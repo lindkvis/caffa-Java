@@ -43,14 +43,11 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import com.google.protobuf.Empty;
 
-import java.util.logging.Logger;
-
-public class AppTest {
-    private static final Logger logger = Logger.getLogger(AppTest.class.getName());
+public class GrpcApp {
     private final AppGrpc.AppBlockingStub appStub;
     private final ManagedChannel channel;
 
-    public AppTest(String host, int port) {
+    public GrpcApp(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
     }
@@ -59,18 +56,19 @@ public class AppTest {
     {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.getAppInfo(message);
+        return appInfo.getName();
+    }
+    
+    public String appVersion()
+    {
+        NullMessage message = NullMessage.getDefaultInstance();
+        AppInfoReply appInfo = this.appStub.getAppInfo(message);
         StringBuilder sb = new StringBuilder();
-        sb.append(appInfo.getName());
-        sb.append(" version ");
         sb.append(appInfo.getMajorVersion());
         sb.append(".");
         sb.append(appInfo.getMinorVersion());
+        sb.append(".");
+        sb.append(appInfo.getPatchVersion());
         return sb.toString();
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        AppTest test = new AppTest("localhost", 55555);
-        String appName = test.appName();
-        logger.info("Application Name and Version: " + appName);
     }
 }

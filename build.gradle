@@ -17,29 +17,37 @@ repositories {
     mavenLocal()
 }
 
-// IMPORTANT: You probably want the non-SNAPSHOT version of gRPC. Make sure you
-// are looking at a tagged version of the example and not "master"!
-
-// Feel free to delete the comment at the next line. It is just for safely
-// updating the version in our release process.
-def grpcVersion = "1.16.1"
-def protobufVersion = "3.6.1"
+// gRPC 1.20.0 and protobuf 3.7.1 works with the Ubuntu 20.04LTS 1.16.1 version
+// and avoids warnings that the earlier protobuf versions had with java.
+def grpcVersion = "1.20.0"
+def protobufVersion = "3.7.1"
 
 dependencies {
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.4.2')
+    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.2')
     compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
-    compile "io.grpc:grpc-alts:1.16.1"
-    compile "io.grpc:grpc-protobuf:1.16.1"
-    compile "io.grpc:grpc-stub:1.16.1"
+    compile "io.grpc:grpc-alts:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
     compileOnly "javax.annotation:javax.annotation-api:1.2"
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat "full"
+        events "started", "skipped", "passed", "failed"
+        showStandardStreams true
+    }
 }
 
 protobuf {
   protoc {
-    artifact = "com.google.protobuf:protoc:3.6.1"
+    artifact = "com.google.protobuf:protoc:${protobufVersion}"
   }
   plugins {
     grpc {
-      artifact = "io.grpc:protoc-gen-grpc-java:1.16.1"
+      artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
     }
   }
   generateProtoTasks {
