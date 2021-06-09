@@ -1,6 +1,9 @@
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
+sourceCompatibility = 11
+targetCompatibility = 11
+
 buildscript {
     repositories {
         maven { // The google mirror is less flaky than mavenCentral()
@@ -55,6 +58,15 @@ protobuf {
       grpc {}
     }
   }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
 }
 
 jar {

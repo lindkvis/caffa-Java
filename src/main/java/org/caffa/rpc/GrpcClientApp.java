@@ -36,6 +36,9 @@ package org.caffa.rpc;
 
 import org.caffa.rpc.AppInfo;
 import org.caffa.rpc.AppGrpc;
+import org.caffa.rpc.DocumentRequest;
+import org.caffa.rpc.ObjectAccessGrpc;
+import org.caffa.rpc.Object;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -43,24 +46,24 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import com.google.protobuf.Empty;
 
-public class GrpcApp {
+public class GrpcClientApp {
     private final AppGrpc.AppBlockingStub appStub;
+    private final ObjectAccessGrpc.ObjectAccessBlockingStub objectStub;
     private final ManagedChannel channel;
 
-    public GrpcApp(String host, int port) {
+    public GrpcClientApp(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
+        this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
     }
 
-    public String appName()
-    {
+    public String appName() {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.getAppInfo(message);
         return appInfo.getName();
     }
-    
-    public String appVersion()
-    {
+
+    public String appVersion() {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.getAppInfo(message);
         StringBuilder sb = new StringBuilder();
@@ -70,5 +73,10 @@ public class GrpcApp {
         sb.append(".");
         sb.append(appInfo.getPatchVersion());
         return sb.toString();
+    }
+
+    public Object document(String documentId) {
+        DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).build();
+        return this.objectStub.getDocument(request);
     }
 }
