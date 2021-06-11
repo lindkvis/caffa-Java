@@ -1,9 +1,11 @@
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.caffa.rpc.GrpcClientApp;
-import org.caffa.rpc.Object;
+import org.caffa.rpc.CaffaObject;
+import org.caffa.rpc.CaffaAbstractField;
 
 class ClientAppTest {
     private GrpcClientApp testApp;
@@ -16,27 +18,50 @@ class ClientAppTest {
     @Test
     void appInfo() {
         String appName = testApp.appName();
-        assumeTrue(!appName.isEmpty());
+        assertTrue(!appName.isEmpty());
         System.out.println("Application Name: " + appName);
     }
 
     @Test
     void appVersion() {
         String appVersion = testApp.appVersion();
-        assumeTrue(!appVersion.isEmpty());
+        assertTrue(!appVersion.isEmpty());
         System.out.println("Application Version: " + appVersion);
     }
 
     @Test
     void document() {
-        Object object = testApp.document("");
-        String classKeyword = object.getClassKeyword();
-        assumeTrue(!classKeyword.isEmpty());
+        CaffaObject object = testApp.document("");
+
+        String classKeyword = object.classKeyword;
+        assertTrue(!classKeyword.isEmpty());
         System.out.println("Main Document Class Keyword: " + classKeyword);
 
-        String json = object.getJson();
-        assumeTrue(!json.isEmpty());
-        System.out.println("Main Document JSON: " + json);
+        long address = object.address;
+        System.out.println("Address: " + address);
+
+        assertTrue(address != 0);
     }
 
+    @Test
+    void documentFields() {
+        CaffaObject object = testApp.document("");
+        assertTrue(!object.fields.isEmpty());
+
+        Boolean foundDocumentFileName = false;
+        for (CaffaAbstractField field : object.fields) {
+            System.out.println("Found field: '" + field.keyword + "' (" + field.type + ")");
+            if (field.keyword.equals("DocumentFileName")) {
+                foundDocumentFileName = true;
+            }
+        }
+        assertTrue(foundDocumentFileName);
+    }
+
+    @Test
+    void dumpDocumentFields() {
+        CaffaObject object = testApp.document("");
+        assertTrue(!object.fields.isEmpty());
+        object.dump();
+    }
 }

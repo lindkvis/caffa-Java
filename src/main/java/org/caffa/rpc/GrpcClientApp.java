@@ -37,6 +37,8 @@ package org.caffa.rpc;
 import org.caffa.rpc.AppInfo;
 import org.caffa.rpc.AppGrpc;
 import org.caffa.rpc.DocumentRequest;
+import org.caffa.rpc.CaffaObject;
+import org.caffa.rpc.CaffaFieldAdapter;
 import org.caffa.rpc.ObjectAccessGrpc;
 import org.caffa.rpc.Object;
 
@@ -45,6 +47,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import com.google.protobuf.Empty;
+import com.google.gson.GsonBuilder;
 
 public class GrpcClientApp {
     private final AppGrpc.AppBlockingStub appStub;
@@ -75,8 +78,16 @@ public class GrpcClientApp {
         return sb.toString();
     }
 
-    public Object document(String documentId) {
+    public CaffaObject document(String documentId) {
         DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).build();
-        return this.objectStub.getDocument(request);
+        Object object = this.objectStub.getDocument(request);
+        String jsonString = object.getJson();
+        CaffaObject caffaObject = new GsonBuilder()
+                .registerTypeAdapter(CaffaAbstractField.class, new CaffaFieldAdapter())
+                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter()).create()
+                .fromJson(jsonString, CaffaObject.class);
+        caffaObject.address = object.getAddress();
+        return caffaObject;
     }
+
 }

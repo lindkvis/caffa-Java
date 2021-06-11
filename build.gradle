@@ -17,6 +17,7 @@ buildscript {
 repositories {
     maven { // The google mirror is less flaky than mavenCentral()
         url "https://maven-central.storage-download.googleapis.com/repos/central/data/" }
+    mavenCentral()
     mavenLocal()
 }
 
@@ -32,6 +33,7 @@ dependencies {
     compile "io.grpc:grpc-alts:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"
+    compile "com.google.code.gson:gson:2.8.7"
     compileOnly "javax.annotation:javax.annotation-api:1.2"
 }
 
