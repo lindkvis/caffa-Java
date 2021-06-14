@@ -36,10 +36,12 @@ package org.caffa.rpc;
 
 import org.caffa.rpc.AppInfo;
 import org.caffa.rpc.AppGrpc;
+import org.caffa.rpc.AppGrpc.AppBlockingStub;
 import org.caffa.rpc.DocumentRequest;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaFieldAdapter;
 import org.caffa.rpc.ObjectAccessGrpc;
+import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
 import org.caffa.rpc.Object;
 
 import io.grpc.ManagedChannel;
@@ -50,8 +52,8 @@ import com.google.protobuf.Empty;
 import com.google.gson.GsonBuilder;
 
 public class GrpcClientApp {
-    private final AppGrpc.AppBlockingStub appStub;
-    private final ObjectAccessGrpc.ObjectAccessBlockingStub objectStub;
+    private final AppBlockingStub appStub;
+    private final ObjectAccessBlockingStub objectStub;
     private final ManagedChannel channel;
 
     public GrpcClientApp(String host, int port) {
