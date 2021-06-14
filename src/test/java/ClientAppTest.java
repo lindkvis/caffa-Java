@@ -1,11 +1,16 @@
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.caffa.rpc.GrpcClientApp;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaAbstractField;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 class ClientAppTest {
     private GrpcClientApp testApp;
