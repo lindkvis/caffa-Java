@@ -10,6 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import java.util.TreeMap;
+import java.util.ArrayList;
 import java.util.Map;
 
 public class CaffaObject {
@@ -19,6 +20,7 @@ public class CaffaObject {
     public long serverAddress;
 
     public Map<String, CaffaAbstractField> fields;
+    public CaffaAbstractObjectField parentField = null;
 
     public ManagedChannel channel;
 
@@ -37,4 +39,55 @@ public class CaffaObject {
         System.out.println("]");
         System.out.println("}");
     }
+
+    public ArrayList<CaffaObject> children()
+    {
+        ArrayList<CaffaObject> allChildren = new ArrayList<CaffaObject>();
+        for (Map.Entry<String, CaffaAbstractField> entry : fields.entrySet())
+        {
+            CaffaAbstractField field = entry.getValue();
+            if (field.dataType.equals(CaffaObject.class))
+            {
+                CaffaAbstractObjectField objectField = (CaffaAbstractObjectField) entry.getValue();
+                allChildren.addAll(objectField.children());
+            }
+        }
+        return allChildren;
+    }
+
+    public ArrayList<CaffaObject> descendantsMatchingKeyword(String keyword)
+    {
+        ArrayList<CaffaObject> matchingObjects = new ArrayList<CaffaObject>();
+        for (CaffaObject child : children())
+        {
+            if (child.classKeyword.equals(keyword))
+            {
+                matchingObjects.add(child);
+            }
+            matchingObjects.addAll(child.descendantsMatchingKeyword(keyword));
+        }
+        return matchingObjects;
+    }
+
+    public ArrayList<CaffaObject> ancestorsMatchingKeyword(String keyword)
+    {
+        ArrayList<CaffaObject> matchingObjects = new ArrayList<CaffaObject>();
+        matchingObjects.addAll(parent().ancestorsMatchingKeyword(keyword));
+        if (parent().classKeyword.equals(keyword))
+        {
+            matchingObjects.add(parent());
+        }
+        return matchingObjects;
+    }
+
+    public CaffaAbstractField field(String keyword)
+    {
+        return this.fields.get(keyword);
+    }
+
+    public CaffaObject parent()
+    {
+        return parentField.owner;
+    }
+
 }

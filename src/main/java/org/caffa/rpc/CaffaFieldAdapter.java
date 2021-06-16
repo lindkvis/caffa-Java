@@ -45,7 +45,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
                     CaffaObject caffaObject = new GsonBuilder()
                             .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel))
                             .create().fromJson(arrayElement, CaffaObject.class);
-                    caffaField.value.add(caffaObject);
+                    caffaField.add(caffaObject);
                 }
             }
             return caffaField;
@@ -56,8 +56,6 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
     public CaffaAbstractField deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
         final JsonObject object = json.getAsJsonObject();
-
-        System.out.println("Trying to deserialize " + json);
 
         String keyword = object.get("keyword").getAsString();
         String dataType = object.get("type").getAsString();

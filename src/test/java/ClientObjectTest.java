@@ -3,14 +3,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.caffa.rpc.GrpcClientApp;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaAbstractField;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import java.util.Map;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 public class ClientObjectTest {
@@ -36,26 +32,20 @@ public class ClientObjectTest {
     }
 
     @Test
-    void documentFields() {
-        CaffaObject object = testApp.document("");
-        assertTrue(!object.fields.isEmpty());
-
-        Boolean foundDocumentFileName = false;
-        for (Map.Entry<String, CaffaAbstractField> entry : object.fields.entrySet()) {
-            CaffaAbstractField field = entry.getValue();
-            assertTrue(field.keyword == entry.getKey());
-            System.out.println("Found field: '" + entry.getKey() + "' (" + field.type + ")");
-            if (field.keyword.equals("DocumentFileName")) {
-                foundDocumentFileName = true;
-            }
-        }
-        assertTrue(foundDocumentFileName);
-    }
-
-    @Test
-    void dumpDocumentFields() {
+    void dumpDocument() {
         CaffaObject object = testApp.document("");
         assertTrue(!object.fields.isEmpty());
         object.dump();
+    }
+
+    @Test
+    void children() {
+        CaffaObject object = testApp.document("");
+
+        ArrayList<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+        for (CaffaObject child : children){
+            System.out.println("Found child of class: " + child.classKeyword);
+        }
     }
 }

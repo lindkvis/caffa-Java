@@ -18,11 +18,9 @@ import java.util.List;
 import java.util.logging.Level;
 
 abstract public class CaffaArrayField<DataType> extends CaffaAbstractField {
-    private final Class<DataType> dataType;
 
     public CaffaArrayField(CaffaObject owner, Class<DataType> dataType) {
-        super(owner);
-        this.dataType = dataType;
+        super(owner, dataType);
     }
 
     public ArrayList<DataType> get() {

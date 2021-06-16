@@ -35,8 +35,8 @@ public class CaffaFieldFactory {
             case "float": {
                 return new CaffaField<Float>(owner, Float.class);
             }
-            case "bool": {
-                return new CaffaField<Boolean>(owner, Boolean.class);
+            case "uint64": {
+                return new CaffaField<Long>(owner, Long.class);
             }
             case "int[]": {
                 return new CaffaIntArrayField(owner);
@@ -53,7 +53,6 @@ public class CaffaFieldFactory {
             case "uint64[]": {
                 return new CaffaLongArrayField(owner);
             }
-
         }
         System.err.println("Could not create array field for data type: " + dataType);
         return null;

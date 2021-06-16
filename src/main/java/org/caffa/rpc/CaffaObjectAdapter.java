@@ -28,7 +28,6 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
     public CaffaObject deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
-        System.out.println("Full JSON: " + json);
 
         final JsonObject object = json.getAsJsonObject();
 
