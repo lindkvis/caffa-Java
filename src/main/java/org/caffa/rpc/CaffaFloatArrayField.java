@@ -6,8 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class CaffaFloatArrayField extends CaffaArrayField<Float> {
-    public CaffaFloatArrayField(CaffaObject owner) {
-        super(owner, Float.class);
+    public CaffaFloatArrayField(CaffaObject owner, String keyword) {
+        super(owner, keyword, Float.class);
     }
 
     public List<Float> getChunk(GetterArrayReply reply) {

@@ -19,8 +19,8 @@ import java.util.logging.Level;
 
 abstract public class CaffaArrayField<DataType> extends CaffaAbstractField {
 
-    public CaffaArrayField(CaffaObject owner, Class<DataType> dataType) {
-        super(owner, dataType);
+    public CaffaArrayField(CaffaObject owner, String keyword, Class<DataType> dataType) {
+        super(owner, keyword, dataType);
     }
 
     public ArrayList<DataType> get() {
@@ -51,8 +51,7 @@ abstract public class CaffaArrayField<DataType> extends CaffaAbstractField {
 
     public void dump() {
         System.out.println("CaffaArrayField <" + dataType + "> {");
-        System.out.println("keyword = " + keyword);
-        System.out.println("type = " + type + " [array]");
+        super.dump();
         System.out.println("}");
     }
 }

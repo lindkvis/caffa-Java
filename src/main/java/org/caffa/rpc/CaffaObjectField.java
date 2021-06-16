@@ -9,37 +9,33 @@ import java.util.ArrayList;
 public class CaffaObjectField extends CaffaAbstractObjectField {
     private CaffaObject value;
 
-    public CaffaObjectField(CaffaObject owner, CaffaObject value) {
-        super(owner);
+    public CaffaObjectField(CaffaObject owner, String keyword, CaffaObject value) {
+        super(owner, keyword);
         this.value = value;
     }
 
-    public CaffaObjectField(CaffaObject owner) {
-        super(owner);
+    public CaffaObjectField(CaffaObject owner, String keyword) {
+        super(owner, keyword);
     }
 
-    public final ArrayList<CaffaObject> children()
-    {
+    public final ArrayList<CaffaObject> children() {
         ArrayList<CaffaObject> onlyChild = new ArrayList<CaffaObject>();
         onlyChild.add(this.value);
         return onlyChild;
     }
 
-    public void set(CaffaObject object)
-    {
+    public void set(CaffaObject object) {
         object.parentField = this;
         this.value = object;
     }
 
-    public CaffaObject get()
-    {
+    public CaffaObject get() {
         return this.value;
     }
 
     public void dump() {
         System.out.println("CaffaObjectField {");
-        System.out.println("keyword = " + keyword);
-        System.out.println("type = " + type);
+        super.dump();
         this.value.dump();
         System.out.println("}");
     }

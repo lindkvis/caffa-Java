@@ -31,15 +31,15 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
         this.object = object;
     }
 
-    public CaffaAbstractField createField(String dataType, JsonElement valueElement) {
+    public CaffaAbstractField createField(String keyword, String dataType, JsonElement valueElement) {
         if (dataType.equals("object")) {
             CaffaObject caffaObject = new GsonBuilder()
                     .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel)).create()
                     .fromJson(valueElement, CaffaObject.class);
-            return new CaffaObjectField(this.object, caffaObject);
+            return new CaffaObjectField(this.object, keyword, caffaObject);
 
         } else if (dataType.equals("object[]")) {
-            CaffaObjectArrayField caffaField = new CaffaObjectArrayField(this.object);
+            CaffaObjectArrayField caffaField = new CaffaObjectArrayField(this.object, keyword);
             if (valueElement.isJsonArray()) {
                 for (JsonElement arrayElement : valueElement.getAsJsonArray()) {
                     CaffaObject caffaObject = new GsonBuilder()
@@ -50,7 +50,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
             }
             return caffaField;
         }
-        return CaffaFieldFactory.create(this.object, dataType);
+        return CaffaFieldFactory.create(this.object, keyword, dataType);
     }
 
     public CaffaAbstractField deserialize(JsonElement json, Type type, JsonDeserializationContext context)
@@ -61,12 +61,8 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
         String dataType = object.get("type").getAsString();
 
         JsonElement valueElement = object.get("value");
-        CaffaAbstractField abstractCaffaField = createField(dataType, valueElement);
+        CaffaAbstractField abstractCaffaField = createField(keyword, dataType, valueElement);
 
-        if (abstractCaffaField != null) {
-            abstractCaffaField.keyword = keyword;
-            abstractCaffaField.type = dataType;
-        }
         return abstractCaffaField;
     }
 

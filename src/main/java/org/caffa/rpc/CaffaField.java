@@ -10,9 +10,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.GsonBuilder;
 
+import java.lang.SuppressWarnings;
+
 public class CaffaField<DataType> extends CaffaAbstractField {
-    public CaffaField(CaffaObject owner, Class<DataType> dataType) {
-        super(owner, dataType);
+
+    public CaffaField(CaffaObject owner, String keyword, Class<DataType> dataType) {
+        super(owner, keyword, dataType);
     }
 
     public String getJson() {
@@ -42,7 +45,9 @@ public class CaffaField<DataType> extends CaffaAbstractField {
 
     public DataType get() {
         String json = getJson();
-        return new Gson().fromJson(json, (Class<DataType>) this.dataType);
+        @SuppressWarnings("unchecked")
+        Class<DataType> type = (Class<DataType>) this.dataType;
+        return new Gson().fromJson(json, type);
 
     }
 
@@ -52,8 +57,7 @@ public class CaffaField<DataType> extends CaffaAbstractField {
 
     public void dump() {
         System.out.println("CaffaField <" + dataType + "> {");
-        System.out.println("keyword = " + keyword);
-        System.out.println("type = " + type);
+        super.dump();
         System.out.println("}");
     }
 }

@@ -19,39 +19,40 @@ public class CaffaFieldFactory {
         dataTypes.put("float", Float.class);
         dataTypes.put("uint64", Long.class);
         dataTypes.put("string", String.class);
+        dataTypes.put("object", CaffaObject.class);
     }
 
-    public static CaffaAbstractField create(CaffaObject owner, String dataType) {
+    public static CaffaAbstractField create(CaffaObject owner, String keyword, String dataType) {
         switch (dataType) {
             case "int": {
-                return new CaffaField<Integer>(owner, Integer.class);
+                return new CaffaField<Integer>(owner, keyword, Integer.class);
             }
             case "string": {
-                return new CaffaField<String>(owner, String.class);
+                return new CaffaField<String>(owner, keyword, String.class);
             }
             case "double": {
-                return new CaffaField<Double>(owner, Double.class);
+                return new CaffaField<Double>(owner, keyword, Double.class);
             }
             case "float": {
-                return new CaffaField<Float>(owner, Float.class);
+                return new CaffaField<Float>(owner, keyword, Float.class);
             }
             case "uint64": {
-                return new CaffaField<Long>(owner, Long.class);
+                return new CaffaField<Long>(owner, keyword, Long.class);
             }
             case "int[]": {
-                return new CaffaIntArrayField(owner);
+                return new CaffaIntArrayField(owner, keyword);
             }
             case "string[]": {
-                return new CaffaStringArrayField(owner);
+                return new CaffaStringArrayField(owner, keyword);
             }
             case "double[]": {
-                return new CaffaDoubleArrayField(owner);
+                return new CaffaDoubleArrayField(owner, keyword);
             }
             case "float[]": {
-                return new CaffaFloatArrayField(owner);
+                return new CaffaFloatArrayField(owner, keyword);
             }
             case "uint64[]": {
-                return new CaffaLongArrayField(owner);
+                return new CaffaLongArrayField(owner, keyword);
             }
         }
         System.err.println("Could not create array field for data type: " + dataType);

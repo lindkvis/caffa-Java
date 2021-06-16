@@ -58,7 +58,7 @@ public class ClientFieldTest {
         for (Map.Entry<String, CaffaAbstractField> entry : object.fields.entrySet()) {
             CaffaAbstractField field = entry.getValue();
             assertTrue(field.keyword.equals(entry.getKey()));
-            System.out.println("Found field: '" + entry.getKey() + "' (" + field.type + ")");
+            System.out.println("Found field: '" + entry.getKey() + "' (" + field.dataType + ")");
             if (field.keyword.equals("DocumentFileName")) {
                 foundDocumentFileName = true;
             }
@@ -78,8 +78,7 @@ public class ClientFieldTest {
         assertTrue(!values.isEmpty());
 
         System.out.print("Printing first ten floats: ");
-        for (int i = 0; i < 10; ++i)
-        {
+        for (int i = 0; i < 10; ++i) {
             System.out.print(values.get(i) + " ");
         }
         System.out.print("\n");
