@@ -7,11 +7,11 @@ import io.grpc.ManagedChannel;
 
 import java.util.ArrayList;
 
-public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
+public class CaffaObjectArrayField extends CaffaField<CaffaObject> {
     public ArrayList<CaffaObject> value;
 
-    public CaffaObjectArrayField(CaffaObject owner, ManagedChannel channel) {
-        super(owner, channel);
+    public CaffaObjectArrayField(CaffaObject owner) {
+        super(owner, CaffaObject.class);
         this.value = new ArrayList<CaffaObject>();
     }
 

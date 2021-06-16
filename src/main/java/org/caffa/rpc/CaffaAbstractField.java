@@ -5,18 +5,20 @@ import org.caffa.rpc.CaffaObject;
 
 import io.grpc.ManagedChannel;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class CaffaAbstractField {
     public String keyword;
     public String type;
 
     protected CaffaObject owner;
-    protected final ManagedChannel channel;
     protected final FieldAccessGrpc.FieldAccessBlockingStub fieldStub;
+    protected static final Logger logger = Logger.getLogger(CaffaAbstractField.class.getName());
 
-    CaffaAbstractField(CaffaObject owner, ManagedChannel channel) {
+    CaffaAbstractField(CaffaObject owner) {
         this.owner = owner;
-        this.channel = channel;
-        this.fieldStub = FieldAccessGrpc.newBlockingStub(channel);
+        this.fieldStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
     }
 
     public void dump() {

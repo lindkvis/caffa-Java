@@ -3,3 +3,9 @@ gradlew
 gradlew.bat
 build
 .gradle
+.classpath
+.project
+.settings
+.vscode
+bin/
+caffa-Java.code-workspace

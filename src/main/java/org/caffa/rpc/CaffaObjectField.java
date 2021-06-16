@@ -7,18 +7,20 @@ import io.grpc.ManagedChannel;
 public class CaffaObjectField extends CaffaField<CaffaObject> {
     public CaffaObject value;
 
-    public CaffaObjectField(CaffaObject owner, CaffaObject value, ManagedChannel channel) {
-        super(owner, channel);
+    public CaffaObjectField(CaffaObject owner, CaffaObject value) {
+        super(owner, CaffaObject.class);
         this.value = value;
     }
 
-    public CaffaObjectField(ManagedChannel channel) {
-        super(channel);
+    public CaffaObjectField(CaffaObject owner) {
+        super(owner, CaffaObject.class);
     }
 
     public void dump() {
+        System.out.println("CaffaObjectField {");
         System.out.println("keyword = " + keyword);
         System.out.println("type = " + type);
         this.value.dump();
+        System.out.println("}");
     }
 }
