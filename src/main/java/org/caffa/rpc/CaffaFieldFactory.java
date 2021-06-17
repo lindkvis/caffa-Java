@@ -60,9 +60,6 @@ public class CaffaFieldFactory {
 
     public static CaffaAbstractField createArrayField(CaffaObject owner, String keyword, String dataType) {
         CaffaAbstractField creator = arrayFieldCreators.get(dataType);
-        System.out.println("[");
-        creator.dump();
-        System.out.println("]");
         return creator.newInstance(owner, keyword);
     }
 }
