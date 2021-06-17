@@ -36,4 +36,8 @@ public class CaffaObjectArrayField extends CaffaAbstractObjectField {
         }
         System.out.println("}");
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaObjectArrayField(owner, keyword);
+    }
 }

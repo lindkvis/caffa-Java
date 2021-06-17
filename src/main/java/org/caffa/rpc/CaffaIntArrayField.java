@@ -14,4 +14,8 @@ public class CaffaIntArrayField extends CaffaArrayField<Integer> {
         IntArray IntegerArray = reply.getInts();
         return IntegerArray.getDataList();
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaIntArrayField(owner, keyword);
+    }
 }

@@ -13,6 +13,7 @@ import com.google.common.collect.HashBiMap;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,66 +22,85 @@ import java.util.Set;
 public class ClientFieldTest {
     private GrpcClientApp testApp;
 
-    @BeforeEach
     public void setUp() throws Exception {
         testApp = new GrpcClientApp("localhost", 55555);
     }
 
+    public void cleanUp() {
+        testApp.cleanUp();
+    }
+
     @Test
     void getDocumentFileName() {
-        CaffaObject object = testApp.document("");
-        assertTrue(!object.fields.isEmpty());
+        GrpcClientApp testApp = new GrpcClientApp("localhost", 55555);
+        {
+            CaffaObject object = testApp.document("");
+            assertTrue(!object.fields.isEmpty());
 
-        object.dump();
+            object.dump();
 
-        String key = "DocumentFileName";
-        assertTrue(object.fields.containsKey(key));
-        CaffaAbstractField field = object.fields.get(key);
-        assertTrue(field != null);
-        assertEquals(key, field.keyword);
+            String key = "DocumentFileName";
+            assertTrue(object.fields.containsKey(key));
+            CaffaAbstractField field = object.fields.get(key);
+            assertTrue(field != null);
+            assertEquals(key, field.keyword);
 
-        CaffaField<String> fileNameField = (CaffaField<String>) field;
-        String originalValue = fileNameField.get();
-        assertEquals("dummyFileName", originalValue);
-        fileNameField.set("TestValue");
-        String value = fileNameField.get();
-        assertEquals("TestValue", value);
-        fileNameField.set(originalValue);
-        assertEquals(originalValue, fileNameField.get());
+            CaffaField<String> fileNameField = (CaffaField<String>) field;
+            String originalValue = fileNameField.get();
+            assertEquals("dummyFileName", originalValue);
+            fileNameField.set("TestValue");
+            String value = fileNameField.get();
+            assertEquals("TestValue", value);
+            fileNameField.set(originalValue);
+            assertEquals(originalValue, fileNameField.get());
+        }
+        testApp.cleanUp();
+
     }
 
     @Test
     void documentFields() {
-        CaffaObject object = testApp.document("");
-        assertTrue(!object.fields.isEmpty());
+        GrpcClientApp testApp = new GrpcClientApp("localhost", 55555);
+        {
+            CaffaObject object = testApp.document("");
+            assertTrue(!object.fields.isEmpty());
 
-        Boolean foundDocumentFileName = false;
-        for (Map.Entry<String, CaffaAbstractField> entry : object.fields.entrySet()) {
-            CaffaAbstractField field = entry.getValue();
-            assertTrue(field.keyword.equals(entry.getKey()));
-            System.out.println("Found field: '" + entry.getKey() + "' (" + field.dataType + ")");
-            if (field.keyword.equals("DocumentFileName")) {
-                foundDocumentFileName = true;
+            Boolean foundDocumentFileName = false;
+            for (Map.Entry<String, CaffaAbstractField> entry : object.fields.entrySet()) {
+                CaffaAbstractField field = entry.getValue();
+                assertTrue(field.keyword.equals(entry.getKey()));
+                System.out.println("Found field: '" + entry.getKey() + "' (" + field.getType() + ")");
+                if (field.keyword.equals("DocumentFileName")) {
+                    foundDocumentFileName = true;
+                }
             }
+            assertTrue(foundDocumentFileName);
         }
-        assertTrue(foundDocumentFileName);
+        testApp.cleanUp();
+
     }
 
     @Test
     void floatVector() {
-        CaffaObject object = testApp.document("");
+        GrpcClientApp testApp = new GrpcClientApp("localhost", 55555);
+        {
+            CaffaObject object = testApp.document("");
 
-        ArrayList<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
-        CaffaObject demoObject = children.get(0);
-        CaffaArrayField<Float> floatVector = (CaffaArrayField<Float>) demoObject.field("floatVector");
-        ArrayList<Float> values = floatVector.get();
-        assertTrue(!values.isEmpty());
+            ArrayList<CaffaObject> children = object.children();
+            assertTrue(!children.isEmpty());
+            CaffaObject demoObject = children.get(0);
+            System.out.println("Check which field was actually created:");
+            demoObject.field("floatVector").dump();
+            CaffaArrayField<Float> floatVector = (CaffaArrayField<Float>) demoObject.field("floatVector");
+            ArrayList<Float> values = floatVector.get();
+            assertTrue(!values.isEmpty());
 
-        System.out.print("Printing first ten floats: ");
-        for (int i = 0; i < 10; ++i) {
-            System.out.print(values.get(i) + " ");
+            System.out.print("Printing first ten floats: ");
+            for (int i = 0; i < 10; ++i) {
+                System.out.print(values.get(i) + " ");
+            }
+            System.out.print("\n");
         }
-        System.out.print("\n");
+        testApp.cleanUp();
     }
 }

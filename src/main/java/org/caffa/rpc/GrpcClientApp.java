@@ -51,6 +51,8 @@ import io.grpc.StatusRuntimeException;
 import com.google.protobuf.Empty;
 import com.google.gson.GsonBuilder;
 
+import java.util.concurrent.TimeUnit;
+
 public class GrpcClientApp {
     private final AppBlockingStub appStub;
     private final ObjectAccessBlockingStub objectStub;
@@ -60,6 +62,15 @@ public class GrpcClientApp {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
+    }
+
+    public void cleanUp() {
+        System.out.println("Shutting down channels!");
+        try {
+            this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            System.out.println("Failed to shut down gracefully" + e.getMessage());
+        }
     }
 
     public String appName() {

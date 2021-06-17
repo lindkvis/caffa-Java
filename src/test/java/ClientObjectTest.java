@@ -3,6 +3,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.caffa.rpc.GrpcClientApp;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaAbstractField;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,11 @@ public class ClientObjectTest {
     @BeforeEach
     public void setUp() throws Exception {
         testApp = new GrpcClientApp("localhost", 55555);
+    }
+
+    @AfterEach
+    public void cleanUp() {
+        testApp.cleanUp();
     }
 
     @Test
@@ -44,7 +50,7 @@ public class ClientObjectTest {
 
         ArrayList<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
-        for (CaffaObject child : children){
+        for (CaffaObject child : children) {
             System.out.println("Found child of class: " + child.classKeyword);
         }
     }

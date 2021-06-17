@@ -11,22 +11,23 @@ import java.util.logging.Logger;
 
 abstract public class CaffaAbstractField {
     public String keyword;
-    public final Class<?> dataType;
-
     protected CaffaObject owner;
-    protected final FieldAccessGrpc.FieldAccessBlockingStub fieldStub;
+    protected FieldAccessGrpc.FieldAccessBlockingStub fieldStub = null;
     protected static final Logger logger = Logger.getLogger(CaffaAbstractField.class.getName());
 
-    CaffaAbstractField(CaffaObject owner, String keyword, Class<?> dataType) {
+    CaffaAbstractField(CaffaObject owner, String keyword) {
         this.owner = owner;
         this.keyword = keyword;
-        this.dataType = dataType;
-
-        this.fieldStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
+        if (this.owner != null) {
+            this.fieldStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
+        }
     }
 
     public void dump() {
         System.out.println("keyword = " + keyword);
-        System.out.println("dataType = " + dataType);
     }
+
+    abstract public Class<?> getType();
+
+    abstract public CaffaAbstractField newInstance(CaffaObject owner, String keyword);
 }

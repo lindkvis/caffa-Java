@@ -14,4 +14,8 @@ public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
         DoubleArray doubleArray = reply.getDoubles();
         return doubleArray.getDataList();
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaDoubleArrayField(owner, keyword);
+    }
 }

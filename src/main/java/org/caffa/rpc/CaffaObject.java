@@ -40,14 +40,11 @@ public class CaffaObject {
         System.out.println("}");
     }
 
-    public ArrayList<CaffaObject> children()
-    {
+    public ArrayList<CaffaObject> children() {
         ArrayList<CaffaObject> allChildren = new ArrayList<CaffaObject>();
-        for (Map.Entry<String, CaffaAbstractField> entry : fields.entrySet())
-        {
+        for (Map.Entry<String, CaffaAbstractField> entry : fields.entrySet()) {
             CaffaAbstractField field = entry.getValue();
-            if (field.dataType.equals(CaffaObject.class))
-            {
+            if (field.getType() == CaffaObject.class) {
                 CaffaAbstractObjectField objectField = (CaffaAbstractObjectField) entry.getValue();
                 allChildren.addAll(objectField.children());
             }
@@ -55,13 +52,10 @@ public class CaffaObject {
         return allChildren;
     }
 
-    public ArrayList<CaffaObject> descendantsMatchingKeyword(String keyword)
-    {
+    public ArrayList<CaffaObject> descendantsMatchingKeyword(String keyword) {
         ArrayList<CaffaObject> matchingObjects = new ArrayList<CaffaObject>();
-        for (CaffaObject child : children())
-        {
-            if (child.classKeyword.equals(keyword))
-            {
+        for (CaffaObject child : children()) {
+            if (child.classKeyword.equals(keyword)) {
                 matchingObjects.add(child);
             }
             matchingObjects.addAll(child.descendantsMatchingKeyword(keyword));
@@ -69,24 +63,20 @@ public class CaffaObject {
         return matchingObjects;
     }
 
-    public ArrayList<CaffaObject> ancestorsMatchingKeyword(String keyword)
-    {
+    public ArrayList<CaffaObject> ancestorsMatchingKeyword(String keyword) {
         ArrayList<CaffaObject> matchingObjects = new ArrayList<CaffaObject>();
         matchingObjects.addAll(parent().ancestorsMatchingKeyword(keyword));
-        if (parent().classKeyword.equals(keyword))
-        {
+        if (parent().classKeyword.equals(keyword)) {
             matchingObjects.add(parent());
         }
         return matchingObjects;
     }
 
-    public CaffaAbstractField field(String keyword)
-    {
+    public CaffaAbstractField field(String keyword) {
         return this.fields.get(keyword);
     }
 
-    public CaffaObject parent()
-    {
+    public CaffaObject parent() {
         return parentField.owner;
     }
 

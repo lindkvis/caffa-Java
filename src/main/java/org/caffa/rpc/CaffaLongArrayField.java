@@ -14,4 +14,8 @@ public class CaffaLongArrayField extends CaffaArrayField<Long> {
         UInt64Array LongArray = reply.getUint64S();
         return LongArray.getDataList();
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaLongArrayField(owner, keyword);
+    }
 }

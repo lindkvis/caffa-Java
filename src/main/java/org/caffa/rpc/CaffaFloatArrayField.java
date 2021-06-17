@@ -14,4 +14,8 @@ public class CaffaFloatArrayField extends CaffaArrayField<Float> {
         FloatArray FloatArray = reply.getFloats();
         return FloatArray.getDataList();
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaFloatArrayField(owner, keyword);
+    }
 }

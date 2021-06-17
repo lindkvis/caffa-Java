@@ -50,7 +50,12 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
             }
             return caffaField;
         }
-        return CaffaFieldFactory.create(this.object, keyword, dataType);
+        if (dataType.endsWith("[]")) {
+            System.out.println("Creating array field " + keyword);
+            dataType = dataType.substring(0, dataType.length() - 2);
+            return CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
+        }
+        return CaffaFieldFactory.createField(this.object, keyword, dataType);
     }
 
     public CaffaAbstractField deserialize(JsonElement json, Type type, JsonDeserializationContext context)

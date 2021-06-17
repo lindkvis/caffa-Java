@@ -14,4 +14,8 @@ public class CaffaStringArrayField extends CaffaArrayField<String> {
         StringArray StringArray = reply.getStrings();
         return StringArray.getDataList();
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaStringArrayField(owner, keyword);
+    }
 }

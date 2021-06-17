@@ -39,4 +39,8 @@ public class CaffaObjectField extends CaffaAbstractObjectField {
         this.value.dump();
         System.out.println("}");
     }
+
+    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+        return new CaffaObjectField(owner, keyword);
+    }
 }
