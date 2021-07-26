@@ -21,10 +21,7 @@ public class CaffaField<DataType> extends CaffaAbstractField {
     }
 
     public String getJson() {
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel));
-        Gson gson = builder.create();
-        String jsonObject = gson.toJson(this.owner);
+        String jsonObject = this.owner.getJson();
         Object self = Object.newBuilder().setJson(jsonObject).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setMethod(this.keyword).setSelf(self).build();
 
@@ -34,9 +31,7 @@ public class CaffaField<DataType> extends CaffaAbstractField {
 
     public void setJson(String value) {
 
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel));
-        String jsonObject = builder.create().toJson(this.owner);
+        String jsonObject = this.owner.getJson();
         Object object = Object.newBuilder().setJson(jsonObject).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setMethod(this.keyword).setSelf(object).build();
 

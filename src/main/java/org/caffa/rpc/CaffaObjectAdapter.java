@@ -48,21 +48,52 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         } else {
             System.err.println("Could not find classKeyword in object!");
         }
-        if (object.has("serverAddress") && object.get("serverAddress").isJsonPrimitive()) {
-            caffaObject.serverAddress = object.get("serverAddress").getAsLong();
+        if (object.has("uuid") && object.get("uuid").isJsonPrimitive()) {
+            caffaObject.uuid = object.get("uuid").getAsString();
         } else {
-            System.err.println("Could not find serverAddress in object!");
+            System.err.println("Could not find uuid in object!");
         }
 
         return caffaObject;
     }
 
+    public void readFields(CaffaObject caffaObject, JsonElement json)
+    {
+        final JsonObject object = json.getAsJsonObject();
+
+        if (object.has("fields") && object.get("fields").isJsonArray()) {
+            JsonArray fields = object.get("fields").getAsJsonArray();
+            for (JsonElement jsonElement : fields) {
+                CaffaAbstractField field = new GsonBuilder()
+                        .registerTypeAdapter(CaffaAbstractField.class, new CaffaFieldAdapter(caffaObject)).create()
+                        .fromJson(jsonElement, CaffaAbstractField.class);
+
+                caffaObject.fields.put(field.keyword, field);
+            }
+        }
+        if (object.has("classKeyword") && object.get("classKeyword").isJsonPrimitive()) {
+            caffaObject.classKeyword = object.get("classKeyword").getAsString();
+        } else {
+            System.err.println("Could not find classKeyword in object!");
+        }
+        if (object.has("uuid") && object.get("uuid").isJsonPrimitive()) {
+            caffaObject.uuid = object.get("uuid").getAsString();
+        } else {
+            System.err.println("Could not find uuid in object!");
+        }
+    }
+
     public JsonElement serialize(CaffaObject caffaObject, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("classKeyword", caffaObject.classKeyword);
-        jsonObject.addProperty("serverAddress", caffaObject.serverAddress);
 
+        writeFields(caffaObject, jsonObject);
         return jsonObject;
+    }
+
+    public void writeFields(CaffaObject caffaObject,  JsonObject jsonObject)
+    {
+        jsonObject.addProperty("classKeyword", caffaObject.classKeyword);
+        jsonObject.addProperty("uuid", caffaObject.uuid);
     }
 
 }

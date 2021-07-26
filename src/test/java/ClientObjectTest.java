@@ -1,7 +1,9 @@
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.caffa.rpc.GrpcClientApp;
 import org.caffa.rpc.CaffaObject;
+import org.caffa.rpc.CaffaObjectMethod;
 import org.caffa.rpc.CaffaAbstractField;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,10 +33,10 @@ public class ClientObjectTest {
         assertTrue(!classKeyword.isEmpty());
         System.out.println("Main Document Class Keyword: " + classKeyword);
 
-        long address = object.serverAddress;
-        System.out.println("Address: " + address);
+        String uuid = object.uuid;
+        System.out.println("uuid: " + uuid);
 
-        assertTrue(address != 0);
+        assertFalse(uuid.isEmpty());
     }
 
     @Test
@@ -52,6 +54,26 @@ public class ClientObjectTest {
         assertTrue(!children.isEmpty());
         for (CaffaObject child : children) {
             System.out.println("Found child of class: " + child.classKeyword);
+        }
+    }
+
+    @Test
+    void methods() {
+        CaffaObject object = testApp.document("");
+        ArrayList<CaffaObjectMethod> methods = object.methods();
+        assertTrue(methods.isEmpty());
+
+        ArrayList<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+        for (CaffaObject child : children){
+            System.out.println("Found child of class: " + child.classKeyword + " ... checking methods!");
+            ArrayList<CaffaObjectMethod> childMethods = child.methods();
+            assertTrue(!childMethods.isEmpty());
+            for (CaffaObjectMethod method : childMethods)
+            {
+                System.out.println("Found method!!");
+                method.dump();
+            }
         }
     }
 }
