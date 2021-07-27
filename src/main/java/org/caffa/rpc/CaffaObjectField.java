@@ -1,9 +1,5 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaAbstractObjectField;
-import org.caffa.rpc.CaffaObject;
-import io.grpc.ManagedChannel;
-
 import java.util.ArrayList;
 
 public class CaffaObjectField extends CaffaAbstractObjectField {

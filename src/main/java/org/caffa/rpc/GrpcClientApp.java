@@ -34,24 +34,15 @@
 //
 package org.caffa.rpc;
 
-import org.caffa.rpc.AppInfo;
-import org.caffa.rpc.AppGrpc;
+import java.util.concurrent.TimeUnit;
+
+import com.google.gson.GsonBuilder;
+
 import org.caffa.rpc.AppGrpc.AppBlockingStub;
-import org.caffa.rpc.DocumentRequest;
-import org.caffa.rpc.CaffaObject;
-import org.caffa.rpc.CaffaFieldAdapter;
-import org.caffa.rpc.ObjectAccessGrpc;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
-import org.caffa.rpc.Object;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import com.google.protobuf.Empty;
-import com.google.gson.GsonBuilder;
-
-import java.util.concurrent.TimeUnit;
 
 public class GrpcClientApp {
     private final AppBlockingStub appStub;
@@ -95,10 +86,9 @@ public class GrpcClientApp {
         DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).build();
         Object object = this.objectStub.getDocument(request);
         String jsonString = object.getJson();
-        CaffaObject caffaObject = new GsonBuilder()
+        return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel)).create()
                 .fromJson(jsonString, CaffaObject.class);
-        return caffaObject;
     }
 
 }

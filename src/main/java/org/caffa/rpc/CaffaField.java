@@ -1,16 +1,6 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaAbstractField;
-import org.caffa.rpc.CaffaObject;
-
-import io.grpc.ManagedChannel;
-
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.google.gson.GsonBuilder;
-
-import java.lang.SuppressWarnings;
 
 public class CaffaField<DataType> extends CaffaAbstractField {
     private final Class<DataType> dataType;
@@ -35,7 +25,7 @@ public class CaffaField<DataType> extends CaffaAbstractField {
         Object object = Object.newBuilder().setJson(jsonObject).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setMethod(this.keyword).setSelf(object).build();
 
-        String jsonValue = new Gson().toJson(value);
+        String jsonValue = value;
         SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
         this.fieldStub.setValue(setterRequest);
     }
@@ -47,7 +37,7 @@ public class CaffaField<DataType> extends CaffaAbstractField {
     }
 
     public void set(DataType value) {
-        setJson(value.toString());
+        setJson(new Gson().toJson(value));
     }
 
     public void dump() {
@@ -60,7 +50,7 @@ public class CaffaField<DataType> extends CaffaAbstractField {
         return new CaffaField<DataType>(owner, keyword, this.dataType);
     }
 
-    public Class<?> getType() {
+    public Class<?> type() {
         return this.dataType;
     }
 }

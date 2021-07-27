@@ -1,34 +1,30 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaArrayField;
-import org.caffa.rpc.CaffaField;
-import org.caffa.rpc.CaffaFieldFactory;
-import org.caffa.rpc.CaffaObjectAdapter;
-import org.caffa.rpc.CaffaObjectField;
-import org.caffa.rpc.CaffaObjectArrayField;
+import java.lang.reflect.Type;
 
-import io.grpc.ManagedChannel;
-
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
     private final CaffaObject object;
+    private final Boolean remoteValues;
 
     public CaffaFieldAdapter(CaffaObject object) {
         super();
 
         this.object = object;
+        this.remoteValues = true;
+    }
+
+    public CaffaFieldAdapter(CaffaObject object, Boolean remoteValues) {
+        super();
+
+        this.object = object;
+        this.remoteValues = remoteValues;
     }
 
     public CaffaAbstractField createField(String keyword, String dataType, JsonElement valueElement) {
@@ -55,6 +51,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField> {
             dataType = dataType.substring(0, dataType.length() - 2);
             return CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
         }
+        System.out.println("Creating scalar field " + keyword);
         return CaffaFieldFactory.createField(this.object, keyword, dataType);
     }
 

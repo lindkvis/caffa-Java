@@ -1,15 +1,8 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.FieldAccessGrpc;
-import org.caffa.rpc.CaffaFieldFactory;
-import org.caffa.rpc.CaffaObject;
-
-import io.grpc.ManagedChannel;
-
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-abstract public class CaffaAbstractField {
+public abstract class CaffaAbstractField {
     public String keyword;
     protected CaffaObject owner;
     protected FieldAccessGrpc.FieldAccessBlockingStub fieldStub = null;
@@ -27,7 +20,13 @@ abstract public class CaffaAbstractField {
         System.out.println("keyword = " + keyword);
     }
 
-    abstract public Class<?> getType();
+    public abstract Class<?> type();
 
-    abstract public CaffaAbstractField newInstance(CaffaObject owner, String keyword);
+    @SuppressWarnings("unchecked")
+    public <T> CaffaField<T> cast()
+    {
+        return (CaffaField<T>) this;
+    }
+
+    public abstract CaffaAbstractField newInstance(CaffaObject owner, String keyword);
 }

@@ -1,8 +1,5 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaArrayField;
-
-import java.util.Iterator;
 import java.util.List;
 
 public class CaffaIntArrayField extends CaffaArrayField<Integer> {

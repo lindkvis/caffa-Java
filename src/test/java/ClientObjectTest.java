@@ -1,16 +1,16 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.caffa.rpc.GrpcClientApp;
+import java.util.ArrayList;
+
+import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaObjectMethod;
-import org.caffa.rpc.CaffaAbstractField;
+import org.caffa.rpc.GrpcClientApp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.Set;
 
 public class ClientObjectTest {
     private GrpcClientApp testApp;
@@ -68,12 +68,15 @@ public class ClientObjectTest {
         for (CaffaObject child : children){
             System.out.println("Found child of class: " + child.classKeyword + " ... checking methods!");
             ArrayList<CaffaObjectMethod> childMethods = child.methods();
-            assertTrue(!childMethods.isEmpty());
-            for (CaffaObjectMethod method : childMethods)
-            {
-                System.out.println("Found method!!");
-                method.dump();
-            }
+            assertEquals(1, childMethods.size());
+            CaffaObjectMethod method = childMethods.get(0);
+
+            System.out.println("Found method!!");
+            method.dump();
+            //CaffaField<Double> doubleMember = method.field("doubleMember");
+            //doubleMember.set(99.0);
+            //CaffaField<Integer> intMember = method.field("intMember");
+            
         }
     }
 }

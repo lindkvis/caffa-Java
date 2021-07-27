@@ -1,16 +1,10 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaArrayField;
-import org.caffa.rpc.CaffaField;
-import org.caffa.rpc.CaffaObject;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-
-import java.lang.reflect.Type;
-import java.lang.String;
-import java.util.HashMap;
-import java.util.Map;
 
 public class CaffaFieldFactory {
     public static BiMap<String, Class<?>> dataTypes;

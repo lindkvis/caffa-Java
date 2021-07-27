@@ -1,23 +1,19 @@
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.caffa.rpc.GrpcClientApp;
-import org.caffa.rpc.CaffaObject;
-import org.caffa.rpc.CaffaAbstractField;
-import org.caffa.rpc.CaffaArrayField;
-import org.caffa.rpc.CaffaField;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.caffa.rpc.CaffaAbstractField;
+import org.caffa.rpc.CaffaArrayField;
+import org.caffa.rpc.CaffaField;
+import org.caffa.rpc.CaffaFloatArrayField;
+import org.caffa.rpc.CaffaObject;
+import org.caffa.rpc.GrpcClientApp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Set;
 
 public class ClientFieldTest {
     private GrpcClientApp testApp;
@@ -42,10 +38,10 @@ public class ClientFieldTest {
         String key = "DocumentFileName";
         assertTrue(object.fields.containsKey(key));
         CaffaAbstractField field = object.fields.get(key);
-        assertTrue(field != null);
+        assertNotNull(field);
         assertEquals(key, field.keyword);
 
-        CaffaField<String> fileNameField = (CaffaField<String>) field;
+        CaffaField<String> fileNameField = field.cast();
         String originalValue = fileNameField.get();
         assertEquals("dummyFileName", originalValue);
         fileNameField.set("TestValue");
@@ -54,7 +50,6 @@ public class ClientFieldTest {
         fileNameField.set(originalValue);
         assertEquals(originalValue, fileNameField.get());
     }
-
     @Test
     void documentFields() {
         CaffaObject object = testApp.document("");
@@ -63,8 +58,8 @@ public class ClientFieldTest {
         Boolean foundDocumentFileName = false;
         for (Map.Entry<String, CaffaAbstractField> entry : object.fields.entrySet()) {
             CaffaAbstractField field = entry.getValue();
-            assertTrue(field.keyword.equals(entry.getKey()));
-            System.out.println("Found field: '" + entry.getKey() + "' (" + field.getType() + ")");
+            assertEquals(field.keyword, entry.getKey());
+            System.out.println("Found field: '" + entry.getKey() + "' (" + field.type() + ")");
             if (field.keyword.equals("DocumentFileName")) {
                 foundDocumentFileName = true;
             }
@@ -80,8 +75,8 @@ public class ClientFieldTest {
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check which field was actually created:");
-        demoObject.field("floatVector").dump();
-        CaffaArrayField<Float> floatVector = (CaffaArrayField<Float>) demoObject.field("floatVector");
+        demoObject.<CaffaFloatArrayField>field("floatVector").dump();
+        CaffaArrayField<Float> floatVector = demoObject.field("floatVector");
         ArrayList<Float> values = floatVector.get();
         assertTrue(!values.isEmpty());
 
@@ -90,5 +85,28 @@ public class ClientFieldTest {
             System.out.print(values.get(i) + " ");
         }
         System.out.print("\n");
+    }
+
+    @Test
+    void doubleMember() {
+        CaffaObject object = testApp.document("");
+
+        ArrayList<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+        CaffaObject demoObject = children.get(0);
+        System.out.println("Check that a double field was actually created:");
+        demoObject.<CaffaField<Double>>field("doubleMember").dump();
+        CaffaField<Double> doubleField = demoObject.field("doubleMember");
+        Double originalValue = doubleField.get();
+        System.out.println("Original double value: " + originalValue);
+        Double newValue = 45.3;
+        doubleField.set(newValue);
+        System.out.println("Setting double value: " + newValue);
+
+        assertEquals(newValue, doubleField.get());
+        System.out.println("Confirmed values match!");
+
+        doubleField.set(originalValue);
+        assertEquals(originalValue, doubleField.get());
     }
 }

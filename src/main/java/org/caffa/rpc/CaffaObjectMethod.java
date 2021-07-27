@@ -1,8 +1,8 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaField;
-import org.caffa.rpc.CaffaObject;
 import com.google.gson.annotations.Expose;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class CaffaObjectMethod extends CaffaObject
 {
@@ -16,6 +16,16 @@ public class CaffaObjectMethod extends CaffaObject
 
     public CaffaObject execute()
     {
-        return null;
+        return self.execute(this);
+    }
+
+    @Override
+    public String getJson()
+    {
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
+            new CaffaObjectMethodAdapter(this.self, this.channel));
+        Gson gson = builder.create();
+        String jsonObject = gson.toJson(this);
+        return jsonObject;
     }
 }

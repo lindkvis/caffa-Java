@@ -1,22 +1,14 @@
 package org.caffa.rpc;
 
-import org.caffa.rpc.CaffaObject;
-import org.caffa.rpc.CaffaObjectAdapter;
+import java.lang.reflect.Type;
 
-import io.grpc.ManagedChannel;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSerializationContext;
 
-import java.lang.reflect.Type;
+import io.grpc.ManagedChannel;
 
 public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
@@ -31,7 +23,6 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
             throws JsonParseException {
 
         CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.self);
-
         readFields(caffaObjectMethod, json);
 
         return caffaObjectMethod;
