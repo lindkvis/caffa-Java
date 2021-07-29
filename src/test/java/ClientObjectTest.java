@@ -73,9 +73,20 @@ public class ClientObjectTest {
 
             System.out.println("Found method!!");
             method.dump();
-            //CaffaField<Double> doubleMember = method.field("doubleMember");
-            //doubleMember.set(99.0);
-            //CaffaField<Integer> intMember = method.field("intMember");
+            CaffaField<Double> doubleMethodArg = method.field("doubleArgument");
+            doubleMethodArg.set(99.0);
+            CaffaField<Integer> intMethodArg = method.field("intArgument");
+            intMethodArg.set(41);
+            CaffaField<String> stringMethodArg = method.field("stringArgument");
+            stringMethodArg.set("AnotherValue");
+            assertEquals(99.0, doubleMethodArg.get());
+            assertEquals(41, intMethodArg.get());
+            assertEquals("AnotherValue", stringMethodArg.get());
+            
+            method.execute();
+
+            CaffaField<Double> doubleField = child.field("doubleMember");
+            assertEquals(99.0, doubleField.get());
             
         }
     }

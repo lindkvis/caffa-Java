@@ -1,6 +1,7 @@
 package org.caffa.rpc;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -80,6 +81,16 @@ public class CaffaObject {
         return (T) this.fields.get(keyword);
     }
 
+    public List<CaffaAbstractField> fields()
+    {
+        ArrayList<CaffaAbstractField> allFields = new ArrayList<>();
+        for (Map.Entry<String, CaffaAbstractField> entry : fields.entrySet()) {
+            CaffaAbstractField field = entry.getValue();
+            allFields.add(field);
+        }
+        return allFields;
+    }
+
     public CaffaObject parent() {
         return parentField.owner;
     }
@@ -122,7 +133,10 @@ public class CaffaObject {
     {
         Object self = Object.newBuilder().setJson(getJson()).build();
         String name = method.classKeyword;
-        Object params = Object.newBuilder().setJson(method.getJson()).build();
+
+        String paramJson = method.getJson();
+        System.out.println("Parameter json: " + paramJson);
+        Object params = Object.newBuilder().setJson(paramJson).build();
 
         MethodRequest request = MethodRequest.newBuilder().setSelf(self).setMethod(name).setParams(params).build();
         Object returnValue = this.objectStub.executeMethod(request);

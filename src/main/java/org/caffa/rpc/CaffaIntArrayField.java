@@ -7,7 +7,7 @@ public class CaffaIntArrayField extends CaffaArrayField<Integer> {
         super(owner, keyword, Integer.class);
     }
 
-    public List<Integer> getChunk(GetterArrayReply reply) {
+    public List<Integer> getChunk(GenericArray reply) {
         IntArray IntegerArray = reply.getInts();
         return IntegerArray.getDataList();
     }

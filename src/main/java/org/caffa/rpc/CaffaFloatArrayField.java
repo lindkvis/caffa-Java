@@ -7,7 +7,7 @@ public class CaffaFloatArrayField extends CaffaArrayField<Float> {
         super(owner, keyword, Float.class);
     }
 
-    public List<Float> getChunk(GetterArrayReply reply) {
+    public List<Float> getChunk(GenericArray reply) {
         FloatArray floatArray = reply.getFloats();
         return floatArray.getDataList();
     }

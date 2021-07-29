@@ -2,7 +2,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.caffa.rpc.CaffaAbstractField;
@@ -71,13 +71,13 @@ public class ClientFieldTest {
     void floatVector() {
         CaffaObject object = testApp.document("");
 
-        ArrayList<CaffaObject> children = object.children();
+        List<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check which field was actually created:");
         demoObject.<CaffaFloatArrayField>field("floatVector").dump();
         CaffaArrayField<Float> floatVector = demoObject.field("floatVector");
-        ArrayList<Float> values = floatVector.get();
+        List<Float> values = floatVector.get();
         assertTrue(!values.isEmpty());
 
         System.out.print("Printing first ten floats: ");
@@ -91,7 +91,7 @@ public class ClientFieldTest {
     void doubleMember() {
         CaffaObject object = testApp.document("");
 
-        ArrayList<CaffaObject> children = object.children();
+        List<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check that a double field was actually created:");

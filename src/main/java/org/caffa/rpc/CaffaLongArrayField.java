@@ -7,7 +7,7 @@ public class CaffaLongArrayField extends CaffaArrayField<Long> {
         super(owner, keyword, Long.class);
     }
 
-    public List<Long> getChunk(GetterArrayReply reply) {
+    public List<Long> getChunk(GenericArray reply) {
         UInt64Array LongArray = reply.getUint64S();
         return LongArray.getDataList();
     }
