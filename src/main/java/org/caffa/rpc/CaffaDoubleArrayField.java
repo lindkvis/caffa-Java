@@ -7,7 +7,7 @@ public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
         super(owner, keyword, Double.class);
     }
 
-    public List<Double> getChunk(GetterArrayReply reply) {
+    public List<Double> getChunk(GenericArray reply) {
         DoubleArray doubleArray = reply.getDoubles();
         return doubleArray.getDataList();
     }

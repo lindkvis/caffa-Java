@@ -16,6 +16,7 @@ public class CaffaFieldFactory {
         fieldCreators = new HashMap<String, CaffaAbstractField>();
         arrayFieldCreators = new HashMap<String, CaffaAbstractField>();
 
+        addCreator("bool", Boolean.class);
         addCreator("int", Integer.class);
         addCreator("double", Double.class);
         addCreator("float", Float.class);
@@ -31,7 +32,10 @@ public class CaffaFieldFactory {
     }
 
     public static CaffaAbstractField createArrayField(Class<?> clazz) {
-        if (clazz == Integer.class) {
+        if (clazz == Boolean.class) {
+            return new CaffaBooleanArrayField(null, "");
+        }
+        else if (clazz == Integer.class) {
             return new CaffaIntArrayField(null, "");
         } else if (clazz == Double.class) {
             return new CaffaDoubleArrayField(null, "");
@@ -49,6 +53,7 @@ public class CaffaFieldFactory {
     }
 
     public static CaffaAbstractField createField(CaffaObject owner, String keyword, String dataType) {
+        System.out.println("Creating field of type " + dataType);
         return fieldCreators.get(dataType).newInstance(owner, keyword);
     }
 

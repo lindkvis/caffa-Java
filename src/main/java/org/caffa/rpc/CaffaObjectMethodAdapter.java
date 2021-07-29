@@ -19,19 +19,21 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
         this.self = self;
     }
 
+    @Override
     public CaffaObjectMethod deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
 
         CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.self);
-        readFields(caffaObjectMethod, json);
+        readFields(caffaObjectMethod, json, false);
 
         return caffaObjectMethod;
     }
 
-    public JsonElement serialize(CaffaObjectMethod caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {        
+    @Override
+    public JsonElement serialize(CaffaObject caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {        
         final JsonObject jsonObject = new JsonObject();
 
-        writeFields(caffaObjectMethod, jsonObject);
+        writeFields(caffaObjectMethod, jsonObject, typeOfSrc, context, false);
 
         return jsonObject;
     }

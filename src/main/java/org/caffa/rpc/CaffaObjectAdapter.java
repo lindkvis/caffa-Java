@@ -34,7 +34,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             JsonArray fields = object.get("fields").getAsJsonArray();
             for (JsonElement jsonElement : fields) {
                 CaffaAbstractField field = new GsonBuilder()
-                        .registerTypeAdapter(CaffaAbstractField.class, new CaffaFieldAdapter(caffaObject)).create()
+                        .registerTypeAdapter(CaffaAbstractField.class, new CaffaFieldAdapter(caffaObject, true)).create()
                         .fromJson(jsonElement, CaffaAbstractField.class);
 
                 caffaObject.fields.put(field.keyword, field);
@@ -54,7 +54,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         return caffaObject;
     }
 
-    public void readFields(CaffaObject caffaObject, JsonElement json)
+    public void readFields(CaffaObject caffaObject, JsonElement json, boolean grpc)
     {
         final JsonObject object = json.getAsJsonObject();
 
@@ -62,7 +62,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             JsonArray fields = object.get("fields").getAsJsonArray();
             for (JsonElement jsonElement : fields) {
                 CaffaAbstractField field = new GsonBuilder()
-                        .registerTypeAdapter(CaffaAbstractField.class, new CaffaFieldAdapter(caffaObject)).create()
+                        .registerTypeAdapter(CaffaAbstractField.class, new CaffaFieldAdapter(caffaObject, grpc)).create()
                         .fromJson(jsonElement, CaffaAbstractField.class);
 
                 caffaObject.fields.put(field.keyword, field);
@@ -83,14 +83,22 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
     public JsonElement serialize(CaffaObject caffaObject, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
 
-        writeFields(caffaObject, jsonObject);
+        writeFields(caffaObject, jsonObject, typeOfSrc, context, true);
         return jsonObject;
     }
 
-    public void writeFields(CaffaObject caffaObject,  JsonObject jsonObject)
+    public void writeFields(CaffaObject caffaObject,  JsonObject jsonObject, Type typeOfSrc, JsonSerializationContext context, boolean grpc)
     {
+        System.out.println("Writing fields for object: " + caffaObject.classKeyword + " " + grpc);
         jsonObject.addProperty("classKeyword", caffaObject.classKeyword);
         jsonObject.addProperty("uuid", caffaObject.uuid);
+        JsonArray array = new JsonArray();
+
+        for (CaffaAbstractField field : caffaObject.fields())
+        {
+            array.add(new CaffaFieldAdapter(caffaObject, grpc).serialize(field, typeOfSrc, context));
+        }
+        jsonObject.add("fields", array);
     }
 
 }

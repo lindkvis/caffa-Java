@@ -7,7 +7,7 @@ public class CaffaStringArrayField extends CaffaArrayField<String> {
         super(owner, keyword, String.class);
     }
 
-    public List<String> getChunk(GetterArrayReply reply) {
+    public List<String> getChunk(GenericArray reply) {
         StringArray StringArray = reply.getStrings();
         return StringArray.getDataList();
     }

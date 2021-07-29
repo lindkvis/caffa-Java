@@ -1,16 +1,17 @@
 package org.caffa.rpc;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CaffaObjectArrayField extends CaffaAbstractObjectField {
-    private ArrayList<CaffaObject> values;
+    private List<CaffaObject> values;
 
     public CaffaObjectArrayField(CaffaObject owner, String keyword) {
         super(owner, keyword);
         this.values = new ArrayList<CaffaObject>();
     }
 
-    public final ArrayList<CaffaObject> children() {
+    public final List<CaffaObject> children() {
         return values();
     }
 
@@ -19,7 +20,7 @@ public class CaffaObjectArrayField extends CaffaAbstractObjectField {
         this.values.add(object);
     }
 
-    public final ArrayList<CaffaObject> values() {
+    public final List<CaffaObject> values() {
         return this.values;
     }
 

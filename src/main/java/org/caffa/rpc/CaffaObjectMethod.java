@@ -22,6 +22,7 @@ public class CaffaObjectMethod extends CaffaObject
     @Override
     public String getJson()
     {
+        System.out.println("Getting object method json");
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
             new CaffaObjectMethodAdapter(this.self, this.channel));
         Gson gson = builder.create();
