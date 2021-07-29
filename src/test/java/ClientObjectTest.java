@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -88,6 +89,29 @@ public class ClientObjectTest {
             CaffaField<Double> doubleField = child.field("doubleMember");
             assertEquals(99.0, doubleField.get());
             
+        }
+    }
+
+
+    void specificMethod() {
+        CaffaObject object = testApp.document("");
+        ArrayList<CaffaObjectMethod> methods = object.methods();
+        assertTrue(methods.isEmpty());
+
+        ArrayList<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+        for (CaffaObject child : children){
+            CaffaObjectMethod copyObjectMethod = child.method("copyObject");
+            assertNotNull(copyObjectMethod);
+            copyObjectMethod.setParam("doubleArgument", 97.0);
+            copyObjectMethod.setParam("intArgument", 43);
+            copyObjectMethod.setParam("stringArgument", "Testvalue");
+            copyObjectMethod.execute();
+
+            CaffaField<Double> doubleField = child.field("doubleMember");
+            assertEquals(97.0, doubleField.get());
+            assertEquals(43, child.<CaffaField<Integer>>field("intMember").get());
+            assertEquals("TestValue", child.<CaffaField<String>>field("stringMember").get());
         }
     }
 }

@@ -29,4 +29,10 @@ public class CaffaObjectMethod extends CaffaObject
         String jsonObject = gson.toJson(this);
         return jsonObject;
     }
+
+    public <T> void setParam(String keyword, T value)
+    {
+        CaffaField<T> field = this.field(keyword);
+        field.set(value);
+    }
 }
