@@ -2,19 +2,22 @@ package org.caffa.rpc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 public class CaffaFieldFactory {
     public static BiMap<String, Class<?>> dataTypes;
-    public static Map<String, CaffaAbstractField> fieldCreators;
-    public static Map<String, CaffaAbstractField> arrayFieldCreators;
+    public static Map<String, CaffaField<?>> fieldCreators;
+    public static Map<String, CaffaField<?>> arrayFieldCreators;
+    protected static final Logger logger = Logger.getLogger(CaffaFieldFactory.class.getName());
 
     static {
         dataTypes = HashBiMap.create();
-        fieldCreators = new HashMap<String, CaffaAbstractField>();
-        arrayFieldCreators = new HashMap<String, CaffaAbstractField>();
+        fieldCreators = new HashMap<String, CaffaField<?>>();
+        arrayFieldCreators = new HashMap<String, CaffaField<?>>();
 
         addCreator("bool", Boolean.class);
         addCreator("int", Integer.class);
@@ -31,7 +34,7 @@ public class CaffaFieldFactory {
         arrayFieldCreators.put(typeName, createArrayField(clazz));
     }
 
-    public static CaffaAbstractField createArrayField(Class<?> clazz) {
+    public static CaffaField<?> createArrayField(Class<?> clazz) {
         if (clazz == Boolean.class) {
             return new CaffaBooleanArrayField(null, "");
         }
@@ -48,17 +51,17 @@ public class CaffaFieldFactory {
         } else if (clazz == CaffaObject.class) {
             return new CaffaObjectArrayField(null, "");
         }
-        System.err.println("Could not create array field!");
+        logger.log(Level.SEVERE, "Could not create array field!");
         return null;
     }
 
-    public static CaffaAbstractField createField(CaffaObject owner, String keyword, String dataType) {
-        System.out.println("Creating field of type " + dataType);
+    public static CaffaField<?> createField(CaffaObject owner, String keyword, String dataType) {
+        logger.log(Level.FINER, "Creating field of type " + dataType);
         return fieldCreators.get(dataType).newInstance(owner, keyword);
     }
 
-    public static CaffaAbstractField createArrayField(CaffaObject owner, String keyword, String dataType) {
-        CaffaAbstractField creator = arrayFieldCreators.get(dataType);
+    public static CaffaField<?> createArrayField(CaffaObject owner, String keyword, String dataType) {
+        CaffaField<?> creator = arrayFieldCreators.get(dataType);
         return creator.newInstance(owner, keyword);
     }
 }

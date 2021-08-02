@@ -1,8 +1,11 @@
 package org.caffa.rpc;
 
+import java.lang.reflect.Type;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 public class CaffaObjectMethod extends CaffaObject
 {
@@ -26,13 +29,15 @@ public class CaffaObjectMethod extends CaffaObject
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
             new CaffaObjectMethodAdapter(this.self, this.channel));
         Gson gson = builder.create();
-        String jsonObject = gson.toJson(this);
-        return jsonObject;
+        return gson.toJson(this);
     }
 
-    public <T> void setParam(String keyword, T value)
+    public <T> void setParam(String keyword, T value, Class<T> type)
     {
-        CaffaField<T> field = this.field(keyword);
-        field.set(value);
+        CaffaField<?> field = this.field(keyword);
+        if (field != null)
+        {
+            field.set(value, type);
+        }
     }
 }

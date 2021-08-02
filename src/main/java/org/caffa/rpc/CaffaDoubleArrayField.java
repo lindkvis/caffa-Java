@@ -1,5 +1,6 @@
 package org.caffa.rpc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
@@ -12,7 +13,8 @@ public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
         return doubleArray.getDataList();
     }
 
-    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+    @Override
+    public CaffaField<ArrayList<Double>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaDoubleArrayField(owner, keyword);
     }
 }

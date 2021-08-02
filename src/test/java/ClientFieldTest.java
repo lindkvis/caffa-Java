@@ -4,20 +4,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.caffa.rpc.CaffaAbstractField;
-import org.caffa.rpc.CaffaArrayField;
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaFloatArrayField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.GrpcClientApp;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ClientFieldTest {
     private GrpcClientApp testApp;
 
+    @BeforeAll
+    public static void logSetup()
+    {
+        Logger.getGlobal().setLevel(Level.INFO);
+    }
     @BeforeEach
     public void setUp() throws Exception {
         testApp = new GrpcClientApp("localhost", 55555);
@@ -37,11 +43,11 @@ public class ClientFieldTest {
 
         String key = "DocumentFileName";
         assertTrue(object.fields.containsKey(key));
-        CaffaAbstractField field = object.fields.get(key);
+        CaffaField<?> field = object.field(key);
         assertNotNull(field);
         assertEquals(key, field.keyword);
 
-        CaffaField<String> fileNameField = field.cast();
+        CaffaField<String> fileNameField = field.cast(String.class);
         String originalValue = fileNameField.get();
         assertEquals("dummyFileName", originalValue);
         fileNameField.set("TestValue");
@@ -56,12 +62,13 @@ public class ClientFieldTest {
         assertTrue(!object.fields.isEmpty());
 
         Boolean foundDocumentFileName = false;
-        for (Map.Entry<String, CaffaAbstractField> entry : object.fields.entrySet()) {
-            CaffaAbstractField field = entry.getValue();
+        for (Map.Entry<String, CaffaField<?>> entry : object.fields.entrySet()) {
+            CaffaField<?> field = entry.getValue();
             assertEquals(field.keyword, entry.getKey());
             System.out.println("Found field: '" + entry.getKey() + "' (" + field.type() + ")");
             if (field.keyword.equals("DocumentFileName")) {
                 foundDocumentFileName = true;
+                assertEquals(String.class, field.type());
             }
         }
         assertTrue(foundDocumentFileName);
@@ -70,14 +77,18 @@ public class ClientFieldTest {
     @Test
     void floatVector() {
         CaffaObject object = testApp.document("");
-
+        System.out.println("Getting children!");
         List<CaffaObject> children = object.children();
+        System.out.println("Got children!");
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check which field was actually created:");
-        demoObject.<CaffaFloatArrayField>field("floatVector").dump();
-        CaffaArrayField<Float> floatVector = demoObject.field("floatVector");
-        List<Float> values = floatVector.get();
+        CaffaField<?> floatArrayField = demoObject.field("floatVector");
+        assertNotNull(floatArrayField);
+        floatArrayField.dump();
+        CaffaFloatArrayField typedFloatArrayField = floatArrayField.cast(CaffaFloatArrayField.class, Float.class);
+        assertNotNull(typedFloatArrayField);
+        List<Float> values = typedFloatArrayField.get();
         assertTrue(!values.isEmpty());
 
         System.out.print("Printing first ten floats: ");
@@ -95,8 +106,9 @@ public class ClientFieldTest {
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check that a double field was actually created:");
-        demoObject.<CaffaField<Double>>field("doubleMember").dump();
-        CaffaField<Double> doubleField = demoObject.field("doubleMember");
+        demoObject.field("doubleMember").dump();
+        CaffaField<?> untypedDoubleField = demoObject.field("doubleMember");
+        CaffaField<Double> doubleField = untypedDoubleField.cast(Double.class);
         Double originalValue = doubleField.get();
         System.out.println("Original double value: " + originalValue);
         Double newValue = 45.3;

@@ -1,42 +1,37 @@
 package org.caffa.rpc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class CaffaObjectField extends CaffaAbstractObjectField {
-    private CaffaObject value;
-
+public class CaffaObjectField extends CaffaField<CaffaObject> {
     public CaffaObjectField(CaffaObject owner, String keyword, CaffaObject value) {
-        super(owner, keyword);
-        this.value = value;
+        super(owner, keyword, CaffaObject.class);
+        createAccessor(false);
+        this.set(value);
     }
 
     public CaffaObjectField(CaffaObject owner, String keyword) {
-        super(owner, keyword);
+        super(owner, keyword, CaffaObject.class);
+        createAccessor(true);
     }
 
-    public final ArrayList<CaffaObject> children() {
-        ArrayList<CaffaObject> onlyChild = new ArrayList<CaffaObject>();
-        onlyChild.add(this.value);
-        return onlyChild;
-    }
-
-    public void set(CaffaObject object) {
-        object.parentField = this;
-        this.value = object;
-    }
-
-    public CaffaObject get() {
-        return this.value;
-    }
-
+    @Override
     public void dump() {
         System.out.println("CaffaObjectField {");
         super.dump();
-        this.value.dump();
+        this.get().dump();
         System.out.println("}");
     }
 
-    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+    @Override
+    public final List<CaffaObject> children()
+    {
+        return Arrays.asList(this.get());
+    }
+
+    @Override
+    public CaffaField<CaffaObject> newInstance(CaffaObject owner, String keyword) {
         return new CaffaObjectField(owner, keyword);
     }
 }

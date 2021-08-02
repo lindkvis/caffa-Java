@@ -1,5 +1,6 @@
 package org.caffa.rpc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CaffaStringArrayField extends CaffaArrayField<String> {
@@ -7,12 +8,14 @@ public class CaffaStringArrayField extends CaffaArrayField<String> {
         super(owner, keyword, String.class);
     }
 
+    @Override
     public List<String> getChunk(GenericArray reply) {
-        StringArray StringArray = reply.getStrings();
-        return StringArray.getDataList();
+        StringArray stringArray = reply.getStrings();
+        return stringArray.getDataList();
     }
 
-    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
+    @Override
+    public CaffaField<ArrayList<String>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaStringArrayField(owner, keyword);
     }
 }

@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
@@ -20,23 +23,26 @@ public class CaffaObject {
     public String uuid;
 
 
-    public Map<String, CaffaAbstractField> fields;
-    public CaffaAbstractObjectField parentField = null;
+    public Map<String, CaffaField<?>> fields;
+    public CaffaField<?> parentField = null;
 
     public ManagedChannel channel;
     private final ObjectAccessBlockingStub objectStub;
 
+    protected static final Logger logger = Logger.getLogger(CaffaObject.class.getName());
+
+
     public CaffaObject(ManagedChannel channel) {
         this.channel = channel;
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
-        this.fields = new TreeMap<String, CaffaAbstractField>();
+        this.fields = new TreeMap<String, CaffaField<?>>();
     }
 
     public void dump() {
         System.out.println(this.classKeyword + " {");
         System.out.println("uuid = " + uuid);
         System.out.println("fields = [");
-        for (Map.Entry<String, CaffaAbstractField> entry : this.fields.entrySet()) {
+        for (Map.Entry<String, CaffaField<?>> entry : this.fields.entrySet()) {
             System.out.print(entry.getKey() + " = ");
             entry.getValue().dump();
         }
@@ -46,12 +52,11 @@ public class CaffaObject {
 
     public ArrayList<CaffaObject> children() {
         ArrayList<CaffaObject> allChildren = new ArrayList<CaffaObject>();
-        for (Map.Entry<String, CaffaAbstractField> entry : fields.entrySet()) {
-            CaffaAbstractField field = entry.getValue();
-            if (field.type() == CaffaObject.class) {
-                CaffaAbstractObjectField objectField = (CaffaAbstractObjectField) entry.getValue();
-                allChildren.addAll(objectField.children());
-            }
+        for (Map.Entry<String, CaffaField<?>> entry : fields.entrySet()) {
+            CaffaField<?> field = entry.getValue();
+            logger.log(Level.FINER, "Getting children from field: " + entry.getKey());
+            allChildren.addAll(field.children());
+            logger.log(Level.FINER, "Got children from field: " + entry.getKey());
         }
         return allChildren;
     }
@@ -76,17 +81,24 @@ public class CaffaObject {
         return matchingObjects;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends CaffaAbstractField> T field(String keyword) {
-        return (T) this.fields.get(keyword);
+    public CaffaField<?> field(String keyword) {
+        return this.fields.get(keyword);
     }
 
-    public List<CaffaAbstractField> fields()
+    public <T> CaffaField<T> typedField(String keyword, Class<T> type) {
+        CaffaField<?> untypedField = this.fields.get(keyword);
+        if (untypedField != null)
+        {
+            return untypedField.cast(type);
+        }
+        return null;
+    }
+
+    public List<CaffaField<?>> fields()
     {
-        ArrayList<CaffaAbstractField> allFields = new ArrayList<>();
-        for (Map.Entry<String, CaffaAbstractField> entry : fields.entrySet()) {
-            CaffaAbstractField field = entry.getValue();
-            allFields.add(field);
+        ArrayList<CaffaField<?>> allFields = new ArrayList<>();
+        for (Map.Entry<String, CaffaField<?>> entry : fields.entrySet()) {
+            allFields.add(entry.getValue());
         }
         return allFields;
     }
@@ -104,13 +116,21 @@ public class CaffaObject {
         return jsonObject;
     }
 
+    public String getAddressJson()
+    {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("classKeyword", this.classKeyword);
+        jsonObject.addProperty("uuid", this.uuid);
+        return jsonObject.toString();
+    }
+
     public ArrayList<CaffaObjectMethod> methods()
     {
         ArrayList<CaffaObjectMethod> methods = new ArrayList<CaffaObjectMethod>();
 
-        Object self = Object.newBuilder().setJson(getJson()).build();
-        ObjectList methodList = this.objectStub.listMethods(self);
-        for (Object method : methodList.getObjectsList())
+        RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
+        RpcObjectList methodList = this.objectStub.listMethods(self);
+        for (RpcObject method : methodList.getObjectsList())
         {
             CaffaObjectMethod caffaMethod = new GsonBuilder()
             .registerTypeAdapter(CaffaObjectMethod.class, new CaffaObjectMethodAdapter(this, this.channel)).create()
@@ -122,24 +142,25 @@ public class CaffaObject {
 
     public CaffaObjectMethod method(String name)
     {
+        String nameWithClass = this.classKeyword + "_" + name;
         for (CaffaObjectMethod myMethod : methods())
         {
-            if (myMethod.classKeyword == name) return myMethod;
+            if (myMethod.classKeyword == name || myMethod.classKeyword == nameWithClass) return myMethod;
         }
         return null;
     }
 
     public CaffaObject execute(CaffaObjectMethod method)
     {
-        Object self = Object.newBuilder().setJson(getJson()).build();
+        RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
         String name = method.classKeyword;
 
         String paramJson = method.getJson();
-        System.out.println("Parameter json: " + paramJson);
-        Object params = Object.newBuilder().setJson(paramJson).build();
+        logger.log(Level.FINER, "Parameter json: " + paramJson);
+        RpcObject params = RpcObject.newBuilder().setJson(paramJson).build();
 
         MethodRequest request = MethodRequest.newBuilder().setSelf(self).setMethod(name).setParams(params).build();
-        Object returnValue = this.objectStub.executeMethod(request);
+        RpcObject returnValue = this.objectStub.executeMethod(request);
         return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel)).create()
                 .fromJson(returnValue.getJson(), CaffaObject.class);

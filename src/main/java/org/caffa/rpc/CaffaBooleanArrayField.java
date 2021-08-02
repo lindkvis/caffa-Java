@@ -1,5 +1,6 @@
 package org.caffa.rpc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CaffaBooleanArrayField extends CaffaArrayField<Boolean> {
@@ -12,7 +13,8 @@ public class CaffaBooleanArrayField extends CaffaArrayField<Boolean> {
         return boolArray.getDataList();
     }
 
-    public CaffaAbstractField newInstance(CaffaObject owner, String keyword) {
-        return new CaffaIntArrayField(owner, keyword);
+    @Override
+    public CaffaField<ArrayList<Boolean>> newInstance(CaffaObject owner, String keyword) {
+        return new CaffaBooleanArrayField(owner, keyword);
     }
 }

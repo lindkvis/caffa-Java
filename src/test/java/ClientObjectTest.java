@@ -1,20 +1,30 @@
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaObjectMethod;
 import org.caffa.rpc.GrpcClientApp;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ClientObjectTest {
     private GrpcClientApp testApp;
+
+    @BeforeAll
+    public static void logSetup()
+    {
+        Logger.getGlobal().setLevel(Level.INFO);
+    }
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -74,19 +84,19 @@ public class ClientObjectTest {
 
             System.out.println("Found method!!");
             method.dump();
-            CaffaField<Double> doubleMethodArg = method.field("doubleArgument");
-            doubleMethodArg.set(99.0);
-            CaffaField<Integer> intMethodArg = method.field("intArgument");
-            intMethodArg.set(41);
-            CaffaField<String> stringMethodArg = method.field("stringArgument");
-            stringMethodArg.set("AnotherValue");
+            CaffaField<?> doubleMethodArg = method.field("doubleArgument");
+            assertDoesNotThrow(() -> doubleMethodArg.set(99.0, Double.class));
+            CaffaField<?> intMethodArg = method.field("intArgument");
+            assertDoesNotThrow(() -> intMethodArg.set(41, Integer.class));
+            CaffaField<?> stringMethodArg = method.field("stringArgument");
+            stringMethodArg.set("AnotherValue", String.class);
             assertEquals(99.0, doubleMethodArg.get());
             assertEquals(41, intMethodArg.get());
             assertEquals("AnotherValue", stringMethodArg.get());
             
             method.execute();
 
-            CaffaField<Double> doubleField = child.field("doubleMember");
+            CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
             assertEquals(99.0, doubleField.get());
             
         }
@@ -103,15 +113,15 @@ public class ClientObjectTest {
         for (CaffaObject child : children){
             CaffaObjectMethod copyObjectMethod = child.method("copyObject");
             assertNotNull(copyObjectMethod);
-            copyObjectMethod.setParam("doubleArgument", 97.0);
-            copyObjectMethod.setParam("intArgument", 43);
-            copyObjectMethod.setParam("stringArgument", "Testvalue");
+            copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
+            copyObjectMethod.setParam("intArgument", 43, Integer.class);
+            copyObjectMethod.setParam("stringArgument", "Testvalue", String.class);
             copyObjectMethod.execute();
 
-            CaffaField<Double> doubleField = child.field("doubleMember");
+            CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
             assertEquals(97.0, doubleField.get());
-            assertEquals(43, child.<CaffaField<Integer>>field("intMember").get());
-            assertEquals("TestValue", child.<CaffaField<String>>field("stringMember").get());
+            assertEquals(43, child.field("intMember").get(Integer.class));
+            assertEquals("TestValue", child.field("stringMember").get(String.class));
         }
     }
 }

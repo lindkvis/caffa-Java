@@ -1,22 +1,25 @@
 package org.caffa.rpc;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
-public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField>, JsonSerializer<CaffaAbstractField> {
+public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
     private final CaffaObject object;
     private final boolean grpc;
+    protected static final Logger logger = Logger.getLogger(CaffaFieldAdapter.class.getName());
 
     public CaffaFieldAdapter(CaffaObject object) {
         super();
@@ -32,63 +35,76 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField>, 
         this.grpc = grpc;
     }
 
-    public CaffaAbstractField createField(String keyword, String dataType, JsonElement valueElement) {
+    public CaffaField<?> createField(String keyword, String dataType, JsonElement valueElement) {
         if (dataType.equals("object")) {
+            logger.log(Level.FINER, "Creating object field " + keyword);
+            if (this.grpc) return new CaffaObjectField(this.object, keyword);
+
             CaffaObject caffaObject = new GsonBuilder()
                     .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel)).create()
                     .fromJson(valueElement, CaffaObject.class);
             return new CaffaObjectField(this.object, keyword, caffaObject);
 
         } else if (dataType.equals("object[]")) {
-            CaffaObjectArrayField caffaField = new CaffaObjectArrayField(this.object, keyword);
-            if (valueElement.isJsonArray()) {
-                for (JsonElement arrayElement : valueElement.getAsJsonArray()) {
+            logger.log(Level.FINER, "Creating object array field " + keyword);
+
+            if (!this.grpc)
+            {
+                ArrayList<CaffaObject> objectList = new ArrayList<>();
+                JsonArray objectArray = valueElement.getAsJsonArray();
+                for (int i = 0; i < objectArray.size(); ++i)
+                {
                     CaffaObject caffaObject = new GsonBuilder()
-                            .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel))
-                            .create().fromJson(arrayElement, CaffaObject.class);
-                    caffaField.add(caffaObject);
+                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel)).create()
+                    .fromJson(objectArray.get(i), CaffaObject.class);
+                    if (caffaObject != null)
+                    {
+                        objectList.add(caffaObject);
+                    }
                 }
+                return new CaffaObjectArrayField(this.object, keyword, objectList);
             }
-            return caffaField;
+            return new CaffaObjectArrayField(this.object, keyword);
         }
         if (dataType.endsWith("[]")) {
-            System.out.println("Creating array field " + keyword);
+            logger.log(Level.FINER, "Creating array field " + keyword);
             dataType = dataType.substring(0, dataType.length() - 2);
-            CaffaAbstractField field = CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
+            CaffaField<?> field = CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
             field.createAccessor(this.grpc);
             if (!this.grpc)
             {
+                logger.log(Level.FINER, "Setting local value for object " + object.classKeyword + " and []field " + keyword + " to: " + valueElement.toString());
                 field.setJson(valueElement.toString());
             }
     
             return field;
         }
-        System.out.println("Creating scalar field " + keyword);
-        CaffaAbstractField field = CaffaFieldFactory.createField(this.object, keyword, dataType);
+        logger.log(Level.FINER, "Creating scalar field " + keyword);
+        CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
         field.createAccessor(this.grpc);
         if (!this.grpc)
         {
+            logger.log(Level.FINER, "Setting local value for object " + object.classKeyword + " and field " + keyword + " to: " + valueElement.toString());
             field.setJson(valueElement.toString());
         }
         return field;
     }
 
-    public CaffaAbstractField deserialize(JsonElement json, Type type, JsonDeserializationContext context)
+    public CaffaField<?> deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
-        final JsonObject object = json.getAsJsonObject();
+        logger.log(Level.FINER, "JSON: " + json.toString());
+        final JsonObject jsonObject = json.getAsJsonObject();
 
-        String keyword = object.get("keyword").getAsString();
-        String dataType = object.get("type").getAsString();
+        String keyword = jsonObject.get("keyword").getAsString();
+        String dataType = jsonObject.get("type").getAsString();
 
-        JsonElement valueElement = object.get("value");
-        CaffaAbstractField abstractCaffaField = createField(keyword, dataType, valueElement);
-
-        return abstractCaffaField;
+        JsonElement valueElement = jsonObject.get("value");
+        return createField(keyword, dataType, valueElement);
     }
     
     @Override
-    public JsonElement serialize(CaffaAbstractField src, Type typeOfSrc, JsonSerializationContext context) {
-        System.out.println("Writing field: " + src.keyword);
+    public JsonElement serialize(CaffaField<?> src, Type typeOfSrc, JsonSerializationContext context) {
+        logger.log(Level.FINER, "Writing field: " + src.keyword);
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("keyword", src.keyword);
@@ -98,6 +114,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaAbstractField>, 
             JsonElement element = JsonParser.parseString(src.getJson());
             jsonObject.add("value", element);
         }
+        logger.log(Level.FINER, "Done writing field: " + src.keyword);
         return jsonObject;
     }
 }

@@ -4,24 +4,24 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
+import java.lang.reflect.Type;
 
-import com.google.gson.JsonArray;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import io.grpc.StatusRuntimeException;
 
-public abstract class CaffaArrayField<T> extends CaffaAbstractField {
-    private final Class<T> dataType;
+public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
+    protected GenericArray localArray = null;
+
     private FieldAccessGrpc.FieldAccessBlockingStub fieldStub = null;
-    private GenericArray localArray = null;
 
-    protected CaffaArrayField(CaffaObject owner, String keyword, Class<T> dataType) {
-        super(owner, keyword);
-        this.dataType = dataType;
-
+    protected CaffaArrayField(CaffaObject owner, String keyword, Type scalarType) {
+        super(owner, keyword, ArrayList.class, scalarType);
     }
 
+    @Override
     public void createAccessor(boolean grpc)
     {
         if (grpc)
@@ -35,19 +35,20 @@ public abstract class CaffaArrayField<T> extends CaffaAbstractField {
         }
     }
 
-    public List<T> get() {
-        logger.log(Level.INFO, "Sending get request");
+    @Override
+    public ArrayList<T> get() {
+        logger.log(Level.FINER, "Sending get request");
 
         if (this.localArray != null)
         {
-            return getChunk(this.localArray);
+            return new ArrayList<>(getChunk(this.localArray));
         }
         
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.owner.channel));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this.owner);
-        Object self = Object.newBuilder().setJson(jsonObject).build();
+        RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setMethod(this.keyword).setSelf(self).build();
 
         ArrayList<T> values = new ArrayList<>();
@@ -56,8 +57,7 @@ public abstract class CaffaArrayField<T> extends CaffaAbstractField {
             Iterator<GenericArray> replies = this.fieldStub.getArrayValue(fieldRequest);
             while (replies.hasNext()) {
                 GenericArray reply = replies.next();
-                List<T> chunk = getChunk(reply);
-                values.addAll(chunk);
+                values.addAll(getChunk(reply));
             }
 
         } catch (StatusRuntimeException e) {
@@ -80,20 +80,22 @@ public abstract class CaffaArrayField<T> extends CaffaAbstractField {
         // Not implemented        
     }
 
+    @Override
     public void dump() {
-        System.out.print("CaffaArrayField<" + dataType + ">::");
+        System.out.print("CaffaArrayField<" + this.scalarType + ">::");
         if (this.localArray != null)
         {
             System.out.print("local");
         }
         else{
             System.out.print("grpc");
-        }        
-    }
-
-    public abstract CaffaAbstractField newInstance(CaffaObject owner, String keyword);
-
-    public Class<?> type() {
-        return this.dataType;
+        }      
+        System.out.println(" {");
+        System.out.println("keyword = " + this.keyword);
+        if (this.localArray != null)
+        {
+            System.out.println("value = " + this.localArray);
+        }
+        System.out.println("}");  
     }
 }
