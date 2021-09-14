@@ -102,7 +102,7 @@ public class ClientObjectTest {
         }
     }
 
-
+    @Test
     void specificMethod() {
         CaffaObject object = testApp.document("");
         ArrayList<CaffaObjectMethod> methods = object.methods();
@@ -111,11 +111,12 @@ public class ClientObjectTest {
         ArrayList<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
         for (CaffaObject child : children){
-            CaffaObjectMethod copyObjectMethod = child.method("copyObject");
+            String methodName = new String("copyObject");
+            CaffaObjectMethod copyObjectMethod = child.method(methodName);
             assertNotNull(copyObjectMethod);
             copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
             copyObjectMethod.setParam("intArgument", 43, Integer.class);
-            copyObjectMethod.setParam("stringArgument", "Testvalue", String.class);
+            copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
             copyObjectMethod.execute();
 
             CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
