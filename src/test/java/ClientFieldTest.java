@@ -36,12 +36,13 @@ public class ClientFieldTest {
 
     @Test
     void getDocumentFileName() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = testApp.document("testDocument");
+
         assertTrue(!object.fields.isEmpty());
 
         object.dump();
 
-        String key = "DocumentFileName";
+        String key = "fileName";
         assertTrue(object.fields.containsKey(key));
         CaffaField<?> field = object.field(key);
         assertNotNull(field);
@@ -56,9 +57,10 @@ public class ClientFieldTest {
         fileNameField.set(originalValue);
         assertEquals(originalValue, fileNameField.get());
     }
+
     @Test
     void documentFields() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = testApp.document("testDocument");
         assertTrue(!object.fields.isEmpty());
 
         Boolean foundDocumentFileName = false;
@@ -66,7 +68,7 @@ public class ClientFieldTest {
             CaffaField<?> field = entry.getValue();
             assertEquals(field.keyword, entry.getKey());
             System.out.println("Found field: '" + entry.getKey() + "' (" + field.type() + ")");
-            if (field.keyword.equals("DocumentFileName")) {
+            if (field.keyword.equals("fileName")) {
                 foundDocumentFileName = true;
                 assertEquals(String.class, field.type());
             }
@@ -76,7 +78,7 @@ public class ClientFieldTest {
 
     @Test
     void floatVector() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = testApp.document("testDocument");
         System.out.println("Getting children!");
         List<CaffaObject> children = object.children();
         System.out.println("Got children!");

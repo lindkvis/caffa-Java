@@ -145,7 +145,7 @@ public class CaffaObject {
         String nameWithClass = this.classKeyword + "_" + name;
         for (CaffaObjectMethod myMethod : methods())
         {
-            if (myMethod.classKeyword == name || myMethod.classKeyword == nameWithClass) return myMethod;
+            if (myMethod.classKeyword.equals(name) || myMethod.classKeyword.equals(nameWithClass)) return myMethod;
         }
         return null;
     }

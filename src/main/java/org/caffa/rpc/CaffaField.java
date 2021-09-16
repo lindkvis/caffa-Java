@@ -57,7 +57,7 @@ public class CaffaField<T extends Object> {
         FieldRequest fieldRequest = FieldRequest.newBuilder().setMethod(this.keyword).setSelf(self).build();
 
         logger.log(Level.FINEST, "Trying to get field value for " + this.keyword);
-        GetterReply reply = this.fieldStub.getValue(fieldRequest);
+        GenericScalar reply = this.fieldStub.getValue(fieldRequest);
         logger.log(Level.FINEST, "Got field reply: " + reply.getValue());
         return reply.getValue();
     }
