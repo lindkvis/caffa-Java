@@ -20,10 +20,10 @@ public class ClientFieldTest {
     private GrpcClientApp testApp;
 
     @BeforeAll
-    public static void logSetup()
-    {
+    public static void logSetup() {
         Logger.getGlobal().setLevel(Level.INFO);
     }
+
     @BeforeEach
     public void setUp() throws Exception {
         testApp = new GrpcClientApp("localhost", 55555);
@@ -36,7 +36,7 @@ public class ClientFieldTest {
 
     @Test
     void getDocumentFileName() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = testApp.document("DemoDocument");
 
         assertTrue(!object.fields.isEmpty());
 
@@ -60,7 +60,7 @@ public class ClientFieldTest {
 
     @Test
     void documentFields() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = testApp.document("DemoDocument");
         assertTrue(!object.fields.isEmpty());
 
         Boolean foundDocumentFileName = false;
@@ -78,7 +78,7 @@ public class ClientFieldTest {
 
     @Test
     void floatVector() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = testApp.document("DemoDocument");
         System.out.println("Getting children!");
         List<CaffaObject> children = object.children();
         System.out.println("Got children!");

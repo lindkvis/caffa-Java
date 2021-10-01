@@ -20,10 +20,10 @@ public class CaffaFieldFactory {
         arrayFieldCreators = new HashMap<String, CaffaField<?>>();
 
         addCreator("bool", Boolean.class);
-        addCreator("int", Integer.class);
+        addCreator("int32", Integer.class);
         addCreator("double", Double.class);
         addCreator("float", Float.class);
-        addCreator("uint64", Long.class);
+        addCreator("int64", Long.class);
         addCreator("string", String.class);
         addCreator("object", CaffaObject.class);
     }
@@ -37,8 +37,7 @@ public class CaffaFieldFactory {
     public static CaffaField<?> createArrayField(Class<?> clazz) {
         if (clazz == Boolean.class) {
             return new CaffaBooleanArrayField(null, "");
-        }
-        else if (clazz == Integer.class) {
+        } else if (clazz == Integer.class) {
             return new CaffaIntArrayField(null, "");
         } else if (clazz == Double.class) {
             return new CaffaDoubleArrayField(null, "");
