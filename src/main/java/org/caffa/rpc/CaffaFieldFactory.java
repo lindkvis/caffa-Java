@@ -30,7 +30,7 @@ public class CaffaFieldFactory {
 
     public static <T> void addCreator(String typeName, Class<T> clazz) {
         dataTypes.put(typeName, clazz);
-        fieldCreators.put(typeName, new CaffaField<T>(null, "", clazz));
+        fieldCreators.put(typeName, new CaffaField<>(null, "", clazz));
         arrayFieldCreators.put(typeName, createArrayField(clazz));
     }
 
@@ -56,6 +56,15 @@ public class CaffaFieldFactory {
 
     public static CaffaField<?> createField(CaffaObject owner, String keyword, String dataType) {
         logger.log(Level.FINER, "Creating field of type " + dataType);
+
+        if (dataType.startsWith("uint")) {
+            CaffaField<?> unsignedField = fieldCreators.get(dataType.replace("uint", "int")).newInstance(owner,
+                    keyword);
+            unsignedField.setUnsigned(true);
+            assert unsignedField.getUnsigned();
+
+            return unsignedField;
+        }
         return fieldCreators.get(dataType).newInstance(owner, keyword);
     }
 
