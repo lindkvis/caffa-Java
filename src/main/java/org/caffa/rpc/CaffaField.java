@@ -16,6 +16,7 @@ public class CaffaField<T extends Object> {
     protected static final Logger logger = Logger.getLogger(CaffaField.class.getName());
 
     public String keyword;
+    public boolean unsigned;
 
     private FieldAccessGrpc.FieldAccessBlockingStub fieldStub = null;
     private String localValue = null;
@@ -150,5 +151,13 @@ public class CaffaField<T extends Object> {
 
     public Type type() {
         return this.dataType;
+    }
+
+    public void setUnsigned(boolean unsigned) {
+        this.unsigned = unsigned;
+    }
+
+    public boolean getUnsigned() {
+        return this.unsigned;
     }
 }
