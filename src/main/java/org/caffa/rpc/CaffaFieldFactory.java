@@ -56,20 +56,26 @@ public class CaffaFieldFactory {
 
     public static CaffaField<?> createField(CaffaObject owner, String keyword, String dataType) {
         logger.log(Level.FINER, "Creating field of type " + dataType);
+        return createFieldWithCreators(owner, keyword, dataType, fieldCreators);
+    }
+
+    public static CaffaField<?> createArrayField(CaffaObject owner, String keyword, String dataType) {
+        logger.log(Level.FINER, "Creating array field of type " + dataType);
+        return createFieldWithCreators(owner, keyword, dataType, arrayFieldCreators);
+    }
+
+    private static CaffaField<?> createFieldWithCreators(CaffaObject owner, String keyword, String dataType,
+                                                         Map<String, CaffaField<?>> creators) {
 
         if (dataType.startsWith("uint")) {
-            CaffaField<?> unsignedField = fieldCreators.get(dataType.replace("uint", "int")).newInstance(owner,
+            CaffaField<?> unsignedField = creators.get(dataType.replace("uint", "int")).newInstance(owner,
                     keyword);
             unsignedField.setUnsigned(true);
             assert unsignedField.getUnsigned();
 
             return unsignedField;
         }
-        return fieldCreators.get(dataType).newInstance(owner, keyword);
-    }
 
-    public static CaffaField<?> createArrayField(CaffaObject owner, String keyword, String dataType) {
-        CaffaField<?> creator = arrayFieldCreators.get(dataType);
-        return creator.newInstance(owner, keyword);
+        return creators.get(dataType).newInstance(owner, keyword);
     }
 }
