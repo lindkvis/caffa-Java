@@ -2,11 +2,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.caffa.rpc.CaffaBooleanArrayField;
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaFloatArrayField;
 import org.caffa.rpc.CaffaObject;
@@ -98,6 +100,28 @@ public class ClientFieldTest {
             System.out.print(values.get(i) + " ");
         }
         System.out.print("\n");
+    }
+
+    @Test
+    void boolVector() {
+        CaffaObject object = testApp.document("DemoDocument");
+        System.out.println("Getting children!");
+        List<CaffaObject> children = object.children();
+        System.out.println("Got children!");
+        assertTrue(!children.isEmpty());
+        CaffaObject demoObject = children.get(0);
+        System.out.println("Check which field was actually created:");
+        CaffaField<?> boolArrayField = demoObject.field("boolVector");
+        assertNotNull(boolArrayField);
+        boolArrayField.dump();
+        CaffaBooleanArrayField typedBoolArrayField = boolArrayField.cast(CaffaBooleanArrayField.class, Boolean.class);
+        assertNotNull(typedBoolArrayField);
+        ArrayList<Boolean> values = typedBoolArrayField.get();
+        assertEquals(4, values.size());
+        assertEquals(true, values.get(0));
+        assertEquals(false, values.get(1));
+        assertEquals(false, values.get(2));
+        assertEquals(true, values.get(3));
     }
 
     @Test
