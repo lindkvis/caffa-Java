@@ -15,6 +15,13 @@ public class CaffaFloatArrayField extends CaffaArrayField<Float> {
     }
 
     @Override
+    public GenericArray createChunk(List<Float> values) {
+        FloatArray valueArray = FloatArray.newBuilder().addAllData(values).build();
+
+        return GenericArray.newBuilder().setFloats(valueArray).build();
+    }
+
+    @Override
     public CaffaField<ArrayList<Float>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaFloatArrayField(owner, keyword);
     }
@@ -22,19 +29,16 @@ public class CaffaFloatArrayField extends CaffaArrayField<Float> {
     @Override
     public void dump() {
         System.out.print("CaffaFloatArrayField::");
-        if (this.localArray != null)
-        {
+        if (this.localArray != null) {
             System.out.print("local");
-        }
-        else{
+        } else {
             System.out.print("grpc");
-        }      
+        }
         System.out.println(" {");
         System.out.println("keyword = " + this.keyword);
-        if (this.localArray != null)
-        {
+        if (this.localArray != null) {
             System.out.println("value = " + this.localArray);
         }
-        System.out.println("}");  
+        System.out.println("}");
     }
 }

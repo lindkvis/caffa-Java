@@ -8,9 +8,16 @@ public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
         super(owner, keyword, Double.class);
     }
 
+    @Override
     public List<Double> getChunk(GenericArray reply) {
         DoubleArray doubleArray = reply.getDoubles();
         return doubleArray.getDataList();
+    }
+
+    @Override
+    public GenericArray createChunk(List<Double> values) {
+        DoubleArray valueArray = DoubleArray.newBuilder().addAllData(values).build();
+        return GenericArray.newBuilder().setDoubles(valueArray).build();
     }
 
     @Override

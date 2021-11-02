@@ -15,6 +15,12 @@ public class CaffaStringArrayField extends CaffaArrayField<String> {
     }
 
     @Override
+    public GenericArray createChunk(List<String> values) {
+        StringArray valueArray = StringArray.newBuilder().addAllData(values).build();
+        return GenericArray.newBuilder().setStrings(valueArray).build();
+    }
+
+    @Override
     public CaffaField<ArrayList<String>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaStringArrayField(owner, keyword);
     }

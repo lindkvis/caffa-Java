@@ -24,21 +24,27 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
 
         ArrayList<CaffaObject> objects = new ArrayList<>();
 
-        for (RpcObject object : objectList.getObjectsList())
-        {
+        for (RpcObject object : objectList.getObjectsList()) {
             String jsonString = object.getJson();
             System.out.println("Got child JSON: " + jsonString);
-            objects.add(new GsonBuilder()
-                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel)).create()
-                    .fromJson(jsonString, CaffaObject.class));
+            objects.add(
+                    new GsonBuilder().registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel))
+                            .create().fromJson(jsonString, CaffaObject.class));
         }
         return objects;
     }
 
+    @Override
+    public GenericArray createChunk(List<CaffaObject> values) {
+        org.caffa.rpc.RpcObjectList.Builder objectListBuilder = RpcObjectList.newBuilder();
+        for (CaffaObject caffaObject : values) {
+            objectListBuilder.addObjects(RpcObject.newBuilder().setJson(caffaObject.getJson()));
+        }
+        return GenericArray.newBuilder().setObjects(objectListBuilder).build();
+    }
 
     @Override
-    public final List<CaffaObject> children()
-    {
+    public final List<CaffaObject> children() {
         return get();
     }
 

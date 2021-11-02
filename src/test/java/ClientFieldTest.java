@@ -92,7 +92,7 @@ public class ClientFieldTest {
         floatArrayField.dump();
         CaffaFloatArrayField typedFloatArrayField = floatArrayField.cast(CaffaFloatArrayField.class, Float.class);
         assertNotNull(typedFloatArrayField);
-        List<Float> values = typedFloatArrayField.get();
+        ArrayList<Float> values = typedFloatArrayField.get();
         assertTrue(!values.isEmpty());
 
         System.out.print("Printing first ten floats: ");
@@ -100,6 +100,40 @@ public class ClientFieldTest {
             System.out.print(values.get(i) + " ");
         }
         System.out.print("\n");
+
+        {
+            int count = 10000;
+            ArrayList<Float> newValues = new ArrayList<Float>();
+            for (int i = 0; i < count; ++i) {
+                newValues.add((float) i);
+            }
+            typedFloatArrayField.set(newValues);
+
+            ArrayList<Float> readValues = typedFloatArrayField.get();
+            assertEquals(count, readValues.size());
+            for (int i = 0; i < count; ++i) {
+                assertEquals((float) i, readValues.get(i));
+            }
+        }
+
+        {
+            int count = 20;
+            ArrayList<Float> newValues = new ArrayList<Float>();
+            for (int i = 0; i < count; ++i) {
+                newValues.add((float) i);
+            }
+            typedFloatArrayField.set(newValues);
+
+            ArrayList<Float> readValues = typedFloatArrayField.get();
+            assertEquals(count, readValues.size());
+            for (int i = 0; i < count; ++i) {
+                System.out.print(readValues.get(i) + " ");
+                assertEquals((float) i, readValues.get(i));
+            }
+        }
+        // Original values
+        typedFloatArrayField.set(values);
+
     }
 
     @Test
@@ -117,11 +151,32 @@ public class ClientFieldTest {
         CaffaBooleanArrayField typedBoolArrayField = boolArrayField.cast(CaffaBooleanArrayField.class, Boolean.class);
         assertNotNull(typedBoolArrayField);
         ArrayList<Boolean> values = typedBoolArrayField.get();
+
         assertEquals(4, values.size());
         assertEquals(true, values.get(0));
         assertEquals(false, values.get(1));
         assertEquals(false, values.get(2));
         assertEquals(true, values.get(3));
+
+        {
+            ArrayList<Boolean> newValues = new ArrayList<Boolean>() {
+                {
+                    add(false);
+                    add(false);
+                    add(true);
+                }
+            };
+            typedBoolArrayField.set(newValues);
+        }
+        {
+            ArrayList<Boolean> newValues = typedBoolArrayField.get();
+            assertEquals(3, newValues.size());
+            assertEquals(false, newValues.get(0));
+            assertEquals(false, newValues.get(1));
+            assertEquals(true, newValues.get(2));
+        }
+        // Original values
+        typedBoolArrayField.set(values);
     }
 
     @Test
