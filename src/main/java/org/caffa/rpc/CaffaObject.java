@@ -159,7 +159,7 @@ public class CaffaObject {
         logger.log(Level.FINER, "Parameter json: " + paramJson);
         RpcObject params = RpcObject.newBuilder().setJson(paramJson).build();
 
-        MethodRequest request = MethodRequest.newBuilder().setSelf(self).setMethod(name).setParams(params).build();
+        MethodRequest request = MethodRequest.newBuilder().setSelfObject(self).setMethod(name).setParams(params).build();
         RpcObject returnValue = this.objectStub.executeMethod(request);
         return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel)).create()
