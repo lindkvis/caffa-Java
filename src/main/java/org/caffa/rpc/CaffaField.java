@@ -55,7 +55,7 @@ public class CaffaField<T extends Object> {
         String jsonObject = this.owner.getAddressJson();
         logger.log(Level.FINEST, "Got owner json: " + jsonObject);
         RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
-        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setSelfObject(self).build();
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
         logger.log(Level.FINEST, "Trying to get field value for " + this.keyword);
         GenericScalar reply = this.fieldStub.getValue(fieldRequest);
@@ -70,8 +70,8 @@ public class CaffaField<T extends Object> {
             this.localValue = value;
         } else {
             String jsonObject = this.owner.getAddressJson();
-            RpcObject object = RpcObject.newBuilder().setJson(jsonObject).build();
-            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setSelfObject(object).build();
+            RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
+            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)setKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
             String jsonValue = value;
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
