@@ -6,8 +6,8 @@ targetCompatibility = 11
 
 buildscript {
     repositories {
-        maven { // The google mirror is less flaky than mavenCentral()
-            url "https://maven-central.storage-download.googleapis.com/repos/central/data/" }
+        mavenCentral()
+        google()
     }
     dependencies { // ASSUMES GRADLE 2.12 OR HIGHER. Use plugin version 0.7.5 with earlier
         // gradle versions
@@ -15,21 +15,20 @@ buildscript {
 }
 
 repositories {
-    maven { // The google mirror is less flaky than mavenCentral()
-        url "https://maven-central.storage-download.googleapis.com/repos/central/data/" }
     mavenCentral()
     mavenLocal()
+    google()
 }
 
 // gRPC 1.20.0 and protobuf 3.7.1 works with the Ubuntu 20.04LTS 1.16.1 version
 // and avoids warnings that the earlier protobuf versions had with java.
-def grpcVersion = "1.20.0"
-def protobufVersion = "3.7.1"
+def grpcVersion = "1.42.1"
+def protobufVersion = "3.19.1"
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.2'
     testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
-    compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
+    compile "com.google.api.grpc:proto-google-common-protos:2.7.0"
     compile "io.grpc:grpc-alts:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"

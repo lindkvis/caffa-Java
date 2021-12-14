@@ -71,7 +71,7 @@ public class CaffaField<T extends Object> {
         } else {
             String jsonObject = this.owner.getAddressJson();
             RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
-            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)setKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
             String jsonValue = value;
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
