@@ -28,7 +28,7 @@ public class ClientObjectTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new GrpcClientApp("localhost", 55555);
+        testApp = new GrpcClientApp("localhost", 50000);
     }
 
     @AfterEach
