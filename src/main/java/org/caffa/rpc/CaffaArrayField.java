@@ -49,7 +49,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this.owner);
         RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
-        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setSelfObject(self).build();
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
         ArrayList<T> values = new ArrayList<>();
 
