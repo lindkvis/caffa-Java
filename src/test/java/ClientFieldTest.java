@@ -118,10 +118,32 @@ public class ClientFieldTest {
         intArrayField.dump();
         CaffaIntArrayField typedIntArrayField = intArrayField.cast(CaffaIntArrayField.class, Integer.class);
         assertNotNull(typedIntArrayField);
+
         ArrayList<Integer> values = typedIntArrayField.get();
         assertTrue(!values.isEmpty());
         assertEquals(1, values.size());
         assertEquals(42, values.get(0));
+
+        {
+            ArrayList<Integer> values2 = new ArrayList<Integer>();
+            values2.addAll(values);
+            values2.add(44);
+            values2.add(43);
+            values2.add(172);
+
+            typedIntArrayField.set(values2);
+
+            ArrayList<Integer> values3 = typedIntArrayField.get();
+            assertTrue(!values3.isEmpty());
+            assertEquals(4, values3.size());
+            assertEquals(42, values3.get(0));
+            assertEquals(44, values3.get(1));
+            assertEquals(43, values3.get(2));
+            assertEquals(172, values3.get(3));
+        }
+        typedIntArrayField.set(values);
+
+        
 
         System.out.print("\n");
     }
@@ -146,6 +168,21 @@ public class ClientFieldTest {
         assertEquals(false, values.get(1));
         assertEquals(false, values.get(2));
         assertEquals(true, values.get(3));
+
+        {
+            ArrayList<Boolean> values2 = new ArrayList<Boolean>();
+            values2.addAll(values);
+            values2.add(true);
+            values2.add(false);
+            values2.add(true);
+
+            typedBoolArrayField.set(values2);
+
+            ArrayList<Boolean> values3 = typedBoolArrayField.get();
+            assertEquals(values2.size(), values3.size());
+            assertEquals(values2, values3);
+        }
+        typedBoolArrayField.set(values);
     }
 
     @Test

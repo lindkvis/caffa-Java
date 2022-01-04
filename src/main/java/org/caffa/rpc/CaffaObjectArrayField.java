@@ -35,6 +35,19 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
     }
 
 
+
+    @Override
+    public GenericArray createChunk(List<CaffaObject> values)
+    {
+        RpcObjectList.Builder objectList = RpcObjectList.newBuilder();
+        for (CaffaObject object : values)
+        {
+            RpcObject rpcObject = RpcObject.newBuilder().setJson(object.getJson()).build();
+            objectList.addObjects(rpcObject);
+        }
+        return GenericArray.newBuilder().setObjects(objectList).build();
+    }
+
     @Override
     public final List<CaffaObject> children()
     {

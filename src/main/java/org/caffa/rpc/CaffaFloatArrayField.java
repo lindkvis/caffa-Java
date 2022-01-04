@@ -15,6 +15,13 @@ public class CaffaFloatArrayField extends CaffaArrayField<Float> {
     }
 
     @Override
+    public GenericArray createChunk(List<Float> values)
+    {
+        FloatArray floatValues = FloatArray.newBuilder().addAllData(values).build();
+        return GenericArray.newBuilder().setFloats(floatValues).build();
+    }
+
+    @Override
     public CaffaField<ArrayList<Float>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaFloatArrayField(owner, keyword);
     }

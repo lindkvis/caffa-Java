@@ -1,6 +1,8 @@
 package org.caffa.rpc;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -11,11 +13,16 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import io.grpc.Status;
 
 public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     protected GenericArray localArray = null;
 
-    private FieldAccessGrpc.FieldAccessBlockingStub fieldStub = null;
+    private FieldAccessGrpc.FieldAccessBlockingStub fieldBlockingStub = null;
+    private FieldAccessGrpc.FieldAccessStub fieldStub = null;
+    public static int chunkSize = 8192;
+
 
     protected CaffaArrayField(CaffaObject owner, String keyword, Type scalarType) {
         super(owner, keyword, ArrayList.class, scalarType);
@@ -27,7 +34,8 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         if (grpc)
         {
             if (this.owner != null) {
-                this.fieldStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
+                this.fieldBlockingStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
+                this.fieldStub = FieldAccessGrpc.newStub(this.owner.channel);
             }    
         }
         else{
@@ -49,7 +57,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         ArrayList<T> values = new ArrayList<>();
 
         try {
-            Iterator<GenericArray> replies = this.fieldStub.getArrayValue(fieldRequest);
+            Iterator<GenericArray> replies = this.fieldBlockingStub.getArrayValue(fieldRequest);
             while (replies.hasNext()) {
                 GenericArray reply = replies.next();
                 values.addAll(getChunk(reply));
@@ -61,7 +69,78 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         return values;
     }
 
+    @Override
+    public void set(ArrayList<T> values) {
+        logger.log(Level.FINER, "Sending get request");
+
+        if (this.localArray != null)
+        {
+            this.localArray = createChunk(values);
+            return;
+        }
+        
+        int chunkCount = values.size() / chunkSize;
+        if (values.size() % chunkSize != 0) chunkCount++;
+
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+        ArrayRequest setterRequest = ArrayRequest.newBuilder().setField(fieldRequest).setValueCount(values.size()).build();
+
+        final CountDownLatch finishLatch = new CountDownLatch(1);
+        StreamObserver<SetterArrayReply> responseObserver = new StreamObserver<SetterArrayReply>() {
+            @Override
+            public void onNext(SetterArrayReply reply) {
+                logger.log(Level.FINEST, "Sent {0} values", reply.getValueCount());
+            }
+        
+            @Override
+            public void onError(Throwable t) {
+                Status status = Status.fromThrowable(t);
+                logger.log(Level.SEVERE, "Error sending chunk: {0}", status);
+                finishLatch.countDown();
+            }
+        
+            @Override
+            public void onCompleted() {     
+                logger.log(Level.FINER, "Sent all values");        
+                finishLatch.countDown();
+  
+            }
+        };
+
+        StreamObserver<GenericArray> requestObserver = this.fieldStub.setArrayValue(responseObserver);
+        try {
+            GenericArray initMsg = GenericArray.newBuilder().setRequest(setterRequest).build();
+            requestObserver.onNext(initMsg);
+            
+            for (int i = 0; i < chunkCount; ++i)
+            {
+                int fromIndex = i * chunkSize;
+                int toIndex = Math.min(fromIndex + chunkSize, values.size());
+                List<T> subList = values.subList(fromIndex, toIndex);
+                requestObserver.onNext(createChunk(subList));
+                if (finishLatch.getCount() == 0)
+                {
+                    break;
+                }
+            }
+            requestObserver.onCompleted();
+            finishLatch.await(30, TimeUnit.SECONDS);
+    
+        }
+        catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+            requestObserver.onError(e);
+        }
+        catch(Exception e) {
+            logger.log(Level.WARNING, "Something failed: {0}", e.getMessage());
+            requestObserver.onError(e);
+        }
+    }
+
     protected abstract List<T> getChunk(GenericArray reply);
+
+    protected abstract GenericArray createChunk(List<T> reply);
+
 
     @Override
     public String getJson()
