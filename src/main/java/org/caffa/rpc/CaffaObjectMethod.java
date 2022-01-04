@@ -17,7 +17,7 @@ public class CaffaObjectMethod extends CaffaObject
         this.self = self;        
     }
 
-    public CaffaObject execute()
+    public CaffaObjectMethodResult execute()
     {
         return self.execute(this);
     }

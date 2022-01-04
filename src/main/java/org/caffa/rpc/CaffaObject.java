@@ -150,7 +150,7 @@ public class CaffaObject {
         return null;
     }
 
-    public CaffaObject execute(CaffaObjectMethod method)
+    public CaffaObjectMethodResult execute(CaffaObjectMethod method)
     {
         RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
         String name = method.classKeyword;
@@ -161,8 +161,10 @@ public class CaffaObject {
 
         MethodRequest request = MethodRequest.newBuilder().setSelfObject(self).setMethod(name).setParams(params).build();
         RpcObject returnValue = this.objectStub.executeMethod(request);
+
         return new GsonBuilder()
-                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel)).create()
-                .fromJson(returnValue.getJson(), CaffaObject.class);
+                .registerTypeAdapter(CaffaObjectMethodResult.class, new CaffaObjectMethodResultAdapter(
+                        this, this.channel)).create()
+                .fromJson(returnValue.getJson(), CaffaObjectMethodResult.class);
     }
 }
