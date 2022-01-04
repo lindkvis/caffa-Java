@@ -1,20 +1,17 @@
 package org.caffa.rpc;
 
-import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Level;
-import java.lang.reflect.Type;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
+import com.google.gson.JsonArray;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import io.grpc.Status;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     protected GenericArray localArray = null;
@@ -141,18 +138,19 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
 
     protected abstract GenericArray createChunk(List<T> reply);
 
+    public abstract JsonArray getJsonArray();
 
     @Override
-    public String getJson()
-    {
-        return "";
+    public String getJson() {
+        return getJsonArray().toString();
     }
 
     @Override
     public void setJson(String jsonValue)
     {
-        // Not implemented        
+        // Not implemented
     }
+
 
     @Override
     public void dump() {

@@ -1,6 +1,9 @@
 package org.caffa.rpc;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +37,6 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
         return objects;
     }
 
-
-
     @Override
     public GenericArray createChunk(List<CaffaObject> values)
     {
@@ -46,6 +47,20 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
             objectList.addObjects(rpcObject);
         }
         return GenericArray.newBuilder().setObjects(objectList).build();
+    }
+
+    @Override
+    public JsonArray getJsonArray() {
+        RpcObjectList objectList = localArray.getObjects();
+
+        JsonArray objects = new JsonArray();
+        for (RpcObject object : objectList.getObjectsList()) {
+            String jsonString = object.getJson();
+            JsonElement el = JsonParser.parseString(jsonString);
+            objects.add(el);
+        }
+
+        return objects;
     }
 
     @Override
