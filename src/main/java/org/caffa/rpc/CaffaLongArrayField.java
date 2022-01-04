@@ -1,5 +1,7 @@
 package org.caffa.rpc;
 
+import com.google.gson.JsonArray;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,16 @@ public class CaffaLongArrayField extends CaffaArrayField<Long> {
     {
         UInt64Array intValues = UInt64Array.newBuilder().addAllData(values).build();
         return GenericArray.newBuilder().setUint64S(intValues).build();
+    }
+
+    @Override
+    public JsonArray getJsonArray() {
+        List<Long> values = getChunk(localArray);
+        JsonArray array = new JsonArray();
+        for (Long value : values) {
+            array.add(value);
+        }
+        return array;
     }
 
     @Override

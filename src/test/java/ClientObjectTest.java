@@ -1,3 +1,5 @@
+import org.caffa.rpc.CaffaArrayField;
+import org.caffa.rpc.CaffaIntArrayField;
 import org.caffa.rpc.CaffaObjectMethodResult;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,10 +93,18 @@ public class ClientObjectTest {
             assertDoesNotThrow(() -> intMethodArg.set(41, Integer.class));
             CaffaField<?> stringMethodArg = method.field("stringArgument");
             stringMethodArg.set("AnotherValue", String.class);
+            CaffaIntArrayField intArrayMethodArg = method.field("intArrayArgument").cast(CaffaIntArrayField.class, Integer.class);
+            ArrayList<Integer> intArrayValues = new ArrayList<>();
+            intArrayValues.add(1);
+            intArrayValues.add(2);
+            intArrayValues.add(97);
+            intArrayMethodArg.set(intArrayValues);
+
             assertEquals(99.0, doubleMethodArg.get());
             assertEquals(41, intMethodArg.get());
             assertEquals("AnotherValue", stringMethodArg.get());
-            
+            assertEquals( intArrayValues, intArrayMethodArg.get());
+
             CaffaObjectMethodResult result = method.execute();
 
             boolean status = result.field("status").cast(Boolean.class).get();
@@ -102,6 +112,9 @@ public class ClientObjectTest {
 
             CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
             assertEquals(99.0, doubleField.get());
+
+            CaffaField arrayField = child.field("intVector");
+            assertEquals( intArrayValues, arrayField.get());
         }
     }
 

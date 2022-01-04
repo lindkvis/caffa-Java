@@ -1,5 +1,7 @@
 package org.caffa.rpc;
 
+import com.google.gson.JsonArray;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,16 @@ public class CaffaFloatArrayField extends CaffaArrayField<Float> {
     {
         FloatArray floatValues = FloatArray.newBuilder().addAllData(values).build();
         return GenericArray.newBuilder().setFloats(floatValues).build();
+    }
+
+    @Override
+    public JsonArray getJsonArray() {
+        List<Float> values = getChunk(localArray);
+        JsonArray array = new JsonArray();
+        for (Float value : values) {
+            array.add(value);
+        }
+        return array;
     }
 
     @Override
