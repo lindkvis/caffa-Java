@@ -1,11 +1,8 @@
 package org.caffa.rpc;
 
-import java.lang.reflect.Type;
-
-import com.google.gson.annotations.Expose;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.annotations.Expose;
 
 public class CaffaObjectMethod extends CaffaObject
 {
@@ -25,7 +22,6 @@ public class CaffaObjectMethod extends CaffaObject
     @Override
     public String getJson()
     {
-        System.out.println("Getting object method json");
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
             new CaffaObjectMethodAdapter(this.self, this.channel));
         Gson gson = builder.create();

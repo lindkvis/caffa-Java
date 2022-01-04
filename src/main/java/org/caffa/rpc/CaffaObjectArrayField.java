@@ -27,7 +27,6 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
         for (RpcObject object : objectList.getObjectsList())
         {
             String jsonString = object.getJson();
-            System.out.println("Got child JSON: " + jsonString);
             objects.add(new GsonBuilder()
                     .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel)).create()
                     .fromJson(jsonString, CaffaObject.class));
