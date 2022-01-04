@@ -14,6 +14,13 @@ public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
     }
 
     @Override
+    public GenericArray createChunk(List<Double> values)
+    {
+        DoubleArray doubleValues = DoubleArray.newBuilder().addAllData(values).build();
+        return GenericArray.newBuilder().setDoubles(doubleValues).build();
+    }
+
+    @Override
     public CaffaField<ArrayList<Double>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaDoubleArrayField(owner, keyword);
     }
