@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import org.caffa.rpc.CaffaBooleanArrayField;
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaFloatArrayField;
+import org.caffa.rpc.CaffaIntArrayField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.GrpcClientApp;
 import org.junit.jupiter.api.AfterEach;
@@ -99,6 +100,29 @@ public class ClientFieldTest {
         for (int i = 0; i < 10; ++i) {
             System.out.print(values.get(i) + " ");
         }
+        System.out.print("\n");
+    }
+
+
+    @Test
+    void intVector() {
+        CaffaObject object = testApp.document("DemoDocument");
+        System.out.println("Getting children!");
+        List<CaffaObject> children = object.children();
+        System.out.println("Got children!");
+        assertTrue(!children.isEmpty());
+        CaffaObject demoObject = children.get(0);
+        System.out.println("Check which field was actually created:");
+        CaffaField<?> intArrayField = demoObject.field("intVector");
+        assertNotNull(intArrayField);
+        intArrayField.dump();
+        CaffaIntArrayField typedIntArrayField = intArrayField.cast(CaffaIntArrayField.class, Integer.class);
+        assertNotNull(typedIntArrayField);
+        ArrayList<Integer> values = typedIntArrayField.get();
+        assertTrue(!values.isEmpty());
+        assertEquals(1, values.size());
+        assertEquals(42, values.get(0));
+
         System.out.print("\n");
     }
 
