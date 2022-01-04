@@ -1,3 +1,4 @@
+import org.caffa.rpc.CaffaObjectMethodResult;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -94,11 +95,13 @@ public class ClientObjectTest {
             assertEquals(41, intMethodArg.get());
             assertEquals("AnotherValue", stringMethodArg.get());
             
-            method.execute();
+            CaffaObjectMethodResult result = method.execute();
+
+            boolean status = result.field("status").cast(Boolean.class).get();
+            assertTrue(status);
 
             CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
             assertEquals(99.0, doubleField.get());
-            
         }
     }
 
