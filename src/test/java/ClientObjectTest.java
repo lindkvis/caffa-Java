@@ -24,8 +24,7 @@ public class ClientObjectTest {
     private GrpcClientApp testApp;
 
     @BeforeAll
-    public static void logSetup()
-    {
+    public static void logSetup() {
         Logger.getGlobal().setLevel(Level.INFO);
     }
 
@@ -79,7 +78,7 @@ public class ClientObjectTest {
 
         ArrayList<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
-        for (CaffaObject child : children){
+        for (CaffaObject child : children) {
             System.out.println("Found child of class: " + child.classKeyword + " ... checking methods!");
             ArrayList<CaffaObjectMethod> childMethods = child.methods();
             assertEquals(1, childMethods.size());
@@ -93,7 +92,8 @@ public class ClientObjectTest {
             assertDoesNotThrow(() -> intMethodArg.set(41, Integer.class));
             CaffaField<?> stringMethodArg = method.field("stringArgument");
             stringMethodArg.set("AnotherValue", String.class);
-            CaffaIntArrayField intArrayMethodArg = method.field("intArrayArgument").cast(CaffaIntArrayField.class, Integer.class);
+            CaffaIntArrayField intArrayMethodArg = method.field("intArrayArgument").cast(CaffaIntArrayField.class,
+                    Integer.class);
             ArrayList<Integer> intArrayValues = new ArrayList<>();
             intArrayValues.add(1);
             intArrayValues.add(2);
@@ -103,18 +103,18 @@ public class ClientObjectTest {
             assertEquals(99.0, doubleMethodArg.get());
             assertEquals(41, intMethodArg.get());
             assertEquals("AnotherValue", stringMethodArg.get());
-            assertEquals( intArrayValues, intArrayMethodArg.get());
+            assertEquals(intArrayValues, intArrayMethodArg.get());
 
             CaffaObjectMethodResult result = method.execute();
 
             boolean status = result.field("status").cast(Boolean.class).get();
             assertTrue(status);
 
-            CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
+            CaffaField<Double> doubleField = child.typedField("doubleField", Double.class);
             assertEquals(99.0, doubleField.get());
 
-            CaffaField arrayField = child.field("intVector");
-            assertEquals( intArrayValues, arrayField.get());
+            CaffaField arrayField = child.field("proxyIntVector");
+            assertEquals(intArrayValues, arrayField.get());
         }
     }
 
@@ -126,7 +126,7 @@ public class ClientObjectTest {
 
         ArrayList<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
-        for (CaffaObject child : children){
+        for (CaffaObject child : children) {
             String methodName = new String("copyObject");
             CaffaObjectMethod copyObjectMethod = child.method(methodName);
             assertNotNull(copyObjectMethod);
@@ -135,10 +135,10 @@ public class ClientObjectTest {
             copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
             copyObjectMethod.execute();
 
-            CaffaField<Double> doubleField = child.typedField("doubleMember", Double.class);
+            CaffaField<Double> doubleField = child.typedField("doubleField", Double.class);
             assertEquals(97.0, doubleField.get());
-            assertEquals(43, child.field("intMember").get(Integer.class));
-            assertEquals("TestValue", child.field("stringMember").get(String.class));
+            assertEquals(43, child.field("intField").get(Integer.class));
+            assertEquals("TestValue", child.field("stringField").get(String.class));
         }
     }
 }

@@ -93,14 +93,16 @@ public class ClientFieldTest {
         floatArrayField.dump();
         CaffaFloatArrayField typedFloatArrayField = floatArrayField.cast(CaffaFloatArrayField.class, Float.class);
         assertNotNull(typedFloatArrayField);
+
+        {
+            ArrayList<Float> values2 = new ArrayList<Float>();
+            values2.add(41.4f);
+            values2.add(42.0f);
+            values2.add(-23.0f);
+            typedFloatArrayField.set(values2);
+        }
         List<Float> values = typedFloatArrayField.get();
         assertTrue(!values.isEmpty());
-
-        System.out.print("Printing first ten floats: ");
-        for (int i = 0; i < 10; ++i) {
-            System.out.print(values.get(i) + " ");
-        }
-        System.out.print("\n");
     }
 
     @Test
@@ -112,7 +114,7 @@ public class ClientFieldTest {
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check which field was actually created:");
-        CaffaField<?> intArrayField = demoObject.field("intVector");
+        CaffaField<?> intArrayField = demoObject.field("proxyIntVector");
         assertNotNull(intArrayField);
         intArrayField.dump();
         CaffaIntArrayField typedIntArrayField = intArrayField.cast(CaffaIntArrayField.class, Integer.class);
@@ -177,8 +179,8 @@ public class ClientFieldTest {
         assertTrue(!children.isEmpty());
         CaffaObject demoObject = children.get(0);
         System.out.println("Check that a double field was actually created:");
-        demoObject.field("doubleMember").dump();
-        CaffaField<?> untypedDoubleField = demoObject.field("doubleMember");
+        demoObject.field("doubleField").dump();
+        CaffaField<?> untypedDoubleField = demoObject.field("doubleField");
         CaffaField<Double> doubleField = untypedDoubleField.cast(Double.class);
         Double originalValue = doubleField.get();
         System.out.println("Original double value: " + originalValue);

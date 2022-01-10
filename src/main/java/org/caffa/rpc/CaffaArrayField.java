@@ -20,22 +20,18 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     private FieldAccessGrpc.FieldAccessStub fieldStub = null;
     public static int chunkSize = 8192;
 
-
     protected CaffaArrayField(CaffaObject owner, String keyword, Type scalarType) {
         super(owner, keyword, ArrayList.class, scalarType);
     }
 
     @Override
-    public void createAccessor(boolean grpc)
-    {
-        if (grpc)
-        {
+    public void createAccessor(boolean grpc) {
+        if (grpc) {
             if (this.owner != null) {
                 this.fieldBlockingStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
                 this.fieldStub = FieldAccessGrpc.newStub(this.owner.channel);
-            }    
-        }
-        else{
+            }
+        } else {
             localArray = GenericArray.getDefaultInstance();
         }
     }
@@ -44,12 +40,12 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     public ArrayList<T> get() {
         logger.log(Level.FINER, "Sending get request");
 
-        if (this.localArray != null)
-        {
+        if (this.localArray != null) {
             return new ArrayList<>(getChunk(this.localArray));
         }
-        
-        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
         ArrayList<T> values = new ArrayList<>();
 
@@ -70,17 +66,22 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     public void set(ArrayList<T> values) {
         logger.log(Level.FINER, "Sending get request");
 
-        if (this.localArray != null)
-        {
+        if (this.localArray != null) {
             this.localArray = createChunk(values);
             return;
         }
-        
-        int chunkCount = values.size() / chunkSize;
-        if (values.size() % chunkSize != 0) chunkCount++;
 
-        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
-        ArrayRequest setterRequest = ArrayRequest.newBuilder().setField(fieldRequest).setValueCount(values.size()).build();
+        int chunkCount = values.size() / chunkSize;
+        if (values.size() % chunkSize != 0)
+            chunkCount++;
+
+        logger.log(Level.INFO, "Attempting to send {0} values in {1} chunks",
+                new Object[] { values.size(), chunkCount });
+
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+        ArrayRequest setterRequest = ArrayRequest.newBuilder().setField(fieldRequest).setValueCount(values.size())
+                .build();
 
         final CountDownLatch finishLatch = new CountDownLatch(1);
         StreamObserver<SetterArrayReply> responseObserver = new StreamObserver<SetterArrayReply>() {
@@ -88,19 +89,19 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
             public void onNext(SetterArrayReply reply) {
                 logger.log(Level.FINEST, "Sent {0} values", reply.getValueCount());
             }
-        
+
             @Override
             public void onError(Throwable t) {
                 Status status = Status.fromThrowable(t);
                 logger.log(Level.SEVERE, "Error sending chunk: {0}", status);
                 finishLatch.countDown();
             }
-        
+
             @Override
-            public void onCompleted() {     
-                logger.log(Level.FINER, "Sent all values");        
+            public void onCompleted() {
+                logger.log(Level.FINER, "Sent all values");
                 finishLatch.countDown();
-  
+
             }
         };
 
@@ -108,27 +109,23 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         try {
             GenericArray initMsg = GenericArray.newBuilder().setRequest(setterRequest).build();
             requestObserver.onNext(initMsg);
-            
-            for (int i = 0; i < chunkCount; ++i)
-            {
+
+            for (int i = 0; i < chunkCount; ++i) {
                 int fromIndex = i * chunkSize;
                 int toIndex = Math.min(fromIndex + chunkSize, values.size());
                 List<T> subList = values.subList(fromIndex, toIndex);
                 requestObserver.onNext(createChunk(subList));
-                if (finishLatch.getCount() == 0)
-                {
+                if (finishLatch.getCount() == 0) {
                     break;
                 }
             }
             requestObserver.onCompleted();
             finishLatch.await(30, TimeUnit.SECONDS);
-    
-        }
-        catch (StatusRuntimeException e) {
+
+        } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
             requestObserver.onError(e);
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             logger.log(Level.WARNING, "Something failed: {0}", e.getMessage());
             requestObserver.onError(e);
         }
@@ -146,28 +143,23 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     }
 
     @Override
-    public void setJson(String jsonValue)
-    {
+    public void setJson(String jsonValue) {
         // Not implemented
     }
-
 
     @Override
     public void dump() {
         System.out.print("CaffaArrayField<" + this.scalarType + ">::");
-        if (this.localArray != null)
-        {
+        if (this.localArray != null) {
             System.out.print("local");
-        }
-        else{
+        } else {
             System.out.print("grpc");
-        }      
+        }
         System.out.println(" {");
         System.out.println("keyword = " + this.keyword);
-        if (this.localArray != null)
-        {
+        if (this.localArray != null) {
             System.out.println("value = " + this.localArray);
         }
-        System.out.println("}");  
+        System.out.println("}");
     }
 }
