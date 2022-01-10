@@ -39,7 +39,7 @@ public class ClientFieldTest {
 
     @Test
     void getDocumentFileName() {
-        CaffaObject object = testApp.document("DemoDocument");
+        CaffaObject object = testApp.document("testDocument");
 
         assertTrue(!object.fields.isEmpty());
 
@@ -63,7 +63,7 @@ public class ClientFieldTest {
 
     @Test
     void documentFields() {
-        CaffaObject object = testApp.document("DemoDocument");
+        CaffaObject object = testApp.document("testDocument");
         assertTrue(!object.fields.isEmpty());
 
         Boolean foundDocumentFileName = false;
@@ -81,7 +81,7 @@ public class ClientFieldTest {
 
     @Test
     void floatVector() {
-        CaffaObject object = testApp.document("DemoDocument");
+        CaffaObject object = testApp.document("testDocument");
         System.out.println("Getting children!");
         List<CaffaObject> children = object.children();
         System.out.println("Got children!");
@@ -103,10 +103,9 @@ public class ClientFieldTest {
         System.out.print("\n");
     }
 
-
     @Test
     void intVector() {
-        CaffaObject object = testApp.document("DemoDocument");
+        CaffaObject object = testApp.document("testDocument");
         System.out.println("Getting children!");
         List<CaffaObject> children = object.children();
         System.out.println("Got children!");
@@ -140,7 +139,7 @@ public class ClientFieldTest {
 
     @Test
     void boolVector() {
-        CaffaObject object = testApp.document("DemoDocument");
+        CaffaObject object = testApp.document("testDocument");
         System.out.println("Getting children!");
         List<CaffaObject> children = object.children();
         System.out.println("Got children!");
