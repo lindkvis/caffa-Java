@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -133,12 +134,63 @@ public class ClientObjectTest {
             copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
             copyObjectMethod.setParam("intArgument", 43, Integer.class);
             copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
-            copyObjectMethod.execute();
+            CaffaObjectMethodResult result = copyObjectMethod.execute();
+
+            CaffaField<Boolean> status = result.typedField("status", Boolean.class);
+            assertTrue(status.get());
 
             CaffaField<Double> doubleField = child.typedField("doubleField", Double.class);
             assertEquals(97.0, doubleField.get());
             assertEquals(43, child.field("intField").get(Integer.class));
             assertEquals("TestValue", child.field("stringField").get(String.class));
+        }
+    }
+
+    @Test
+    void nonExistentMethod() {
+        CaffaObject object = testApp.document("");
+        ArrayList<CaffaObjectMethod> methods = object.methods();
+        assertTrue(methods.isEmpty());
+
+        ArrayList<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+        for (CaffaObject child : children) {
+            String methodName = new String("copyObject");
+            CaffaObjectMethod copyObjectMethod = child.method(methodName);
+            assertNotNull(copyObjectMethod);
+            // Manipulate class keyword
+            copyObjectMethod.classKeyword = "rubbish";
+            copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
+            copyObjectMethod.setParam("intArgument", 43, Integer.class);
+            copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
+            CaffaObjectMethodResult result = copyObjectMethod.execute();
+
+            assertNull(result);
+        }
+    }
+
+    @Test
+    void methodWithNonExistentSelf() {
+        CaffaObject object = testApp.document("");
+        ArrayList<CaffaObjectMethod> methods = object.methods();
+        assertTrue(methods.isEmpty());
+
+        ArrayList<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+
+        for (CaffaObject child : children) {
+            String methodName = new String("copyObject");
+            CaffaObjectMethod copyObjectMethod = child.method(methodName);
+
+            // Manipulate child's uuid
+            child.uuid = "rubbish";
+            assertNotNull(copyObjectMethod);
+            copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
+            copyObjectMethod.setParam("intArgument", 43, Integer.class);
+            copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
+            CaffaObjectMethodResult result = copyObjectMethod.execute();
+
+            assertNull(result);
         }
     }
 }

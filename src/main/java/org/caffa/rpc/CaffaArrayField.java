@@ -3,6 +3,7 @@ package org.caffa.rpc;
 import com.google.gson.JsonArray;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.Status.Code;
 import io.grpc.stub.StreamObserver;
 
 import java.lang.reflect.Type;
@@ -93,7 +94,11 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
             @Override
             public void onError(Throwable t) {
                 Status status = Status.fromThrowable(t);
-                logger.log(Level.SEVERE, "Error sending chunk: {0}", status);
+                if (status.getCode() != Code.OUT_OF_RANGE) {
+                    logger.log(Level.SEVERE, "Error sending chunk: {0}", status);
+                } else {
+                    logger.log(Level.FINER, "Sent all values");
+                }
                 finishLatch.countDown();
             }
 
