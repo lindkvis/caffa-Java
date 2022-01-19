@@ -48,19 +48,19 @@ public class CaffaField<T extends Object> {
 
     public String getJson() {
         if (localValue != null) {
-            logger.log(Level.FINEST, "Local value: " + this.localValue);
+            logger.log(Level.FINER, "Local value: " + this.localValue);
             return this.localValue;
         }
 
         String jsonObject = this.owner.getAddressJson();
-        logger.log(Level.INFO, "Got owner json: " + jsonObject);
+        logger.log(Level.FINEST, "Got owner json: " + jsonObject);
         RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
         
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
-        logger.log(Level.INFO, "Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
+        logger.log(Level.FINEST, "Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
         GenericScalar reply = this.fieldStub.getValue(fieldRequest);
-        logger.log(Level.FINEST, "Got field reply: " + reply.getValue());
+        logger.log(Level.FINER, "Got field reply: " + reply.getValue());
         return reply.getValue();
     }
 
