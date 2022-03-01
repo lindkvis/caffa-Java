@@ -6,3 +6,4 @@ build
 .vscode
 bin/
 caffa-Java.code-workspace
+dist/
