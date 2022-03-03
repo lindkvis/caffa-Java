@@ -103,11 +103,15 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
 
     @Override
     public JsonElement serialize(CaffaField<?> src, Type typeOfSrc, JsonSerializationContext context) {
-        logger.log(Level.FINER, "Writing field: " + src.keyword);
-
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("keyword", src.keyword);
-        jsonObject.addProperty("type", CaffaFieldFactory.dataTypes.inverse().get(src.type()));
+
+        String type = CaffaFieldFactory.dataTypes.inverse().get(src.scalarType);
+        if (src.isArray()) {
+            type += "[]";
+        }
+        System.out.println("Writing field: " + src.keyword + " with type: '" + type + "'");
+
+        jsonObject.addProperty("type", type);
         if (!this.grpc) {
             JsonElement element = JsonParser.parseString(src.getJson());
             jsonObject.add("value", element);

@@ -55,8 +55,9 @@ public class CaffaField<T extends Object> {
         String jsonObject = this.owner.getAddressJson();
         logger.log(Level.FINEST, "Got owner json: " + jsonObject);
         RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
-        
-        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
         logger.log(Level.FINEST, "Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
         GenericScalar reply = this.fieldStub.getValue(fieldRequest);
@@ -72,7 +73,8 @@ public class CaffaField<T extends Object> {
         } else {
             String jsonObject = this.owner.getAddressJson();
             RpcObject self = RpcObject.newBuilder().setJson(jsonObject).build();
-            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword).setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
+                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
             String jsonValue = value;
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
@@ -154,6 +156,10 @@ public class CaffaField<T extends Object> {
         return this.dataType;
     }
 
+    public boolean isArray() {
+        return this.dataType == ArrayList.class;
+    }
+
     public void setUnsigned(boolean unsigned) {
         this.unsigned = unsigned;
     }
@@ -161,4 +167,5 @@ public class CaffaField<T extends Object> {
     public boolean getUnsigned() {
         return this.unsigned;
     }
+
 }
