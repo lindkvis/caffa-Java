@@ -91,7 +91,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
 
     public CaffaField<?> deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
-        System.out.println("JSON: " + json.toString());
+        logger.log(Level.FINER, "JSON: " + json.toString());
         final JsonObject jsonObject = json.getAsJsonObject();
 
         String keyword = jsonObject.get("keyword").getAsString();
