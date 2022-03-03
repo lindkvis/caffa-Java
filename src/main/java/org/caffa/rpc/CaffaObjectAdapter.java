@@ -32,7 +32,6 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
         final JsonObject object = json.getAsJsonObject();
 
-        System.out.println("Deserializing " + json.toString());
         CaffaObject caffaObject = new CaffaObject(this.channel);
 
         Gson gson = new GsonBuilder().registerTypeAdapter(CaffaField.class, new CaffaFieldAdapter(caffaObject, true))
@@ -55,7 +54,6 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             if (!key.equals("Class") && !key.equals("UUID")) {
                 JsonObject jsonElement = object.get(key).getAsJsonObject();
                 jsonElement.addProperty("keyword", key);
-                System.out.println("Found field " + key + " -> " + jsonElement.toString());
                 CaffaField<?> field = gson.fromJson(jsonElement, CaffaField.class);
                 caffaObject.fields.put(field.keyword, field);
             }
