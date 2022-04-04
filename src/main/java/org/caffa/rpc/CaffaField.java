@@ -83,7 +83,7 @@ public class CaffaField<T extends Object> {
     }
 
     public T get() {
-        logger.log(Level.FINEST, "Getting JSON for field " + this.keyword);
+        logger.log(Level.INFO, "Getting JSON for field " + this.keyword);
         String json = getJson();
         logger.log(Level.FINEST, "Got JSON: " + json);
         return new GsonBuilder().registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel))

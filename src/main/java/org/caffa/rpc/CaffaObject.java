@@ -83,6 +83,10 @@ public class CaffaObject {
     }
 
     public CaffaField<?> field(String keyword) {
+        if (!this.fields.containsKey(keyword)) {
+            logger.log(Level.WARNING, "Field does not exist: " + keyword);
+            return null;
+        }
         return this.fields.get(keyword);
     }
 
@@ -90,8 +94,10 @@ public class CaffaObject {
         CaffaField<?> untypedField = this.fields.get(keyword);
         if (untypedField != null) {
             return untypedField.cast(type);
+        } else {
+            logger.log(Level.WARNING, "Field '" + keyword + "' of type " + type.getName() + " does not exist");
+            return null;
         }
-        return null;
     }
 
     public List<CaffaField<?>> fields() {
