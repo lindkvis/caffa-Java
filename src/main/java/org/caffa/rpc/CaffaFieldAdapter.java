@@ -109,7 +109,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         if (src.isArray()) {
             type += "[]";
         }
-        System.out.println("Writing field: " + src.keyword + " with type: '" + type + "'");
+        logger.log(Level.FINER, "Writing field: " + src.keyword + " with type: '" + type + "'");
 
         jsonObject.addProperty("type", type);
         if (!this.grpc) {
