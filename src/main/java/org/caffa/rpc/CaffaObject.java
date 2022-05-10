@@ -51,10 +51,9 @@ public class CaffaObject {
 
     public ArrayList<CaffaObject> children() {
         ArrayList<CaffaObject> allChildren = new ArrayList<CaffaObject>();
-        System.out.println("Fields size: " + fields.size());
+        logger.log(Level.FINER, "Fields size: " + fields.size());
         for (Map.Entry<String, CaffaField<?>> entry : fields.entrySet()) {
             CaffaField<?> field = entry.getValue();
-            System.out.println(field.keyword);
             logger.log(Level.FINER, "Getting children from field: " + entry.getKey());
             allChildren.addAll(field.children());
             logger.log(Level.FINER, "Got children from field: " + entry.getKey());
