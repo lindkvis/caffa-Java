@@ -25,7 +25,7 @@ public class CaffaObjectMethod extends CaffaObject {
         return gson.toJson(this);
     }
 
-    public <T> void setParam(String keyword, T value, Class<T> type) {
+    public <T> void setParam(String keyword, T value, Class<T> type) throws Exception {
         CaffaField<?> field = this.field(keyword);
         assert field != null;
         if (field != null) {

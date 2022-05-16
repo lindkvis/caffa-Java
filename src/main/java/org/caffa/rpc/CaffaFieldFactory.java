@@ -26,6 +26,9 @@ public class CaffaFieldFactory {
         addCreator("int64", Long.class);
         addCreator("string", String.class);
         addCreator("object", CaffaObject.class);
+
+        dataTypes.put("AppEnum", CaffaAppEnum.class);
+        fieldCreators.put("AppEnum", new CaffaAppEnumField(null, ""));
     }
 
     public static <T> void addCreator(String typeName, Class<T> clazz) {
@@ -65,7 +68,7 @@ public class CaffaFieldFactory {
     }
 
     private static CaffaField<?> createFieldWithCreators(CaffaObject owner, String keyword, String dataType,
-                                                         Map<String, CaffaField<?>> creators) {
+            Map<String, CaffaField<?>> creators) {
 
         if (dataType.startsWith("uint")) {
             CaffaField<?> unsignedField = creators.get(dataType.replace("uint", "int")).newInstance(owner,
@@ -75,7 +78,23 @@ public class CaffaFieldFactory {
 
             return unsignedField;
         }
+        if (dataType.startsWith("AppEnum")) {
+            CaffaAppEnumField appEnumField = (CaffaAppEnumField) creators.get("AppEnum").newInstance(owner, keyword);
 
-        return creators.get(dataType).newInstance(owner, keyword);
+            String validValuesString = dataType.substring(8, dataType.length() - 1);
+            String[] values = validValuesString.split(",");
+            for (String value : values) {
+                appEnumField.addValidValue(value);
+            }
+
+            return appEnumField;
+        }
+
+        CaffaField<?> creator = creators.get(dataType);
+        if (creator == null) {
+            logger.log(Level.SEVERE, "Could not find creator for dataType: " + dataType);
+            return null;
+        }
+        return creator.newInstance(owner, keyword);
     }
 }

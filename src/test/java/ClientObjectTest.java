@@ -92,7 +92,7 @@ public class ClientObjectTest {
             CaffaField<?> intMethodArg = method.field("intArgument");
             assertDoesNotThrow(() -> intMethodArg.set(41, Integer.class));
             CaffaField<?> stringMethodArg = method.field("stringArgument");
-            stringMethodArg.set("AnotherValue", String.class);
+            assertDoesNotThrow(() -> stringMethodArg.set("AnotherValue", String.class));
             CaffaIntArrayField intArrayMethodArg = method.field("intArrayArgument").cast(CaffaIntArrayField.class,
                     Integer.class);
             ArrayList<Integer> intArrayValues = new ArrayList<>();
@@ -131,9 +131,9 @@ public class ClientObjectTest {
             String methodName = new String("copyObject");
             CaffaObjectMethod copyObjectMethod = child.method(methodName);
             assertNotNull(copyObjectMethod);
-            copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
-            copyObjectMethod.setParam("intArgument", 43, Integer.class);
-            copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleArgument", 97.0, Double.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("intArgument", 43, Integer.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument", "TestValue", String.class));
             CaffaObjectMethodResult result = copyObjectMethod.execute();
 
             CaffaField<Boolean> status = result.typedField("status", Boolean.class);
@@ -160,9 +160,9 @@ public class ClientObjectTest {
             assertNotNull(copyObjectMethod);
             // Manipulate class keyword
             copyObjectMethod.classKeyword = "rubbish";
-            copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
-            copyObjectMethod.setParam("intArgument", 43, Integer.class);
-            copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleArgument", 97.0, Double.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("intArgument", 43, Integer.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument", "TestValue", String.class));
             CaffaObjectMethodResult result = copyObjectMethod.execute();
 
             assertNull(result);
@@ -185,9 +185,9 @@ public class ClientObjectTest {
             // Manipulate child's uuid
             child.uuid = "rubbish";
             assertNotNull(copyObjectMethod);
-            copyObjectMethod.setParam("doubleArgument", 97.0, Double.class);
-            copyObjectMethod.setParam("intArgument", 43, Integer.class);
-            copyObjectMethod.setParam("stringArgument", "TestValue", String.class);
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleArgument", 97.0, Double.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("intArgument", 43, Integer.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument", "TestValue", String.class));
             CaffaObjectMethodResult result = copyObjectMethod.execute();
 
             assertNull(result);

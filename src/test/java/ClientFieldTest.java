@@ -1,13 +1,18 @@
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.caffa.rpc.CaffaAppEnum;
+import org.caffa.rpc.CaffaAppEnumField;
 import org.caffa.rpc.CaffaBooleanArrayField;
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaFloatArrayField;
@@ -54,10 +59,10 @@ public class ClientFieldTest {
         CaffaField<String> fileNameField = field.cast(String.class);
         String originalValue = fileNameField.get();
         assertEquals("dummyFileName", originalValue);
-        fileNameField.set("TestValue");
+        assertDoesNotThrow(() -> fileNameField.set("TestValue"));
         String value = fileNameField.get();
         assertEquals("TestValue", value);
-        fileNameField.set(originalValue);
+        assertDoesNotThrow(() -> fileNameField.set(originalValue));
         assertEquals(originalValue, fileNameField.get());
     }
 
@@ -185,13 +190,36 @@ public class ClientFieldTest {
         Double originalValue = doubleField.get();
         System.out.println("Original double value: " + originalValue);
         Double newValue = 45.3;
-        doubleField.set(newValue);
+        assertDoesNotThrow(() -> doubleField.set(newValue));
         System.out.println("Setting double value: " + newValue);
 
         assertEquals(newValue, doubleField.get());
         System.out.println("Confirmed values match!");
 
-        doubleField.set(originalValue);
+        assertDoesNotThrow(() -> doubleField.set(originalValue));
         assertEquals(originalValue, doubleField.get());
+
+    }
+
+    @Test
+    void appEnumMember() {
+        CaffaObject object = testApp.document("");
+
+        List<CaffaObject> children = object.children();
+        assertTrue(!children.isEmpty());
+        CaffaObject demoObject = children.get(0);
+        demoObject.field("enumField").dump();
+        CaffaField<?> untypedEnumField = demoObject.field("enumField");
+        CaffaAppEnumField enumField = untypedEnumField.cast(CaffaAppEnumField.class, CaffaAppEnum.class);
+        CaffaAppEnum originalValue = enumField.get();
+
+        assertDoesNotThrow(() -> enumField.set("T3"));
+
+        assertEquals("T3", enumField.get().value());
+
+        assertThrows(IllegalArgumentException.class, () -> enumField.set("T4"));
+
+        assertDoesNotThrow(() -> enumField.set(originalValue));
+        assertEquals(originalValue.value(), enumField.get().value());
     }
 }

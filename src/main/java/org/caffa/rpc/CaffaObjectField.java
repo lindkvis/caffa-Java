@@ -1,14 +1,22 @@
 package org.caffa.rpc;
 
-import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Arrays;
 import java.util.List;
 
 public class CaffaObjectField extends CaffaField<CaffaObject> {
+    protected static final Logger logger = Logger.getLogger(CaffaObjectField.class.getName());
+
     public CaffaObjectField(CaffaObject owner, String keyword, CaffaObject value) {
         super(owner, keyword, CaffaObject.class);
         createAccessor(false);
-        this.set(value);
+        try {
+            this.set(value);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage());
+        }
+
     }
 
     public CaffaObjectField(CaffaObject owner, String keyword) {
@@ -25,8 +33,7 @@ public class CaffaObjectField extends CaffaField<CaffaObject> {
     }
 
     @Override
-    public final List<CaffaObject> children()
-    {
+    public final List<CaffaObject> children() {
         return Arrays.asList(this.get());
     }
 
