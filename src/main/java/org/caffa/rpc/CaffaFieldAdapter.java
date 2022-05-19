@@ -108,7 +108,6 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         String type = src.typeString();
 
         logger.log(Level.FINER, "Writing field: " + src.keyword + " with type: '" + type + "'");
-        System.out.println("Writing field " + src.keyword + " with grpc: " + grpc + " and type: '" + type + "'");
 
         jsonObject.addProperty("type", type);
         if (!this.grpc) {
