@@ -12,15 +12,34 @@ public class CaffaIntArrayField extends CaffaArrayField<Integer> {
 
     @Override
     public List<Integer> getChunk(GenericArray reply) {
-        IntArray integerArray = reply.getInts();
-        return integerArray.getDataList();
+        if (this.getUnsigned())
+        {
+            UIntArray integerArray = reply.getUints();
+            return integerArray.getDataList();
+    
+        }
+        else
+        {
+            IntArray integerArray = reply.getInts();
+            return integerArray.getDataList();
+        }
     }
 
     @Override
     public GenericArray createChunk(List<Integer> values)
     {
-        IntArray intValues = IntArray.newBuilder().addAllData(values).build();
-        return GenericArray.newBuilder().setInts(intValues).build();
+        
+        if (this.getUnsigned())
+        {
+            UIntArray uintValues = UIntArray.newBuilder().addAllData(values).build();
+            return GenericArray.newBuilder().setUints(uintValues).build();
+        }
+        else
+        {
+            IntArray intValues = IntArray.newBuilder().addAllData(values).build();
+            return GenericArray.newBuilder().setInts(intValues).build();
+        }
+        
     }
 
     @Override
