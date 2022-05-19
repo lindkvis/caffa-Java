@@ -31,7 +31,7 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
         {
             String jsonString = object.getJson();
             objects.add(new GsonBuilder()
-                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel)).create()
+                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel,true)).create()
                     .fromJson(jsonString, CaffaObject.class));
         }
         return objects;

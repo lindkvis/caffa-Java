@@ -15,7 +15,7 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     private final CaffaObject self;
 
     public CaffaObjectMethodAdapter(CaffaObject self, ManagedChannel channel) {
-        super(channel);
+        super(channel, false);
         this.self = self;
     }
 
@@ -24,7 +24,7 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
             throws JsonParseException {
 
         CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.self);
-        readFields(caffaObjectMethod, json, false);
+        readFields(caffaObjectMethod, json);
 
         return caffaObjectMethod;
     }
@@ -33,9 +33,10 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     public JsonElement serialize(CaffaObject caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {        
         final JsonObject jsonObject = new JsonObject();
 
-        writeFields(caffaObjectMethod, jsonObject, typeOfSrc, context, false);
+        writeFields(caffaObjectMethod, jsonObject, typeOfSrc, context);
 
         return jsonObject;
     }
+
 
 }

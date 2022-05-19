@@ -90,7 +90,7 @@ public class GrpcClientApp {
         RpcObject object = this.objectStub.getDocument(request);
         String jsonString = object.getJson();
         return new GsonBuilder()
-                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel)).create()
+                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, true)).create()
                 .fromJson(jsonString, CaffaObject.class);
     }
 

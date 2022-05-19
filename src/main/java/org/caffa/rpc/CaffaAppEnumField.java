@@ -60,8 +60,18 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
             throw new IllegalArgumentException(errMsg);
         }
 
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel));
-        setJson(builder.create().toJson(appEnum.value()));
+        setJson(new GsonBuilder().create().toJson(appEnum.value()));
+    }
+
+    @Override
+    public String typeString()
+    {
+        String validValueString = "";
+        for (String validValue : validValues)
+        {
+            if (!validValueString.isEmpty()) validValueString += ",";
+            validValueString += validValue;
+        }
+        return "AppEnum(" + validValueString + ")";
     }
 }

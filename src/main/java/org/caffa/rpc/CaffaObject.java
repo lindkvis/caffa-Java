@@ -113,7 +113,7 @@ public class CaffaObject {
 
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel));
+                new CaffaObjectAdapter(this.channel, true));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this);
         return jsonObject;

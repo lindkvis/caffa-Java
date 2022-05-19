@@ -84,7 +84,7 @@ public class CaffaField<T extends Object> {
         String json = getJson();
         logger.log(Level.FINEST, "Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel));
+        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.localValue == null));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
     }
@@ -93,7 +93,7 @@ public class CaffaField<T extends Object> {
         logger.log(Level.FINEST, "Setting JSON for field " + this.keyword);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel));
+                new CaffaObjectAdapter(this.owner.channel, this.localValue == null));
         setJson(builder.create().toJson(value));
     }
 
@@ -167,6 +167,14 @@ public class CaffaField<T extends Object> {
 
     public boolean getUnsigned() {
         return this.unsigned;
+    }
+
+    public String typeString() {
+        if (this.getUnsigned())
+        {
+            return "u" + CaffaFieldFactory.dataTypes.inverse().get(this.scalarType);
+        }
+        return CaffaFieldFactory.dataTypes.inverse().get(this.scalarType);
     }
 
 }

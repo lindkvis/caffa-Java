@@ -167,4 +167,11 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         }
         System.out.println("}");
     }
+
+    @Override
+    public String typeString()
+    {
+        String scalarString = super.typeString();
+        return scalarString + "[]";
+    }
 }

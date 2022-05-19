@@ -42,7 +42,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
                 return new CaffaObjectField(this.object, keyword);
 
             CaffaObject caffaObject = new GsonBuilder()
-                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel)).create()
+                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel, this.grpc)).create()
                     .fromJson(valueElement, CaffaObject.class);
             return new CaffaObjectField(this.object, keyword, caffaObject);
 
@@ -54,7 +54,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
                 JsonArray objectArray = valueElement.getAsJsonArray();
                 for (int i = 0; i < objectArray.size(); ++i) {
                     CaffaObject caffaObject = new GsonBuilder()
-                            .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel))
+                            .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.object.channel, this.grpc))
                             .create()
                             .fromJson(objectArray.get(i), CaffaObject.class);
                     if (caffaObject != null) {
@@ -105,11 +105,10 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
     public JsonElement serialize(CaffaField<?> src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject jsonObject = new JsonObject();
 
-        String type = CaffaFieldFactory.dataTypes.inverse().get(src.scalarType);
-        if (src.isArray()) {
-            type += "[]";
-        }
+        String type = src.typeString();
+
         logger.log(Level.FINER, "Writing field: " + src.keyword + " with type: '" + type + "'");
+        System.out.println("Writing field " + src.keyword + " with grpc: " + grpc + " and type: '" + type + "'");
 
         jsonObject.addProperty("type", type);
         if (!this.grpc) {
