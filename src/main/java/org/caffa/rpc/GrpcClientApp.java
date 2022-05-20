@@ -52,7 +52,7 @@ public class GrpcClientApp {
 
     protected static final Logger logger = Logger.getLogger(GrpcClientApp.class.getName());
 
-    public GrpcClientApp(String host, int port) {
+    public GrpcClientApp(String host, int port) throws Exception{
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
