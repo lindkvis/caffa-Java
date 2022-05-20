@@ -1,5 +1,6 @@
 package org.caffa.rpc;
 
+import java.lang.NoSuchFieldError;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,22 +82,24 @@ public class CaffaObject {
         return matchingObjects;
     }
 
-    public CaffaField<?> field(String keyword) {
+    public CaffaField<?> field(String keyword) throws RuntimeException {
         if (!this.fields.containsKey(keyword)) {
-            logger.log(Level.WARNING, "Field does not exist: " + keyword);
-            return null;
+            String errMsg = "Field does not exist: " + keyword;
+            logger.log(Level.SEVERE, errMsg);
+            throw new RuntimeException(errMsg);
         }
         return this.fields.get(keyword);
     }
 
-    public <T> CaffaField<T> typedField(String keyword, Class<T> type) {
+    public <T> CaffaField<T> typedField(String keyword, Class<T> type) throws RuntimeException {
         CaffaField<?> untypedField = this.fields.get(keyword);
-        if (untypedField != null) {
-            return untypedField.cast(type);
-        } else {
-            logger.log(Level.WARNING, "Field '" + keyword + "' of type " + type.getName() + " does not exist");
-            return null;
+        if (untypedField == null) {
+            String errMsg = "Field '" + keyword + "' of type " + type.getName() + " does not exist";
+            logger.log(Level.SEVERE, errMsg);
+            throw new RuntimeException(errMsg);
+
         }
+        return untypedField.cast(type);
     }
 
     public List<CaffaField<?>> fields() {
