@@ -53,8 +53,10 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         }
         logger.debug("Sending get request");
 
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
+
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
         ArrayList<T> values = new ArrayList<>();
 
@@ -87,8 +89,9 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         logger.debug("Attempting to send {0} values in {1} chunks",
                 new Object[] { values.size(), chunkCount });
 
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
         ArrayRequest setterRequest = ArrayRequest.newBuilder().setField(fieldRequest).setValueCount(values.size())
                 .build();
 

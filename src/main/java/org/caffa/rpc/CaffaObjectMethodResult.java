@@ -10,7 +10,7 @@ public class CaffaObjectMethodResult extends CaffaObject
     public CaffaObject self;
 
     public CaffaObjectMethodResult(CaffaObject self) {
-        super(self.channel, false);
+        super(self.channel, false, self.sessionUuid);
         this.self = self;        
     }
 
@@ -18,7 +18,7 @@ public class CaffaObjectMethodResult extends CaffaObject
     public String getJson()
     {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethodResult.class,
-            new CaffaObjectMethodAdapter(this.self, this.channel));
+            new CaffaObjectMethodAdapter(this.self, this.channel, this.sessionUuid));
         Gson gson = builder.create();
         return gson.toJson(this);
     }
