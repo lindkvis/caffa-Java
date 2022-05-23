@@ -24,11 +24,6 @@ import org.junit.jupiter.api.Test;
 public class ClientObjectTest {
     private GrpcClientApp testApp;
 
-    @BeforeAll
-    public static void logSetup() {
-        Logger.getGlobal().setLevel(Level.INFO);
-    }
-
     @BeforeEach
     public void setUp() throws Exception {
         testApp = new GrpcClientApp("localhost", 50000);

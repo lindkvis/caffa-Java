@@ -14,6 +14,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
+import org.caffa.rpc.ListMethodsRequest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
@@ -23,6 +24,8 @@ public class CaffaObject {
     public String classKeyword;
     @Expose
     public String uuid;
+    @Expose
+    public String sessionUuid;
 
     public Map<String, CaffaField<?>> fields;
     public CaffaField<?> parentField = null;
@@ -33,11 +36,13 @@ public class CaffaObject {
 
     private static Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(ManagedChannel channel, boolean grpc) {
+    public CaffaObject(ManagedChannel channel, boolean grpc, String sessionUuid) {
         this.channel = channel;
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
         this.fields = new TreeMap<String, CaffaField<?>>();
+        this.sessionUuid = sessionUuid;
         this.grpc = grpc;
+        assert !this.sessionUuid.isEmpty();
     }
 
     public void dump() {
@@ -87,7 +92,7 @@ public class CaffaObject {
     public CaffaField<?> field(String keyword) throws RuntimeException {
         if (!this.fields.containsKey(keyword)) {
             String errMsg = "Field does not exist: " + keyword;
-            logger.error( errMsg);
+            logger.error(errMsg);
             throw new RuntimeException(errMsg);
         }
         return this.fields.get(keyword);
@@ -97,7 +102,7 @@ public class CaffaObject {
         CaffaField<?> untypedField = this.fields.get(keyword);
         if (untypedField == null) {
             String errMsg = "Field '" + keyword + "' of type " + type.getName() + " does not exist";
-            logger.error( errMsg);
+            logger.error(errMsg);
             throw new RuntimeException(errMsg);
 
         }
@@ -118,7 +123,7 @@ public class CaffaObject {
 
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel, this.grpc));
+                new CaffaObjectAdapter(this.channel, this.grpc, this.sessionUuid));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this);
         return jsonObject;
@@ -135,10 +140,14 @@ public class CaffaObject {
         ArrayList<CaffaObjectMethod> methods = new ArrayList<CaffaObjectMethod>();
 
         RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
-        RpcObjectList methodList = this.objectStub.listMethods(self);
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
+        ListMethodsRequest request = ListMethodsRequest.newBuilder().setSelf(self).setSession(session).build();
+
+        RpcObjectList methodList = this.objectStub.listMethods(request);
         for (RpcObject method : methodList.getObjectsList()) {
             CaffaObjectMethod caffaMethod = new GsonBuilder()
-                    .registerTypeAdapter(CaffaObjectMethod.class, new CaffaObjectMethodAdapter(this, this.channel))
+                    .registerTypeAdapter(CaffaObjectMethod.class,
+                            new CaffaObjectMethodAdapter(this, this.channel, this.sessionUuid))
                     .create()
                     .fromJson(method.getJson(), CaffaObjectMethod.class);
             methods.add(caffaMethod);
@@ -156,6 +165,7 @@ public class CaffaObject {
     }
 
     public CaffaObjectMethodResult execute(CaffaObjectMethod method) {
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
         RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
         String name = method.classKeyword;
 
@@ -164,6 +174,7 @@ public class CaffaObject {
         RpcObject params = RpcObject.newBuilder().setJson(paramJson).build();
 
         MethodRequest request = MethodRequest.newBuilder().setSelfObject(self).setMethod(name).setParams(params)
+                .setSession(session)
                 .build();
 
         try {
@@ -177,7 +188,7 @@ public class CaffaObject {
                     .fromJson(returnValue.getJson(), CaffaObjectMethodResult.class);
         } catch (Exception e) {
             Status status = Status.fromThrowable(e);
-            logger.error( "Failed to execute method with error: " + status.getDescription());
+            logger.error("Failed to execute method with error: " + status.getDescription());
             return null;
         }
     }

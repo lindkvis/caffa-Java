@@ -50,6 +50,7 @@ public class GrpcClientApp {
     private final AppBlockingStub appStub;
     private final ObjectAccessBlockingStub objectStub;
     private final ManagedChannel channel;
+    private final String sessionUuid;
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
@@ -57,9 +58,18 @@ public class GrpcClientApp {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
+
+        NullMessage message = NullMessage.getDefaultInstance();
+        SessionMessage session = this.appStub.createSession(message);
+        this.sessionUuid = session.getUuid();
     }
 
     public void cleanUp() {
+        logger.debug("Destroying session!");
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
+        
+        this.appStub.destroySession(session);
+
         logger.debug("Shutting down channels!");
         try {
             this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
@@ -87,11 +97,12 @@ public class GrpcClientApp {
     }
 
     public CaffaObject document(String documentId) {
-        DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).build();
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
+        DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).setSession(session).build();
         RpcObject object = this.objectStub.getDocument(request);
         String jsonString = object.getJson();
         return new GsonBuilder()
-                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, true)).create()
+                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, true, this.sessionUuid)).create()
                 .fromJson(jsonString, CaffaObject.class);
     }
 

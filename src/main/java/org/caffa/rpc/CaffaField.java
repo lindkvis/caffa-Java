@@ -62,11 +62,10 @@ public class CaffaField<T extends Object> {
             return this.localValue;
         }
 
-        String jsonObject = this.owner.getAddressJson();
-        logger.debug("Got owner json: " + jsonObject);
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
         logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
         GenericScalar reply = this.fieldStub.getValue(fieldRequest);
@@ -80,9 +79,9 @@ public class CaffaField<T extends Object> {
 
             this.localValue = value;
         } else {
-            String jsonObject = this.owner.getAddressJson();
+            SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
             FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
+                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
             String jsonValue = value;
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
@@ -95,7 +94,7 @@ public class CaffaField<T extends Object> {
         String json = getJson();
         logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.isRemoteField()));
+        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.isRemoteField(), this.owner.sessionUuid));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
     }
@@ -104,7 +103,7 @@ public class CaffaField<T extends Object> {
         logger.debug("Setting JSON for field " + this.keyword);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel, this.localValue == null));
+                new CaffaObjectAdapter(this.owner.channel, this.localValue == null, this.owner.sessionUuid));
         setJson(builder.create().toJson(value));
     }
 

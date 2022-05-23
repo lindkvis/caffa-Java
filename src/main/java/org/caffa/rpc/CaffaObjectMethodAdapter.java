@@ -14,8 +14,8 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
     private final CaffaObject self;
 
-    public CaffaObjectMethodAdapter(CaffaObject self, ManagedChannel channel) {
-        super(channel, false);
+    public CaffaObjectMethodAdapter(CaffaObject self, ManagedChannel channel, String sessionId) {
+        super(channel, false, sessionId);
         this.self = self;
     }
 
