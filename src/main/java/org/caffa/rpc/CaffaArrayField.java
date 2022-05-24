@@ -6,16 +6,20 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.Status.Code;
 import io.grpc.stub.StreamObserver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+
 
 public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     protected GenericArray localArray = null;
+    private static Logger logger = LoggerFactory.getLogger(CaffaArrayField.class);
 
     private FieldAccessGrpc.FieldAccessBlockingStub fieldBlockingStub = null;
     private FieldAccessGrpc.FieldAccessStub fieldStub = null;
@@ -39,7 +43,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
 
     @Override
     public ArrayList<T> get() {
-        logger.log(Level.FINER, "Sending get request");
+        logger.debug("Sending get request");
 
         if (this.localArray != null) {
             return new ArrayList<>(getChunk(this.localArray));
@@ -58,14 +62,14 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
             }
 
         } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+            logger.warn("RPC failed: {0}", e.getStatus());
         }
         return values;
     }
 
     @Override
     public void set(ArrayList<T> values) {
-        logger.log(Level.FINER, "Sending get request");
+        logger.debug("Sending get request");
 
         if (this.localArray != null) {
             this.localArray = createChunk(values);
@@ -76,7 +80,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         if (values.size() % chunkSize != 0)
             chunkCount++;
 
-        logger.log(Level.INFO, "Attempting to send {0} values in {1} chunks",
+        logger.debug("Attempting to send {0} values in {1} chunks",
                 new Object[] { values.size(), chunkCount });
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
@@ -88,23 +92,23 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         StreamObserver<SetterArrayReply> responseObserver = new StreamObserver<SetterArrayReply>() {
             @Override
             public void onNext(SetterArrayReply reply) {
-                logger.log(Level.FINEST, "Sent {0} values", reply.getValueCount());
+                logger.debug("Sent {0} values", reply.getValueCount());
             }
 
             @Override
             public void onError(Throwable t) {
                 Status status = Status.fromThrowable(t);
                 if (status.getCode() != Code.OUT_OF_RANGE) {
-                    logger.log(Level.SEVERE, "Error sending chunk: {0}", status);
+                    logger.error("Error sending chunk: {0}", status);
                 } else {
-                    logger.log(Level.FINER, "Sent all values");
+                    logger.debug("Sent all values");
                 }
                 finishLatch.countDown();
             }
 
             @Override
             public void onCompleted() {
-                logger.log(Level.FINER, "Sent all values");
+                logger.debug("Sent all values");
                 finishLatch.countDown();
 
             }
@@ -128,10 +132,10 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
             finishLatch.await(30, TimeUnit.SECONDS);
 
         } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+            logger.warn("RPC failed: {0}", e.getStatus());
             requestObserver.onError(e);
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Something failed: {0}", e.getMessage());
+            logger.warn("Something failed: {0}", e.getMessage());
             requestObserver.onError(e);
         }
     }

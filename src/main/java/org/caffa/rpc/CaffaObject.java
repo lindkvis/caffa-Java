@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,7 +30,7 @@ public class CaffaObject {
     public ManagedChannel channel;
     private final ObjectAccessBlockingStub objectStub;
 
-    protected static final Logger logger = Logger.getLogger(CaffaObject.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
     public CaffaObject(ManagedChannel channel) {
         this.channel = channel;
@@ -52,12 +52,12 @@ public class CaffaObject {
 
     public ArrayList<CaffaObject> children() {
         ArrayList<CaffaObject> allChildren = new ArrayList<CaffaObject>();
-        logger.log(Level.FINER, "Fields size: " + fields.size());
+        logger.debug("Fields size: " + fields.size());
         for (Map.Entry<String, CaffaField<?>> entry : fields.entrySet()) {
             CaffaField<?> field = entry.getValue();
-            logger.log(Level.FINER, "Getting children from field: " + entry.getKey());
+            logger.debug("Getting children from field: " + entry.getKey());
             allChildren.addAll(field.children());
-            logger.log(Level.FINER, "Got children from field: " + entry.getKey());
+            logger.debug("Got children from field: " + entry.getKey());
         }
         return allChildren;
     }
@@ -85,7 +85,7 @@ public class CaffaObject {
     public CaffaField<?> field(String keyword) throws RuntimeException {
         if (!this.fields.containsKey(keyword)) {
             String errMsg = "Field does not exist: " + keyword;
-            logger.log(Level.SEVERE, errMsg);
+            logger.error( errMsg);
             throw new RuntimeException(errMsg);
         }
         return this.fields.get(keyword);
@@ -95,7 +95,7 @@ public class CaffaObject {
         CaffaField<?> untypedField = this.fields.get(keyword);
         if (untypedField == null) {
             String errMsg = "Field '" + keyword + "' of type " + type.getName() + " does not exist";
-            logger.log(Level.SEVERE, errMsg);
+            logger.error( errMsg);
             throw new RuntimeException(errMsg);
 
         }
@@ -158,7 +158,7 @@ public class CaffaObject {
         String name = method.classKeyword;
 
         String paramJson = method.getJson();
-        logger.log(Level.FINER, "Parameter json: " + paramJson);
+        logger.debug("Parameter json: " + paramJson);
         RpcObject params = RpcObject.newBuilder().setJson(paramJson).build();
 
         MethodRequest request = MethodRequest.newBuilder().setSelfObject(self).setMethod(name).setParams(params)
@@ -174,7 +174,7 @@ public class CaffaObject {
                     .fromJson(returnValue.getJson(), CaffaObjectMethodResult.class);
         } catch (Exception e) {
             Status status = Status.fromThrowable(e);
-            logger.log(Level.SEVERE, "Failed to execute method with error: " + status.getDescription());
+            logger.error( "Failed to execute method with error: " + status.getDescription());
             return null;
         }
     }

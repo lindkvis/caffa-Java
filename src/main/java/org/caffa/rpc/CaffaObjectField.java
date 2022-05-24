@@ -1,12 +1,13 @@
 package org.caffa.rpc;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.List;
 
 public class CaffaObjectField extends CaffaField<CaffaObject> {
-    protected static final Logger logger = Logger.getLogger(CaffaObjectField.class.getName());
+    protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectField.class);
 
     public CaffaObjectField(CaffaObject owner, String keyword, CaffaObject value) {
         super(owner, keyword, CaffaObject.class);
@@ -14,7 +15,7 @@ public class CaffaObjectField extends CaffaField<CaffaObject> {
         try {
             this.set(value);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage());
+            logger.error( e.getMessage());
         }
 
     }

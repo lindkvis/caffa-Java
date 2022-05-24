@@ -8,8 +8,8 @@ import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.caffa.rpc.CaffaAppEnum;
 import org.caffa.rpc.CaffaAppEnumField;

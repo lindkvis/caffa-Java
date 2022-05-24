@@ -1,8 +1,9 @@
 package org.caffa.rpc;
 
 import java.lang.reflect.Type;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -14,7 +15,8 @@ import com.google.gson.JsonSerializer;
 
 public class CaffaAppEnumAdapter
         implements JsonDeserializer<CaffaAppEnum>, JsonSerializer<CaffaAppEnum> {
-    protected static final Logger logger = Logger.getLogger(CaffaAppEnumAdapter.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(CaffaAppEnumAdapter.class);
+
 
     public CaffaAppEnumAdapter() {
         super();
@@ -23,7 +25,7 @@ public class CaffaAppEnumAdapter
 
     public CaffaAppEnum deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
-        logger.log(Level.FINEST, "JSON value: " + json.toString());
+        logger.debug("JSON value: " + json.toString());
         return new CaffaAppEnum(json.getAsString());
     }
 

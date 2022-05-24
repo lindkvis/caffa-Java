@@ -1,13 +1,16 @@
 package org.caffa.rpc;
 
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
-import java.util.logging.Level;
+
 
 public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     private ArrayList<String> validValues = new ArrayList<String>();
+    private static Logger logger = LoggerFactory.getLogger(CaffaAppEnumField.class);
 
     protected CaffaAppEnumField(CaffaObject owner, String keyword) {
         super(owner, keyword, CaffaAppEnum.class);
@@ -47,16 +50,16 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     }
 
     public void set(String value) throws Exception {
-        logger.log(Level.FINER, "Setting string value for app enum field " + this.keyword);
+        logger.debug("Setting string value for app enum field " + this.keyword);
         set(new CaffaAppEnum(value));
     }
 
     @Override
     public void set(CaffaAppEnum appEnum) throws Exception {
-        logger.log(Level.FINER, "Setting JSON for field " + this.keyword);
+        logger.debug("Setting JSON for field " + this.keyword);
         if (!this.validValues.contains(appEnum.value())) {
             String errMsg = "The enum value " + appEnum.value() + " is not valid";
-            logger.log(Level.SEVERE, errMsg);
+            logger.error(errMsg);
             throw new IllegalArgumentException(errMsg);
         }
 
