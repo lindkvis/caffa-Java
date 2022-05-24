@@ -1,10 +1,11 @@
 package org.caffa.rpc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.GsonBuilder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.lang.reflect.Type;
 
 public class CaffaField<T extends Object> {
@@ -12,7 +13,7 @@ public class CaffaField<T extends Object> {
     protected final Type scalarType;
 
     protected CaffaObject owner;
-    protected static final Logger logger = Logger.getLogger(CaffaField.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(CaffaArrayField.class);
 
     public String keyword;
     public boolean unsigned;
@@ -47,25 +48,25 @@ public class CaffaField<T extends Object> {
 
     public String getJson() {
         if (localValue != null) {
-            logger.log(Level.FINER, "Local value: " + this.localValue);
+            logger.debug("Local value: " + this.localValue);
             return this.localValue;
         }
 
         String jsonObject = this.owner.getAddressJson();
-        logger.log(Level.FINEST, "Got owner json: " + jsonObject);
+        logger.debug("Got owner json: " + jsonObject);
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
 
-        logger.log(Level.FINEST, "Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
+        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
         GenericScalar reply = this.fieldStub.getValue(fieldRequest);
-        logger.log(Level.FINER, "Got field reply: " + reply.getValue());
+        logger.debug("Got field reply: " + reply.getValue());
         return reply.getValue();
     }
 
     public void setJson(String value) {
         if (this.localValue != null) {
-            logger.log(Level.FINEST, "Setting local value: " + value);
+            logger.debug("Setting local value: " + value);
 
             this.localValue = value;
         } else {
@@ -80,9 +81,9 @@ public class CaffaField<T extends Object> {
     }
 
     public T get() {
-        logger.log(Level.FINEST, "Getting JSON for field " + this.keyword);
+        logger.debug("Getting JSON for field " + this.keyword);
         String json = getJson();
-        logger.log(Level.FINEST, "Got JSON: " + json);
+        logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.localValue == null));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
@@ -90,7 +91,7 @@ public class CaffaField<T extends Object> {
     }
 
     public void set(T value) throws Exception {
-        logger.log(Level.FINEST, "Setting JSON for field " + this.keyword);
+        logger.debug("Setting JSON for field " + this.keyword);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.owner.channel, this.localValue == null));

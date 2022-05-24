@@ -35,12 +35,13 @@
 package org.caffa.rpc;
 
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import com.google.gson.GsonBuilder;
 
 import org.caffa.rpc.AppGrpc.AppBlockingStub;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -50,7 +51,7 @@ public class GrpcClientApp {
     private final ObjectAccessBlockingStub objectStub;
     private final ManagedChannel channel;
 
-    protected static final Logger logger = Logger.getLogger(GrpcClientApp.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
     public GrpcClientApp(String host, int port) throws Exception{
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
@@ -59,11 +60,11 @@ public class GrpcClientApp {
     }
 
     public void cleanUp() {
-        logger.finer("Shutting down channels!");
+        logger.debug("Shutting down channels!");
         try {
             this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            logger.warning("Failed to shut down gracefully" + e.getMessage());
+            logger.warn("Failed to shut down gracefully" + e.getMessage());
         }
     }
 

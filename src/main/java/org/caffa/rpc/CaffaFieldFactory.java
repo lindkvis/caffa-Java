@@ -2,8 +2,8 @@ package org.caffa.rpc;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -12,7 +12,7 @@ public class CaffaFieldFactory {
     public static BiMap<String, Class<?>> dataTypes;
     public static Map<String, CaffaField<?>> fieldCreators;
     public static Map<String, CaffaField<?>> arrayFieldCreators;
-    protected static final Logger logger = Logger.getLogger(CaffaFieldFactory.class.getName());
+    protected static final Logger logger = LoggerFactory.getLogger(CaffaFieldFactory.class);
 
     static {
         dataTypes = HashBiMap.create();
@@ -53,17 +53,17 @@ public class CaffaFieldFactory {
         } else if (clazz == CaffaObject.class) {
             return new CaffaObjectArrayField(null, "");
         }
-        logger.log(Level.SEVERE, "Could not create array field!");
+        logger.error( "Could not create array field!");
         return null;
     }
 
     public static CaffaField<?> createField(CaffaObject owner, String keyword, String dataType) {
-        logger.log(Level.FINER, "Creating field of type " + dataType);
+        logger.debug("Creating field of type " + dataType);
         return createFieldWithCreators(owner, keyword, dataType, fieldCreators);
     }
 
     public static CaffaField<?> createArrayField(CaffaObject owner, String keyword, String dataType) {
-        logger.log(Level.FINER, "Creating array field of type " + dataType);
+        logger.debug("Creating array field of type " + dataType);
         return createFieldWithCreators(owner, keyword, dataType, arrayFieldCreators);
     }
 
@@ -92,7 +92,7 @@ public class CaffaFieldFactory {
 
         CaffaField<?> creator = creators.get(dataType);
         if (creator == null) {
-            logger.log(Level.SEVERE, "Could not find creator for dataType: " + dataType);
+            logger.error( "Could not find creator for dataType: " + dataType);
             return null;
         }
         return creator.newInstance(owner, keyword);
