@@ -13,7 +13,7 @@ public class CaffaField<T extends Object> {
     protected final Type scalarType;
 
     protected CaffaObject owner;
-    private static Logger logger = LoggerFactory.getLogger(CaffaArrayField.class);
+    private static Logger logger = LoggerFactory.getLogger(CaffaField.class);
 
     public String keyword;
     public boolean unsigned;
