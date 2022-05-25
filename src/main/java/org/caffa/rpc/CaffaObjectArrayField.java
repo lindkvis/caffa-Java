@@ -31,7 +31,7 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
         {
             String jsonString = object.getJson();
             objects.add(new GsonBuilder()
-                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel,true)).create()
+                    .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel,isRemoteField())).create()
                     .fromJson(jsonString, CaffaObject.class));
         }
         return objects;
@@ -51,6 +51,8 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
 
     @Override
     public JsonArray getJsonArray() {
+        assert localArray != null;
+        
         RpcObjectList objectList = localArray.getObjects();
 
         JsonArray objects = new JsonArray();
@@ -61,6 +63,19 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
         }
 
         return objects;
+    }
+
+    @Override
+    protected List<CaffaObject> getListFromJsonArray(JsonArray jsonArray)
+    {
+        ArrayList<CaffaObject> values = new ArrayList<>();
+        for (JsonElement element : jsonArray)
+        {
+            values.add(new GsonBuilder()
+            .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel,true)).create()
+            .fromJson(element, CaffaObject.class));
+        }
+        return values;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.caffa.rpc;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,17 @@ public class CaffaIntArrayField extends CaffaArrayField<Integer> {
             array.add(value);
         }
         return array;
+    }
+
+    @Override
+    protected List<Integer> getListFromJsonArray(JsonArray jsonArray)
+    {
+        ArrayList<Integer> values = new ArrayList<>();
+        for (JsonElement element : jsonArray)
+        {
+            values.add(element.getAsInt());
+        }
+        return values;
     }
 
     @Override

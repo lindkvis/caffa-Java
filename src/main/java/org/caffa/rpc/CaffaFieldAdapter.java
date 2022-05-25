@@ -22,13 +22,6 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
     private final boolean grpc;
     private static Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
 
-    public CaffaFieldAdapter(CaffaObject object) {
-        super();
-
-        this.object = object;
-        this.grpc = true;
-    }
-
     public CaffaFieldAdapter(CaffaObject object, boolean grpc) {
         super();
 
@@ -37,8 +30,14 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
     }
 
     public CaffaField<?> createField(String keyword, String dataType, JsonElement valueElement) {
+        assert this.object != null;
+
+        if (!this.grpc) {
+            assert valueElement != null;
+            assert this.object.channel != null;
+        }
         if (dataType.equals("object")) {
-            logger.debug("Creating object field " + keyword);
+            logger.debug("Creating object field " + keyword + " with grpc: " + this.grpc);
             if (this.grpc)
                 return new CaffaObjectField(this.object, keyword);
 
@@ -47,7 +46,8 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
                     .fromJson(valueElement, CaffaObject.class);
             return new CaffaObjectField(this.object, keyword, caffaObject);
 
-        } else if (dataType.equals("object[]")) {
+        }
+        if (dataType.equals("object[]")) {
             logger.debug("Creating object array field " + keyword);
 
             if (!this.grpc) {
@@ -70,10 +70,12 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
             logger.debug("Creating array field " + keyword);
             dataType = dataType.substring(0, dataType.length() - 2);
             CaffaField<?> field = CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
+            assert field != null;
+
             field.createAccessor(this.grpc);
             if (!this.grpc) {
                 logger.debug("Setting local value for object " + object.classKeyword + " and []field "
-                        + keyword + " to: " + valueElement.toString());
+            + keyword + " to: " + valueElement.toString());
                 field.setJson(valueElement.toString());
             }
 
@@ -81,6 +83,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         }
         logger.debug("Creating scalar field " + keyword);
         CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
+        assert field != null;
         field.createAccessor(this.grpc);
         if (!this.grpc) {
             logger.debug("Setting local value for object " + object.classKeyword + " and field " + keyword
@@ -92,13 +95,20 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
 
     public CaffaField<?> deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
+        assert json != null;
         logger.debug("JSON: " + json.toString());
+        
         final JsonObject jsonObject = json.getAsJsonObject();
 
         String keyword = jsonObject.get("keyword").getAsString();
-        String dataType = jsonObject.get("type").getAsString();
-
-        JsonElement valueElement = jsonObject.get("value");
+        String dataType = jsonObject.get("type").getAsString();        
+        
+        JsonElement valueElement = null;
+        if (!this.grpc)
+        {
+            assert jsonObject.has("value");
+            valueElement = jsonObject.get("value");
+        }
         return createField(keyword, dataType, valueElement);
     }
 

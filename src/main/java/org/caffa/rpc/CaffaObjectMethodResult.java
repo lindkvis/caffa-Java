@@ -10,7 +10,7 @@ public class CaffaObjectMethodResult extends CaffaObject
     public CaffaObject self;
 
     public CaffaObjectMethodResult(CaffaObject self) {
-        super(self.channel);
+        super(self.channel, false);
         this.self = self;        
     }
 

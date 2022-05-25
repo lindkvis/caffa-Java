@@ -1,6 +1,7 @@
 package org.caffa.rpc;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,18 @@ public class CaffaStringArrayField extends CaffaArrayField<String> {
         return array;
     }
 
+
+    @Override
+    protected List<String> getListFromJsonArray(JsonArray jsonArray)
+    {
+        ArrayList<String> values = new ArrayList<>();
+        for (JsonElement element : jsonArray)
+        {
+            values.add(element.getAsString());
+        }
+        return values;
+    }
+    
     @Override
     public CaffaField<ArrayList<String>> newInstance(CaffaObject owner, String keyword) {
         return new CaffaStringArrayField(owner, keyword);

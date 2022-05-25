@@ -29,13 +29,15 @@ public class CaffaObject {
 
     public ManagedChannel channel;
     private final ObjectAccessBlockingStub objectStub;
+    private final boolean grpc;
 
     private static Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(ManagedChannel channel) {
+    public CaffaObject(ManagedChannel channel, boolean grpc) {
         this.channel = channel;
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
         this.fields = new TreeMap<String, CaffaField<?>>();
+        this.grpc = grpc;
     }
 
     public void dump() {
@@ -116,7 +118,7 @@ public class CaffaObject {
 
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel, true));
+                new CaffaObjectAdapter(this.channel, this.grpc));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this);
         return jsonObject;
@@ -166,6 +168,7 @@ public class CaffaObject {
 
         try {
             RpcObject returnValue = this.objectStub.executeMethod(request);
+            logger.debug("Return value json: " + returnValue.getJson());
 
             return new GsonBuilder()
                     .registerTypeAdapter(CaffaObjectMethodResult.class, new CaffaObjectMethodResultAdapter(

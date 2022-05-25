@@ -36,6 +36,16 @@ public class CaffaField<T extends Object> {
 
     }
 
+    public boolean isRemoteField()
+    {
+        return localValue == null;
+    }
+
+    public boolean isLocalField()
+    {
+        return !isRemoteField();
+    }
+
     public void createAccessor(boolean grpc) {
         if (grpc) {
             if (this.owner != null) {
@@ -85,7 +95,7 @@ public class CaffaField<T extends Object> {
         String json = getJson();
         logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.localValue == null));
+        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.isRemoteField()));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
     }

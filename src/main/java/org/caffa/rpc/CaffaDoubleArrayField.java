@@ -1,6 +1,7 @@
 package org.caffa.rpc;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,17 @@ public class CaffaDoubleArrayField extends CaffaArrayField<Double> {
             array.add(value);
         }
         return array;
+    }
+
+    @Override
+    protected List<Double> getListFromJsonArray(JsonArray jsonArray)
+    {
+        ArrayList<Double> values = new ArrayList<>();
+        for (JsonElement element : jsonArray)
+        {
+            values.add(element.getAsDouble());
+        }
+        return values;
     }
 
     @Override
