@@ -35,6 +35,8 @@
 package org.caffa.rpc;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import com.google.gson.GsonBuilder;
 
@@ -52,9 +54,13 @@ public class GrpcClientApp {
     private final ManagedChannel channel;
     private final String sessionUuid;
 
+    /** Defines the keepalive interval (milliseconds). */
+    static final long KEEPALIVE_INTERVAL = 500;
+    private ScheduledExecutorService executor;
+
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
-    public GrpcClientApp(String host, int port) throws Exception{
+    public GrpcClientApp(String host, int port) throws Exception {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
@@ -62,16 +68,19 @@ public class GrpcClientApp {
         NullMessage message = NullMessage.getDefaultInstance();
         SessionMessage session = this.appStub.createSession(message);
         this.sessionUuid = session.getUuid();
+
+        startKeepAliveTransfer();
     }
 
     public void cleanUp() {
-        logger.debug("Destroying session!");
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
-        
-        this.appStub.destroySession(session);
-
-        logger.debug("Shutting down channels!");
         try {
+            stopKeepAliveTransfer();
+
+            logger.debug("Destroying session!");
+            SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
+            this.appStub.destroySession(session);
+
+            logger.debug("Shutting down channels!");
             this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             logger.warn("Failed to shut down gracefully" + e.getMessage());
@@ -102,8 +111,38 @@ public class GrpcClientApp {
         RpcObject object = this.objectStub.getDocument(request);
         String jsonString = object.getJson();
         return new GsonBuilder()
-                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, true, this.sessionUuid)).create()
+                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, true, this.sessionUuid))
+                .create()
                 .fromJson(jsonString, CaffaObject.class);
+    }
+
+    public void startKeepAliveTransfer() throws Exception {
+        try {
+            this.executor = Executors.newSingleThreadScheduledExecutor();
+            this.executor.scheduleAtFixedRate(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            sendKeepAliveMessage();
+                        }
+                    },
+                    KEEPALIVE_INTERVAL,
+                    KEEPALIVE_INTERVAL,
+                    TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            logger.error("Failed to send keepalive: ", e);
+            throw e;
+        }
+    }
+
+    public void stopKeepAliveTransfer() throws InterruptedException {
+        this.executor.shutdownNow();
+        this.executor.awaitTermination(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS);
+    }
+
+    void sendKeepAliveMessage() {
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
+        this.appStub.keepSessionAlive(session);
     }
 
 }
