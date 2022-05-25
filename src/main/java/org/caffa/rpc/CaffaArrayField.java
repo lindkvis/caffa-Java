@@ -1,6 +1,10 @@
 package org.caffa.rpc;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.Status.Code;
@@ -38,16 +42,16 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
             }
         } else {
             localArray = GenericArray.getDefaultInstance();
+            localValue = "";
         }
     }
 
     @Override
     public ArrayList<T> get() {
-        logger.debug("Sending get request");
-
         if (this.localArray != null) {
-            return new ArrayList<>(getChunk(this.localArray));
+             return new ArrayList<>(getChunk(this.localArray));
         }
+        logger.debug("Sending get request");
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).build();
@@ -141,9 +145,10 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     }
 
     protected abstract List<T> getChunk(GenericArray reply);
+    protected abstract List<T> getListFromJsonArray(JsonArray jsonArray);
 
     protected abstract GenericArray createChunk(List<T> reply);
-
+    
     public abstract JsonArray getJsonArray();
 
     @Override
@@ -153,7 +158,10 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
 
     @Override
     public void setJson(String jsonValue) {
-        // Not implemented
+        JsonElement jsonArrayElement = JsonParser.parseString(jsonValue);
+        List<T> values = getListFromJsonArray(jsonArrayElement.getAsJsonArray());
+        this.localArray = createChunk(values);
+        this.localValue = jsonValue;
     }
 
     @Override

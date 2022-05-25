@@ -9,7 +9,7 @@ public class CaffaObjectMethod extends CaffaObject {
     public CaffaObject self;
 
     public CaffaObjectMethod(CaffaObject self) {
-        super(self.channel);
+        super(self.channel, false);
         this.self = self;
     }
 

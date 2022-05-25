@@ -1,6 +1,7 @@
 package org.caffa.rpc;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,17 @@ public class CaffaBooleanArrayField extends CaffaArrayField<Boolean> {
             array.add(value);
         }
         return array;
+    }
+
+    @Override
+    protected List<Boolean> getListFromJsonArray(JsonArray jsonArray)
+    {
+        ArrayList<Boolean> values = new ArrayList<>();
+        for (JsonElement element : jsonArray)
+        {
+            values.add(element.getAsBoolean());
+        }
+        return values;
     }
 
     @Override
