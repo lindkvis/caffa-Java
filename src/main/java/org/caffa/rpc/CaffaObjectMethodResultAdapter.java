@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 public class CaffaObjectMethodResultAdapter extends CaffaObjectAdapter {
 
     public CaffaObjectMethodResultAdapter(ManagedChannel channel, String sessionUuid) {
-        super(channel, false, sessionUuid);
+        super(sessionUuid);
     }
 
     @Override
@@ -27,7 +27,7 @@ public class CaffaObjectMethodResultAdapter extends CaffaObjectAdapter {
         String classKeyword = object.get("Class").getAsString();
         String objectUuid = object.get("UUID").getAsString();
 
-        CaffaObjectMethodResult methodResult = new CaffaObjectMethodResult(classKeyword, objectUuid, this.channel,
+        CaffaObjectMethodResult methodResult = new CaffaObjectMethodResult(classKeyword, objectUuid,
                 this.sessionUuid);
         readFields(methodResult, object);
 

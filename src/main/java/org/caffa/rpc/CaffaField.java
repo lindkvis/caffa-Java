@@ -79,7 +79,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel(), this.isRemoteField(), this.owner.sessionUuid()));
+                new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
     }
@@ -88,7 +88,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         logger.debug("Setting JSON for field " + this.keyword);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel(), this.isRemoteField(), this.owner.sessionUuid()));
+                new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
         setJson(builder.create().toJson(value));
     }
 
