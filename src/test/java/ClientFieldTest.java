@@ -29,7 +29,7 @@ public class ClientFieldTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new GrpcClientApp("localhost", 50000);
+        testApp = new GrpcClientApp("localhost", 50000, "log4j.properties");
     }
 
     @AfterEach

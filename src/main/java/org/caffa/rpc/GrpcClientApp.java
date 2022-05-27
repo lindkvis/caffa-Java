@@ -67,7 +67,6 @@ public class GrpcClientApp {
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
     public GrpcClientApp(String host, int port, String logConfigFilePath) throws Exception {
-        setupLogging(logConfigFilePath);
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
@@ -76,11 +75,17 @@ public class GrpcClientApp {
         SessionMessage session = this.appStub.createSession(message);
         this.sessionUuid = session.getUuid();
 
+        if (!logConfigFilePath.isEmpty())
+        {
+            setupLogging(logConfigFilePath);
+        }
+
+
         startKeepAliveTransfer();
     }
 
     public GrpcClientApp(String host, int port) throws Exception {
-        this(host, port, "log4j.properties");
+        this(host, port, "");
     }
 
     private void setupLogging(String logConfigFilePath) {
