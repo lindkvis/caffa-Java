@@ -18,16 +18,34 @@ import com.google.gson.JsonSerializer;
 import io.grpc.ManagedChannel;
 
 public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSerializer<CaffaObject> {
-    protected final ManagedChannel channel;
-    protected final boolean grpc;
-    protected final String sessionUuid;
     protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectAdapter.class);
 
-    public CaffaObjectAdapter(ManagedChannel channel, boolean grpc, String sessionUuid) {
+    protected final ManagedChannel channel;
+    protected final String sessionUuid;
+
+    /**
+     * Constructor
+     *
+     * @param channel     if null the adapter will create local objects without a
+     *                    gRPC connection
+     * @param sessionUuid
+     */
+    public CaffaObjectAdapter(ManagedChannel channel, String sessionUuid) {
         super();
 
         this.channel = channel;
-        this.grpc = grpc;
+        this.sessionUuid = sessionUuid;
+    }
+
+    /**
+     * Constructor for creating local objects without a gRPC connection
+     *
+     * @param sessionUuid
+     */
+    public CaffaObjectAdapter(String sessionUuid) {
+        super();
+
+        this.channel = null;
         this.sessionUuid = sessionUuid;
     }
 
@@ -42,12 +60,16 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         String classKeyword = object.get("Class").getAsString();
         String objectUuid = object.get("UUID").getAsString();
 
-        CaffaObject caffaObject = new CaffaObject(classKeyword, objectUuid, this.channel, this.grpc, this.sessionUuid);
+        CaffaObject caffaObject = new CaffaObject(classKeyword, objectUuid, this.sessionUuid);
+        if (this.channel != null) {
+            caffaObject.createGrpcAccessor(this.channel);
+        }
 
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(CaffaField.class, new CaffaFieldAdapter(caffaObject, this.grpc, this.sessionUuid))
+                .registerTypeAdapter(CaffaField.class,
+                        new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid))
                 .registerTypeAdapter(CaffaObject.class,
-                        new CaffaObjectAdapter(this.channel, this.grpc, this.sessionUuid))
+                        new CaffaObjectAdapter(this.channel, this.sessionUuid))
                 .create();
 
         readFields(caffaObject, object);
@@ -66,7 +88,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                 jsonElement.addProperty("keyword", key);
                 CaffaField<?> field = new GsonBuilder()
                         .registerTypeAdapter(CaffaField.class,
-                                new CaffaFieldAdapter(caffaObject, this.grpc, this.sessionUuid))
+                                new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid))
                         .create()
                         .fromJson(jsonElement, CaffaField.class);
 
@@ -85,13 +107,18 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
     public void writeFields(CaffaObject caffaObject, JsonObject jsonObject, Type typeOfSrc,
             JsonSerializationContext context) {
-        logger.debug("Writing fields for object: " + caffaObject.classKeyword + " " + this.grpc);
+        logger.debug("Writing fields for object: " + caffaObject.classKeyword);
+        if (this.channel != null) {
+            logger.debug("with a gRPC-connection");
+        } else {
+            logger.debug("without a gRPC-connection");
+        }
         jsonObject.addProperty("Class", caffaObject.classKeyword);
         jsonObject.addProperty("UUID", caffaObject.uuid);
 
         for (CaffaField<?> field : caffaObject.fields()) {
             jsonObject.add(field.keyword,
-                    new CaffaFieldAdapter(caffaObject, this.grpc, this.sessionUuid).serialize(field, typeOfSrc,
+                    new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid).serialize(field, typeOfSrc,
                             context));
         }
     }

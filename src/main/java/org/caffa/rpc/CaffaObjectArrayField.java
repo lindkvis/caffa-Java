@@ -40,7 +40,7 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
             String jsonString = object.getJson();
             objects.add(new GsonBuilder()
                     .registerTypeAdapter(CaffaObject.class,
-                            new CaffaObjectAdapter(this.owner.channel(), this.isRemoteField(),
+                            new CaffaObjectAdapter(this.channel,
                                     this.owner.sessionUuid()))
                     .create()
                     .fromJson(jsonString, CaffaObject.class));
@@ -80,7 +80,7 @@ public class CaffaObjectArrayField extends CaffaArrayField<CaffaObject> {
         for (JsonElement element : jsonArray) {
             values.add(new GsonBuilder()
                     .registerTypeAdapter(CaffaObject.class,
-                            new CaffaObjectAdapter(this.owner.channel(), this.isRemoteField(),
+                            new CaffaObjectAdapter(this.channel,
                                     this.owner.sessionUuid()))
                     .create()
                     .fromJson(element, CaffaObject.class));

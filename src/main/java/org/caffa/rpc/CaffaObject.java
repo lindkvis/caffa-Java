@@ -26,36 +26,24 @@ public class CaffaObject {
     private Map<String, CaffaField<?>> fields;
     private CaffaField<?> parentField = null;
 
-    private final String sessionUuid;
-    private ManagedChannel channel;
+    protected final String sessionUuid;
+    protected ManagedChannel channel;
     private ObjectAccessBlockingStub objectStub;
 
     private static Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(String classKeyword, String uuid) {
-        assert (!classKeyword.isEmpty());
-        assert (!uuid.isEmpty());
+    public CaffaObject(String classKeyword, String uuid, String sessionUuid) {
+        assert !classKeyword.isEmpty();
+        assert !uuid.isEmpty();
+        assert !sessionUuid.isEmpty();
 
         this.classKeyword = classKeyword;
         this.uuid = uuid;
+        this.sessionUuid = sessionUuid;
         this.fields = new TreeMap<String, CaffaField<?>>();
-        this.sessionUuid = "";
     }
 
-    public CaffaObject(String classKeyword, String uuid, ManagedChannel channel, boolean isRemoteObject,
-            String sessionUuid) {
-
-        assert (!classKeyword.isEmpty());
-        assert (!uuid.isEmpty());
-
-        this.classKeyword = classKeyword;
-        this.uuid = uuid;
-        this.fields = new TreeMap<String, CaffaField<?>>();
-
-        assert !sessionUuid.isEmpty();
-        assert (channel != null);
-
-        this.sessionUuid = sessionUuid;
+    void createGrpcAccessor(ManagedChannel channel) {
         this.channel = channel;
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
     }
@@ -158,7 +146,7 @@ public class CaffaObject {
 
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel, this.isRemoteObject(), this.sessionUuid));
+                new CaffaObjectAdapter(this.channel, this.sessionUuid));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this);
         return jsonObject;
