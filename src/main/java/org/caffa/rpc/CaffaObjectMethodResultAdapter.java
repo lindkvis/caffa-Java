@@ -11,19 +11,25 @@ import java.lang.reflect.Type;
 
 public class CaffaObjectMethodResultAdapter extends CaffaObjectAdapter {
 
-    private final CaffaObject self;
-
-    public CaffaObjectMethodResultAdapter(CaffaObject self, ManagedChannel channel) {
-        super(channel, false, self.sessionUuid);
-        this.self = self;
+    public CaffaObjectMethodResultAdapter(ManagedChannel channel, String sessionUuid) {
+        super(channel, false, sessionUuid);
     }
 
     @Override
     public CaffaObjectMethodResult deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
 
-        CaffaObjectMethodResult methodResult = new CaffaObjectMethodResult(this.self);
-        readFields(methodResult, json);
+        assert (json.isJsonObject());
+        final JsonObject object = json.getAsJsonObject();
+
+        assert object.has("Class") && object.has("UUID");
+
+        String classKeyword = object.get("Class").getAsString();
+        String objectUuid = object.get("UUID").getAsString();
+
+        CaffaObjectMethodResult methodResult = new CaffaObjectMethodResult(classKeyword, objectUuid, this.channel,
+                this.sessionUuid);
+        readFields(methodResult, object);
 
         return methodResult;
     }

@@ -3,89 +3,73 @@ package org.caffa.rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.grpc.ManagedChannel;
+
 import com.google.gson.GsonBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.reflect.Type;
 
-public class CaffaField<T extends Object> {
+public class CaffaField<T extends Object> extends CaffaAbstractField {
     private final Type dataType;
     protected final Type scalarType;
 
-    protected CaffaObject owner;
     private static Logger logger = LoggerFactory.getLogger(CaffaField.class);
 
-    public String keyword;
     public boolean unsigned;
-
-    private FieldAccessGrpc.FieldAccessBlockingStub fieldStub = null;
-    protected String localValue = null;
+    protected String localValue = "";
 
     public CaffaField(CaffaObject owner, String keyword, Type dataType) {
-        this.owner = owner;
-        this.keyword = keyword;
+        super(owner, keyword);
         this.dataType = dataType;
         this.scalarType = dataType;
     }
 
+    /**
+     * Constructor for when the field data type (i.e. ArrayList) is not the same as
+     * the scalar type (the content of the ArrayList)
+     *
+     * @param owner
+     * @param keyword
+     * @param dataType
+     * @param scalarType
+     */
     public CaffaField(CaffaObject owner, String keyword, Type dataType, Type scalarType) {
-        this.owner = owner;
-        this.keyword = keyword;
+        super(owner, keyword);
         this.dataType = dataType;
         this.scalarType = scalarType;
 
     }
 
-    public boolean isRemoteField()
-    {
-        return localValue == null;
-    }
-
-    public boolean isLocalField()
-    {
-        return !isRemoteField();
-    }
-
-    public void createAccessor(boolean grpc) {
-        if (grpc) {
-            if (this.owner != null) {
-                this.fieldStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
-            }
-        } else {
-            this.localValue = "";
-        }
-    }
-
     public String getJson() {
-        if (localValue != null) {
+        if (isLocalField()) {
             logger.debug("Local value: " + this.localValue);
             return this.localValue;
         }
 
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
         logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
-        GenericScalar reply = this.fieldStub.getValue(fieldRequest);
+        GenericScalar reply = this.fieldBlockingStub.getValue(fieldRequest);
         logger.debug("Got field reply: " + reply.getValue());
         return reply.getValue();
     }
 
     public void setJson(String value) {
-        if (this.localValue != null) {
+        if (isLocalField()) {
             logger.debug("Setting local value: " + value);
-
             this.localValue = value;
         } else {
-            SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
+            SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
             FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
                     .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
             String jsonValue = value;
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
-            this.fieldStub.setValue(setterRequest);
+            this.fieldBlockingStub.setValue(setterRequest);
         }
     }
 
@@ -94,7 +78,8 @@ public class CaffaField<T extends Object> {
         String json = getJson();
         logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.owner.channel, this.isRemoteField(), this.owner.sessionUuid));
+        builder.registerTypeAdapter(CaffaObject.class,
+                new CaffaObjectAdapter(this.owner.channel(), this.isRemoteField(), this.owner.sessionUuid()));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
     }
@@ -103,7 +88,7 @@ public class CaffaField<T extends Object> {
         logger.debug("Setting JSON for field " + this.keyword);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.owner.channel, this.localValue == null, this.owner.sessionUuid));
+                new CaffaObjectAdapter(this.owner.channel(), this.isRemoteField(), this.owner.sessionUuid()));
         setJson(builder.create().toJson(value));
     }
 
@@ -180,8 +165,7 @@ public class CaffaField<T extends Object> {
     }
 
     public String typeString() {
-        if (this.getUnsigned())
-        {
+        if (this.getUnsigned()) {
             return "u" + CaffaFieldFactory.dataTypes.inverse().get(this.scalarType);
         }
         return CaffaFieldFactory.dataTypes.inverse().get(this.scalarType);

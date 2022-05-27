@@ -34,9 +34,15 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
     public CaffaObject deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
 
+        assert (json.isJsonObject());
         final JsonObject object = json.getAsJsonObject();
 
-        CaffaObject caffaObject = new CaffaObject(this.channel, this.grpc, this.sessionUuid);
+        assert object.has("Class") && object.has("UUID");
+
+        String classKeyword = object.get("Class").getAsString();
+        String objectUuid = object.get("UUID").getAsString();
+
+        CaffaObject caffaObject = new CaffaObject(classKeyword, objectUuid, this.channel, this.grpc, this.sessionUuid);
 
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(CaffaField.class, new CaffaFieldAdapter(caffaObject, this.grpc, this.sessionUuid))
@@ -44,47 +50,15 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                         new CaffaObjectAdapter(this.channel, this.grpc, this.sessionUuid))
                 .create();
 
-        logger.debug("Deserializing object: " + object.toString());
-
-        if (object.has("Class") && object.get("Class").isJsonPrimitive()) {
-            caffaObject.classKeyword = object.get("Class").getAsString();
-        } else {
-            logger.error("Could not find classKeyword in object!");
-        }
-        if (object.has("UUID") && object.get("UUID").isJsonPrimitive()) {
-            caffaObject.uuid = object.get("UUID").getAsString();
-        } else {
-            logger.error("Could not find uuid in object!");
-        }
-
-        for (String key : object.keySet()) {
-            if (!key.equals("Class") && !key.equals("UUID")) {
-                JsonObject jsonElement = object.get(key).getAsJsonObject();
-                jsonElement.addProperty("keyword", key);
-                CaffaField<?> field = gson.fromJson(jsonElement, CaffaField.class);
-                assert this.grpc == field.isRemoteField();
-                caffaObject.fields.put(field.keyword, field);
-            }
-        }
+        readFields(caffaObject, object);
 
         return caffaObject;
     }
 
-    public void readFields(CaffaObject caffaObject, JsonElement json) {
-        logger.debug("JSON: " + json.toString());
-        assert caffaObject != null;
-        final JsonObject object = json.getAsJsonObject();
+    public void readFields(CaffaObject caffaObject, JsonObject object) {
+        assert caffaObject != null && object != null && object.isJsonObject();
 
-        if (object.has("Class") && object.get("Class").isJsonPrimitive()) {
-            caffaObject.classKeyword = object.get("Class").getAsString();
-        } else {
-            logger.error("Could not find classKeyword in object!");
-        }
-        if (object.has("UUID") && object.get("UUID").isJsonPrimitive()) {
-            caffaObject.uuid = object.get("UUID").getAsString();
-        } else {
-            logger.error("Could not find uuid in object!");
-        }
+        logger.debug("JSON: " + object.toString());
 
         for (String key : object.keySet()) {
             if (!key.equals("Class") && !key.equals("UUID")) {
@@ -96,7 +70,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                         .create()
                         .fromJson(jsonElement, CaffaField.class);
 
-                caffaObject.fields.put(field.keyword, field);
+                caffaObject.addField(field);
             }
         }
 

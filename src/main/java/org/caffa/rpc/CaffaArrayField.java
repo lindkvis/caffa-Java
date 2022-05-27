@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.Status.Code;
@@ -20,13 +21,10 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-
 public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     protected GenericArray localArray = null;
     private static Logger logger = LoggerFactory.getLogger(CaffaArrayField.class);
 
-    private FieldAccessGrpc.FieldAccessBlockingStub fieldBlockingStub = null;
-    private FieldAccessGrpc.FieldAccessStub fieldStub = null;
     public static int chunkSize = 8192;
 
     protected CaffaArrayField(CaffaObject owner, String keyword, Type scalarType) {
@@ -34,26 +32,13 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     }
 
     @Override
-    public void createAccessor(boolean grpc) {
-        if (grpc) {
-            if (this.owner != null) {
-                this.fieldBlockingStub = FieldAccessGrpc.newBlockingStub(this.owner.channel);
-                this.fieldStub = FieldAccessGrpc.newStub(this.owner.channel);
-            }
-        } else {
-            localArray = GenericArray.getDefaultInstance();
-            localValue = "";
-        }
-    }
-
-    @Override
     public ArrayList<T> get() {
         if (this.localArray != null) {
-             return new ArrayList<>(getChunk(this.localArray));
+            return new ArrayList<>(getChunk(this.localArray));
         }
         logger.debug("Sending get request");
 
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
@@ -77,7 +62,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     public void set(ArrayList<T> values) {
         logger.debug("Sending get request");
 
-        if (this.localArray != null) {
+        if (isLocalField()) {
             this.localArray = createChunk(values);
             return;
         }
@@ -89,7 +74,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
         logger.debug("Attempting to send {0} values in {1} chunks",
                 new Object[] { values.size(), chunkCount });
 
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid).build();
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(keyword)
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
         ArrayRequest setterRequest = ArrayRequest.newBuilder().setField(fieldRequest).setValueCount(values.size())
@@ -148,10 +133,11 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     }
 
     protected abstract List<T> getChunk(GenericArray reply);
+
     protected abstract List<T> getListFromJsonArray(JsonArray jsonArray);
 
     protected abstract GenericArray createChunk(List<T> reply);
-    
+
     public abstract JsonArray getJsonArray();
 
     @Override
@@ -184,8 +170,7 @@ public abstract class CaffaArrayField<T> extends CaffaField<ArrayList<T>> {
     }
 
     @Override
-    public String typeString()
-    {
+    public String typeString() {
         String scalarString = super.typeString();
         return scalarString + "[]";
     }

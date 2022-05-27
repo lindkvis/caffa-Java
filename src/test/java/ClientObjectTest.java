@@ -51,7 +51,7 @@ public class ClientObjectTest {
     @Test
     void dumpDocument() {
         CaffaObject object = testApp.document("");
-        assertTrue(!object.fields.isEmpty());
+        assertTrue(!object.fields().isEmpty());
         object.dump();
     }
 
@@ -150,42 +150,9 @@ public class ClientObjectTest {
         ArrayList<CaffaObject> children = object.children();
         assertTrue(!children.isEmpty());
         for (CaffaObject child : children) {
-            String methodName = new String("copyObject");
+            String methodName = new String("copyObjectDoesNotExist");
             CaffaObjectMethod copyObjectMethod = child.method(methodName);
-            assertNotNull(copyObjectMethod);
-            // Manipulate class keyword
-            copyObjectMethod.classKeyword = "rubbish";
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleArgument", 97.0, Double.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("intArgument", 43, Integer.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument", "TestValue", String.class));
-            CaffaObjectMethodResult result = copyObjectMethod.execute();
-
-            assertNull(result);
-        }
-    }
-
-    @Test
-    void methodWithNonExistentSelf() {
-        CaffaObject object = testApp.document("");
-        ArrayList<CaffaObjectMethod> methods = object.methods();
-        assertTrue(methods.isEmpty());
-
-        ArrayList<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
-
-        for (CaffaObject child : children) {
-            String methodName = new String("copyObject");
-            CaffaObjectMethod copyObjectMethod = child.method(methodName);
-
-            // Manipulate child's uuid
-            child.uuid = "rubbish";
-            assertNotNull(copyObjectMethod);
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleArgument", 97.0, Double.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("intArgument", 43, Integer.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument", "TestValue", String.class));
-            CaffaObjectMethodResult result = copyObjectMethod.execute();
-
-            assertNull(result);
+            assertNull(copyObjectMethod);
         }
     }
 }

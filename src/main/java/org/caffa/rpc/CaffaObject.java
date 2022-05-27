@@ -20,29 +20,60 @@ import io.grpc.ManagedChannel;
 import io.grpc.Status;
 
 public class CaffaObject {
-    @Expose
-    public String classKeyword;
-    @Expose
-    public String uuid;
-    @Expose
-    public String sessionUuid;
+    public final String classKeyword;
+    public final String uuid;
 
-    public Map<String, CaffaField<?>> fields;
-    public CaffaField<?> parentField = null;
+    private Map<String, CaffaField<?>> fields;
+    private CaffaField<?> parentField = null;
 
-    public ManagedChannel channel;
-    private final ObjectAccessBlockingStub objectStub;
-    private final boolean grpc;
+    private final String sessionUuid;
+    private ManagedChannel channel;
+    private ObjectAccessBlockingStub objectStub;
 
     private static Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(ManagedChannel channel, boolean grpc, String sessionUuid) {
+    public CaffaObject(String classKeyword, String uuid) {
+        assert (!classKeyword.isEmpty());
+        assert (!uuid.isEmpty());
+
+        this.classKeyword = classKeyword;
+        this.uuid = uuid;
+        this.fields = new TreeMap<String, CaffaField<?>>();
+        this.sessionUuid = "";
+    }
+
+    public CaffaObject(String classKeyword, String uuid, ManagedChannel channel, boolean isRemoteObject,
+            String sessionUuid) {
+
+        assert (!classKeyword.isEmpty());
+        assert (!uuid.isEmpty());
+
+        this.classKeyword = classKeyword;
+        this.uuid = uuid;
+        this.fields = new TreeMap<String, CaffaField<?>>();
+
+        assert !sessionUuid.isEmpty();
+        assert (channel != null);
+
+        this.sessionUuid = sessionUuid;
         this.channel = channel;
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
-        this.fields = new TreeMap<String, CaffaField<?>>();
-        this.sessionUuid = sessionUuid;
-        this.grpc = grpc;
-        assert !this.sessionUuid.isEmpty();
+    }
+
+    public boolean isRemoteObject() {
+        return this.channel != null && this.objectStub != null;
+    }
+
+    public boolean isLocalObject() {
+        return !isRemoteObject();
+    }
+
+    public ManagedChannel channel() {
+        return this.channel;
+    }
+
+    public String sessionUuid() {
+        return this.sessionUuid;
     }
 
     public void dump() {
@@ -117,13 +148,17 @@ public class CaffaObject {
         return allFields;
     }
 
+    public void addField(CaffaField<?> field) {
+        this.fields.put(field.keyword, field);
+    }
+
     public CaffaObject parent() {
         return parentField.owner;
     }
 
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel, this.grpc, this.sessionUuid));
+                new CaffaObjectAdapter(this.channel, this.isRemoteObject(), this.sessionUuid));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this);
         return jsonObject;
@@ -147,7 +182,7 @@ public class CaffaObject {
         for (RpcObject method : methodList.getObjectsList()) {
             CaffaObjectMethod caffaMethod = new GsonBuilder()
                     .registerTypeAdapter(CaffaObjectMethod.class,
-                            new CaffaObjectMethodAdapter(this, this.channel, this.sessionUuid))
+                            new CaffaObjectMethodAdapter(this))
                     .create()
                     .fromJson(method.getJson(), CaffaObjectMethod.class);
             methods.add(caffaMethod);
@@ -183,7 +218,7 @@ public class CaffaObject {
 
             return new GsonBuilder()
                     .registerTypeAdapter(CaffaObjectMethodResult.class, new CaffaObjectMethodResultAdapter(
-                            this, this.channel))
+                            this.channel, this.sessionUuid))
                     .create()
                     .fromJson(returnValue.getJson(), CaffaObjectMethodResult.class);
         } catch (Exception e) {

@@ -36,16 +36,20 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
 
         if (!this.grpc) {
             assert valueElement != null;
-            assert this.object.channel != null;
         }
+
         if (dataType.equals("object")) {
             logger.debug("Creating object field " + keyword + " with grpc: " + this.grpc);
-            if (this.grpc)
-                return new CaffaObjectField(this.object, keyword);
+
+            if (this.grpc) {
+                CaffaObjectField field = new CaffaObjectField(this.object, keyword);
+                field.createGrpcAccessor(this.object.channel());
+                return field;
+            }
 
             CaffaObject caffaObject = new GsonBuilder()
                     .registerTypeAdapter(CaffaObject.class,
-                            new CaffaObjectAdapter(this.object.channel, this.grpc, this.sessionUuid))
+                            new CaffaObjectAdapter(this.object.channel(), this.grpc, this.sessionUuid))
                     .create()
                     .fromJson(valueElement, CaffaObject.class);
             return new CaffaObjectField(this.object, keyword, caffaObject);
@@ -54,22 +58,24 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         if (dataType.equals("object[]")) {
             logger.debug("Creating object array field " + keyword);
 
-            if (!this.grpc) {
-                ArrayList<CaffaObject> objectList = new ArrayList<>();
-                JsonArray objectArray = valueElement.getAsJsonArray();
-                for (int i = 0; i < objectArray.size(); ++i) {
-                    CaffaObject caffaObject = new GsonBuilder()
-                            .registerTypeAdapter(CaffaObject.class,
-                                    new CaffaObjectAdapter(this.object.channel, this.grpc, this.sessionUuid))
-                            .create()
-                            .fromJson(objectArray.get(i), CaffaObject.class);
-                    if (caffaObject != null) {
-                        objectList.add(caffaObject);
-                    }
-                }
-                return new CaffaObjectArrayField(this.object, keyword, objectList);
+            if (this.grpc) {
+                CaffaObjectArrayField field = new CaffaObjectArrayField(this.object, keyword);
+                field.createGrpcAccessor(this.object.channel());
+                return field;
             }
-            return new CaffaObjectArrayField(this.object, keyword);
+            ArrayList<CaffaObject> objectList = new ArrayList<>();
+            JsonArray objectArray = valueElement.getAsJsonArray();
+            for (int i = 0; i < objectArray.size(); ++i) {
+                CaffaObject caffaObject = new GsonBuilder()
+                        .registerTypeAdapter(CaffaObject.class,
+                                new CaffaObjectAdapter(this.object.channel(), this.grpc, this.sessionUuid))
+                        .create()
+                        .fromJson(objectArray.get(i), CaffaObject.class);
+                if (caffaObject != null) {
+                    objectList.add(caffaObject);
+                }
+            }
+            return new CaffaObjectArrayField(this.object, keyword, objectList);
         }
         if (dataType.endsWith("[]")) {
             logger.debug("Creating array field " + keyword);
@@ -77,8 +83,9 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
             CaffaField<?> field = CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
             assert field != null;
 
-            field.createAccessor(this.grpc);
-            if (!this.grpc) {
+            if (this.grpc) {
+                field.createGrpcAccessor(this.object.channel());
+            } else {
                 logger.debug("Setting local value for object " + object.classKeyword + " and []field "
                         + keyword + " to: " + valueElement.toString());
                 field.setJson(valueElement.toString());
@@ -89,8 +96,9 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         logger.debug("Creating scalar field " + keyword);
         CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
         assert field != null;
-        field.createAccessor(this.grpc);
-        if (!this.grpc) {
+        if (this.grpc) {
+            field.createGrpcAccessor(this.object.channel());
+        } else {
             logger.debug("Setting local value for object " + object.classKeyword + " and field " + keyword
                     + " to: " + valueElement.toString());
             field.setJson(valueElement.toString());
