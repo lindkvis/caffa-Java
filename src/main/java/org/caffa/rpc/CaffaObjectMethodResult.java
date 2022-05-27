@@ -2,23 +2,17 @@ package org.caffa.rpc;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.Expose;
+import io.grpc.ManagedChannel;
 
-public class CaffaObjectMethodResult extends CaffaObject
-{
-    @Expose
-    public CaffaObject self;
-
-    public CaffaObjectMethodResult(CaffaObject self) {
-        super(self.channel, false, self.sessionUuid);
-        this.self = self;        
+public class CaffaObjectMethodResult extends CaffaObject {
+    public CaffaObjectMethodResult(String classKeyword, String uuid, ManagedChannel channel, String sessionUuid) {
+        super(classKeyword, uuid, channel, false, sessionUuid);
     }
 
     @Override
-    public String getJson()
-    {
+    public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethodResult.class,
-            new CaffaObjectMethodAdapter(this.self, this.channel, this.sessionUuid));
+                new CaffaObjectAdapter(this.channel(), false, this.sessionUuid()));
         Gson gson = builder.create();
         return gson.toJson(this);
     }

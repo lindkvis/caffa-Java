@@ -2,6 +2,9 @@ package org.caffa.rpc;
 
 import java.lang.reflect.Type;
 
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -13,9 +16,10 @@ import io.grpc.ManagedChannel;
 public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
     private final CaffaObject self;
+    protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectMethodAdapter.class);
 
-    public CaffaObjectMethodAdapter(CaffaObject self, ManagedChannel channel, String sessionId) {
-        super(channel, false, sessionId);
+    public CaffaObjectMethodAdapter(CaffaObject self) {
+        super(self.channel(), false, self.sessionUuid());
         this.self = self;
     }
 
@@ -23,20 +27,27 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     public CaffaObjectMethod deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
 
-        CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.self);
-        readFields(caffaObjectMethod, json);
+        assert json.isJsonObject();
+        final JsonObject object = json.getAsJsonObject();
+
+        assert object.has("Class") && object.has("UUID");
+
+        String classKeyword = object.get("Class").getAsString();
+        String objectUuid = object.get("UUID").getAsString();
+
+        CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(classKeyword, objectUuid, this.self);
+        readFields(caffaObjectMethod, object);
 
         return caffaObjectMethod;
     }
 
     @Override
-    public JsonElement serialize(CaffaObject caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {        
+    public JsonElement serialize(CaffaObject caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
 
         writeFields(caffaObjectMethod, jsonObject, typeOfSrc, context);
 
         return jsonObject;
     }
-
 
 }

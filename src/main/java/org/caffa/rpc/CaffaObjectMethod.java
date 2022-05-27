@@ -5,11 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
 public class CaffaObjectMethod extends CaffaObject {
-    @Expose
-    public CaffaObject self;
+    public final CaffaObject self;
 
-    public CaffaObjectMethod(CaffaObject self) {
-        super(self.channel, false, self.sessionUuid);
+    public CaffaObjectMethod(String classKeyword, String uuid, CaffaObject self) {
+        super(classKeyword, uuid);
         this.self = self;
     }
 
@@ -20,7 +19,7 @@ public class CaffaObjectMethod extends CaffaObject {
     @Override
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
-                new CaffaObjectMethodAdapter(this.self, this.channel, this.sessionUuid));
+                new CaffaObjectMethodAdapter(this.self));
         Gson gson = builder.create();
         return gson.toJson(this);
     }

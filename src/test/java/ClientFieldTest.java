@@ -41,12 +41,11 @@ public class ClientFieldTest {
     void getDocumentFileName() {
         CaffaObject object = testApp.document("testDocument");
 
-        assertTrue(!object.fields.isEmpty());
+        assertTrue(!object.fields().isEmpty());
 
         object.dump();
 
         String key = "fileName";
-        assertTrue(object.fields.containsKey(key));
         CaffaField<?> field = object.field(key);
         assertNotNull(field);
         assertEquals(key, field.keyword);
@@ -64,13 +63,11 @@ public class ClientFieldTest {
     @Test
     void documentFields() {
         CaffaObject object = testApp.document("testDocument");
-        assertTrue(!object.fields.isEmpty());
+        assertTrue(!object.fields().isEmpty());
 
         Boolean foundDocumentFileName = false;
-        for (Map.Entry<String, CaffaField<?>> entry : object.fields.entrySet()) {
-            CaffaField<?> field = entry.getValue();
-            assertEquals(field.keyword, entry.getKey());
-            System.out.println("Found field: '" + entry.getKey() + "' (" + field.type() + ")");
+        for (CaffaField<?> field : object.fields()) {
+            System.out.println("Found field: '" + field.keyword + "' (" + field.type() + ")");
             if (field.keyword.equals("fileName")) {
                 foundDocumentFileName = true;
                 assertEquals(String.class, field.type());
