@@ -37,6 +37,9 @@ package org.caffa.rpc;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 
 import com.google.gson.GsonBuilder;
 
@@ -44,6 +47,7 @@ import org.caffa.rpc.AppGrpc.AppBlockingStub;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.log4j.PropertyConfigurator;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -60,7 +64,8 @@ public class GrpcClientApp {
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
-    public GrpcClientApp(String host, int port) throws Exception {
+    public GrpcClientApp(String host, int port, String logConfigFilePath) throws Exception {
+        setupLogging(logConfigFilePath);
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
@@ -70,6 +75,43 @@ public class GrpcClientApp {
         this.sessionUuid = session.getUuid();
 
         startKeepAliveTransfer();
+    }
+
+    public GrpcClientApp(String host, int port) throws Exception {
+        this(host, port, "log4j.properties");
+    }
+
+    private void setupLogging(String logConfigFilePath) {
+        File log4jConfigFile = new File(logConfigFilePath);
+        if (log4jConfigFile.exists()) {
+            System.out.println("Reading log file: " + log4jConfigFile.getAbsolutePath());
+
+            PropertyConfigurator.configure(log4jConfigFile.getAbsolutePath());
+        } else {
+            System.out.println("Writing log file: " + log4jConfigFile.getAbsolutePath());
+            // CSOFF: Empty Block
+            try {
+                FileWriter writer = new FileWriter(log4jConfigFile);
+                String logFile = (log4jConfigFile.getParent() + File.separator).replace("\\", "\\\\")
+                        + "log4j.log";
+                PrintWriter pw = new PrintWriter(writer);
+                pw.println("log4j.rootLogger=INFO, R");
+                pw.println();
+                pw.println("log4j.appender.R=org.apache.log4j.RollingFileAppender");
+                pw.println(String.format("log4j.appender.R.File=%s", logFile));
+                pw.println("log4j.appender.R.layout=org.apache.log4j.PatternLayout");
+                pw.println(
+                        "log4j.appender.R.layout.ConversionPattern=%d{ISO8601} [%t] %-5p %c %x - %m%n");
+                pw.println("log4j.appender.R.MaxFileSize=10MB");
+                pw.println("log4j.appender.R.MaxBackupIndex=5");
+                pw.close();
+                writer.close();
+                PropertyConfigurator.configure(log4jConfigFile.getAbsolutePath());
+            } catch (Exception ex) {
+                // Do nothing
+            }
+            // CSON: Empty Block
+        }
     }
 
     public void cleanUp() {
