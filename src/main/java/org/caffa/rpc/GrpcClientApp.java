@@ -37,6 +37,7 @@ package org.caffa.rpc;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.locks.ReentrantLock;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -57,6 +58,7 @@ public class GrpcClientApp {
     private final ObjectAccessBlockingStub objectStub;
     private final ManagedChannel channel;
     private final String sessionUuid;
+    private final ReentrantLock lock = new ReentrantLock();
 
     /** Defines the keepalive interval (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 500;
@@ -158,7 +160,15 @@ public class GrpcClientApp {
                 .fromJson(jsonString, CaffaObject.class);
     }
 
-    public void startKeepAliveTransfer() throws Exception {
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
+    }
+
+    private void startKeepAliveTransfer() throws Exception {
         try {
             this.executor = Executors.newSingleThreadScheduledExecutor();
             this.executor.scheduleAtFixedRate(
@@ -177,14 +187,16 @@ public class GrpcClientApp {
         }
     }
 
-    public void stopKeepAliveTransfer() throws InterruptedException {
+    private void stopKeepAliveTransfer() throws InterruptedException {
         this.executor.shutdownNow();
         this.executor.awaitTermination(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
-    void sendKeepAliveMessage() {
+    private void sendKeepAliveMessage() {
+        lock();
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
         this.appStub.keepSessionAlive(session);
+        unlock();
     }
 
 }
