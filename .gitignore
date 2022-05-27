@@ -10,3 +10,4 @@ dist/
 gradlew
 gradlew.bat
 gradle/
+log4j.*
