@@ -211,8 +211,8 @@ public class CaffaObject {
                     .fromJson(returnValue.getJson(), CaffaObjectMethodResult.class);
         } catch (Exception e) {
             Status status = Status.fromThrowable(e);
-            logger.error("Failed to execute method with error: " + status.getDescription());
-            return null;
+            logger.error("Failed to execute method with error: " + status.getDescription() + " ... " + e.getMessage());
+            throw new RuntimeException(status.getDescription());
         }
     }
 }

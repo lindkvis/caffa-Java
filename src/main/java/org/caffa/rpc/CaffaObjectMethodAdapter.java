@@ -31,6 +31,7 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
         final JsonObject object = json.getAsJsonObject();
 
         assert object.has("Class") && object.has("UUID");
+        assert object.get("Class").isJsonPrimitive() && object.get("UUID").isJsonPrimitive();
 
         String classKeyword = object.get("Class").getAsString();
         String objectUuid = object.get("UUID").getAsString();
