@@ -55,10 +55,10 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         assert (json.isJsonObject());
         final JsonObject object = json.getAsJsonObject();
 
-        assert object.has("Class") && object.has("UUID");
+        assert object.has("class") && object.has("uuid");
 
-        String classKeyword = object.get("Class").getAsString();
-        String objectUuid = object.get("UUID").getAsString();
+        String classKeyword = object.get("class").getAsString();
+        String objectUuid = object.get("uuid").getAsString();
 
         CaffaObject caffaObject = new CaffaObject(classKeyword, objectUuid, this.sessionUuid);
         if (this.channel != null) {
@@ -83,7 +83,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         logger.debug("JSON: " + object.toString());
 
         for (String key : object.keySet()) {
-            if (!key.equals("Class") && !key.equals("UUID")) {
+            if (!key.equals("class") && !key.equals("uuid")) {
                 JsonObject jsonElement = object.get(key).getAsJsonObject();
                 jsonElement.addProperty("keyword", key);
                 CaffaField<?> field = new GsonBuilder()
@@ -113,8 +113,8 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         } else {
             logger.debug("without a gRPC-connection");
         }
-        jsonObject.addProperty("Class", caffaObject.classKeyword);
-        jsonObject.addProperty("UUID", caffaObject.uuid);
+        jsonObject.addProperty("class", caffaObject.classKeyword);
+        jsonObject.addProperty("uuid", caffaObject.uuid);
 
         for (CaffaField<?> field : caffaObject.fields()) {
             jsonObject.add(field.keyword,

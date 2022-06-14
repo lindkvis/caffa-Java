@@ -154,8 +154,8 @@ public class CaffaObject {
 
     public String getAddressJson() {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("Class", this.classKeyword);
-        jsonObject.addProperty("UUID", this.uuid);
+        jsonObject.addProperty("class", this.classKeyword);
+        jsonObject.addProperty("uuid", this.uuid);
         return jsonObject.toString();
     }
 

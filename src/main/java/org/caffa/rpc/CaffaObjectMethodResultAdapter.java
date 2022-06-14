@@ -22,10 +22,10 @@ public class CaffaObjectMethodResultAdapter extends CaffaObjectAdapter {
         assert (json.isJsonObject());
         final JsonObject object = json.getAsJsonObject();
 
-        assert object.has("Class") && object.has("UUID");
+        assert object.has("class") && object.has("uuid");
 
-        String classKeyword = object.get("Class").getAsString();
-        String objectUuid = object.get("UUID").getAsString();
+        String classKeyword = object.get("class").getAsString();
+        String objectUuid = object.get("uuid").getAsString();
 
         CaffaObjectMethodResult methodResult = new CaffaObjectMethodResult(classKeyword, objectUuid,
                 this.sessionUuid);
