@@ -164,7 +164,7 @@ public class CaffaObject {
 
         RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
-        ListMethodsRequest request = ListMethodsRequest.newBuilder().setSelf(self).setSession(session).build();
+        ListMethodsRequest request = ListMethodsRequest.newBuilder().setSelfObject(self).setSession(session).build();
 
         RpcObjectList methodList = this.objectStub.listMethods(request);
         for (RpcObject method : methodList.getObjectsList()) {
