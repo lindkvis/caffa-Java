@@ -91,8 +91,10 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                                 new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid))
                         .create()
                         .fromJson(jsonElement, CaffaField.class);
-
-                caffaObject.addField(field);
+                if (field != null)
+                {
+                    caffaObject.addField(field);
+                }
             }
         }
 

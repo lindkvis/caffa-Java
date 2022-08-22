@@ -78,23 +78,12 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
             }
             return new CaffaObjectArrayField(this.object, keyword, objectList);
         }
-        if (dataType.endsWith("[]")) {
-            logger.debug("Creating array field " + keyword);
-            dataType = dataType.substring(0, dataType.length() - 2);
-            CaffaField<?> field = CaffaFieldFactory.createArrayField(this.object, keyword, dataType);
-            assert field != null;
-
-            if (this.channel != null) {
-                field.createGrpcAccessor(this.channel);
-            } else {
-                logger.debug("Setting local value for object " + object.classKeyword + " and []field "
-                        + keyword + " to: " + valueElement.toString());
-                field.setJson(valueElement.toString());
-            }
-
-            return field;
+        if (dataType.endsWith("[][]"))
+        {
+            // TODO: Array of array fields are not supported in Caffa-Java yet, but we ignore them silently.
+            return null;
         }
-        logger.debug("Creating scalar field " + keyword);
+        logger.debug("Creating field " + keyword + " of type " + dataType);
         CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
         assert field != null;
         if (this.channel != null) {
