@@ -205,6 +205,8 @@ public class GrpcClientApp {
 
     public CaffaObject document(String documentId) {
         SessionMessage session = getSession();
+        if (session == null) return null;
+
         DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).setSession(session).build();
 
         RpcObject object = this.objectStub.getDocument(request);
@@ -237,7 +239,7 @@ public class GrpcClientApp {
                     KEEPALIVE_INTERVAL,
                     TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            logger.error("Failed to send keepalive: ", e);
+            logger.error("Failed to start keepalive: ", e);
             throw e;
         }
     }
