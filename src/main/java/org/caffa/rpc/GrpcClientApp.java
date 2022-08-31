@@ -111,28 +111,37 @@ public class GrpcClientApp {
 
     private SessionMessage getSession()
     {
+        SessionMessage existingSession = null;
         lock();
-        if (this.session != null)
+        existingSession = this.session;
+        unlock();
+
+        if (existingSession != null)
         {
             try
             {
-                this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL/2, TimeUnit.MILLISECONDS).keepSessionAlive(this.session);
+                SessionMessage checkSession = this.appStub.checkSession(existingSession);
+                if (!checkSession.getUuid().equals(existingSession.getUuid()))
+                {
+                    throw new RuntimeException("Session UUID mismatch");
+                }
             }
             catch(Exception e)
             {
-                this.session = null;
+                existingSession = null;
                 logger.warn("Could not keep alive old session: " + e.getMessage());
             }
         }
 
-        if (this.session == null)
+        if (existingSession == null)
         {
+            lock();
             this.session = createSession();
+            existingSession = this.session;
+            unlock();
         }
 
-        unlock();
-
-        return this.session;
+        return existingSession;
     }
 
     private void setupLogging(String logConfigFilePath) {
@@ -257,7 +266,7 @@ public class GrpcClientApp {
         {
             try
             {
-                this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL/2, TimeUnit.MILLISECONDS).keepSessionAlive(this.session);
+                this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS).keepSessionAlive(this.session);
                 success = true;
             }
             catch(Exception e)
