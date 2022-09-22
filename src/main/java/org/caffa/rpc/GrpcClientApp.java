@@ -46,6 +46,8 @@ import com.google.gson.GsonBuilder;
 
 import org.caffa.rpc.AppGrpc.AppBlockingStub;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
+import org.caffa.rpc.SessionParameters;
+import org.caffa.rpc.SessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.log4j.PropertyConfigurator;
@@ -66,77 +68,67 @@ public class GrpcClientApp {
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
-    public GrpcClientApp(String host, int port, String logConfigFilePath) throws Exception {
+    public GrpcClientApp(String host, int port, String logConfigFilePath, SessionType sessionType) throws Exception {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
 
-        if (!logConfigFilePath.isEmpty())
-        {
+        if (!logConfigFilePath.isEmpty()) {
             setupLogging(logConfigFilePath);
         }
 
-        this.session = createSession();
-        if (this.session == null)
-        {
+        this.session = createSession(sessionType);
+        if (this.session == null) {
             throw new RuntimeException("Failed to create session");
         }
 
         startKeepAliveTransfer();
     }
 
+    public GrpcClientApp(String host, int port, String logConfigFilePath) throws Exception {
+        this(host, port, logConfigFilePath, SessionType.REGULAR);
+    }
+
     public GrpcClientApp(String host, int port) throws Exception {
         this(host, port, "");
     }
 
-    private SessionMessage createSession()
-    {
+    private SessionMessage createSession(SessionType type) {
         SessionMessage session = null;
-        NullMessage message = NullMessage.getDefaultInstance();
+        SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
 
         // Try to get a session ten times for a total of two seconds
-        for (int i = 0; i < 10 && session == null; ++i)
-        {
-            try
-            {
-                session = this.appStub.withDeadlineAfter(200, TimeUnit.MILLISECONDS).createSession(message);
-            }
-            catch(Exception e)
-            {
+        for (int i = 0; i < 10 && session == null; ++i) {
+            try {
+                session = this.appStub.withDeadlineAfter(200, TimeUnit.MILLISECONDS).createSession(parameters);
+            } catch (Exception e) {
                 logger.error("Failed to create new session: ", e);
             }
         }
         return session;
     }
 
-    private SessionMessage getSession()
-    {
+    private SessionMessage getSession() {
         SessionMessage existingSession = null;
         lock();
         existingSession = this.session;
         unlock();
 
-        if (existingSession != null)
-        {
-            try
-            {
+        if (existingSession != null) {
+            try {
                 SessionMessage checkSession = this.appStub.checkSession(existingSession);
-                if (!checkSession.getUuid().equals(existingSession.getUuid()))
-                {
+                if (!checkSession.getUuid().equals(existingSession.getUuid())) {
                     throw new RuntimeException("Session UUID mismatch");
                 }
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 existingSession = null;
                 logger.warn("Could not keep alive old session: " + e.getMessage());
             }
         }
 
-        if (existingSession == null)
-        {
+        if (existingSession == null) {
             lock();
-            this.session = createSession();
+            this.session = createSession(SessionType.REGULAR);
             existingSession = this.session;
             unlock();
         }
@@ -181,8 +173,7 @@ public class GrpcClientApp {
         try {
             stopKeepAliveTransfer();
             SessionMessage session = getSession();
-            if (session != null)
-            {
+            if (session != null) {
                 logger.debug("Destroying session!");
                 this.appStub.destroySession(session);
 
@@ -214,7 +205,8 @@ public class GrpcClientApp {
 
     public CaffaObject document(String documentId) {
         SessionMessage session = getSession();
-        if (session == null) return null;
+        if (session == null)
+            return null;
 
         DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).setSession(session).build();
 
@@ -262,15 +254,12 @@ public class GrpcClientApp {
         boolean success = false;
 
         lock();
-        if (this.session != null)
-        {
-            try
-            {
-                this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS).keepSessionAlive(this.session);
+        if (this.session != null) {
+            try {
+                this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS)
+                        .keepSessionAlive(this.session);
                 success = true;
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 logger.error("Keepalive failed");
                 this.session = null;
             }
