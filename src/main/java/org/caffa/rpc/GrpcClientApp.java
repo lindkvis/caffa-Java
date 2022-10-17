@@ -64,6 +64,7 @@ public class GrpcClientApp {
 
     /** Defines the keepalive interval (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 500;
+    static final long KEEPALIVE_TIMEOUT = 5000;
     private ScheduledExecutorService executor;
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
@@ -100,7 +101,7 @@ public class GrpcClientApp {
         // Try to get a session ten times for a total of two seconds
         for (int i = 0; i < 10 && session == null; ++i) {
             try {
-                session = this.appStub.withDeadlineAfter(200, TimeUnit.MILLISECONDS).createSession(parameters);
+                session = this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL/2, TimeUnit.MILLISECONDS).createSession(parameters);
             } catch (Exception e) {
                 logger.error("Failed to create new session: ", e);
             }
@@ -256,7 +257,7 @@ public class GrpcClientApp {
         lock();
         if (this.session != null) {
             try {
-                this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS)
+                this.appStub.withDeadlineAfter(KEEPALIVE_TIMEOUT, TimeUnit.MILLISECONDS)
                         .keepSessionAlive(this.session);
                 success = true;
             } catch (Exception e) {
