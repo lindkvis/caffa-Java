@@ -11,8 +11,8 @@ import com.google.gson.GsonBuilder;
 public class CaffaObjectMethod extends CaffaObject {
     public final CaffaObject self;
 
-    public CaffaObjectMethod(String classKeyword, String uuid, CaffaObject self) {
-        super(classKeyword, uuid, self.sessionUuid());
+    public CaffaObjectMethod(String classKeyword, CaffaObject self) {
+        super(classKeyword, self.sessionUuid());
         this.self = self;
     }
 

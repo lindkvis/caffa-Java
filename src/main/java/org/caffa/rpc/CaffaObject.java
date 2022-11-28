@@ -43,7 +43,18 @@ public class CaffaObject {
         this.fields = new TreeMap<String, CaffaField<?>>();
     }
 
+    public CaffaObject(String classKeyword, String sessionUuid) {
+        assert !classKeyword.isEmpty();
+        assert !sessionUuid.isEmpty();
+
+        this.classKeyword = classKeyword;
+        this.uuid = "";
+        this.sessionUuid = sessionUuid;
+        this.fields = new TreeMap<String, CaffaField<?>>();
+    }
+
     void createGrpcAccessor(ManagedChannel channel) {
+        assert !uuid.isEmpty();
         this.channel = channel;
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
     }

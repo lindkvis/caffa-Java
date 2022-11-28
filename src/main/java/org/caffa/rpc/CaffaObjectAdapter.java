@@ -55,14 +55,21 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         assert (json.isJsonObject());
         final JsonObject object = json.getAsJsonObject();
 
-        assert object.has("class") && object.has("uuid");
+        assert object.has("class");
 
         String classKeyword = object.get("class").getAsString();
-        String objectUuid = object.get("uuid").getAsString();
 
-        CaffaObject caffaObject = new CaffaObject(classKeyword, objectUuid, this.sessionUuid);
-        if (this.channel != null) {
-            caffaObject.createGrpcAccessor(this.channel);
+        CaffaObject caffaObject = null;
+
+        if (object.has("uuid")) {
+            String objectUuid = object.get("uuid").getAsString();
+
+            caffaObject = new CaffaObject(classKeyword, objectUuid, this.sessionUuid);
+            if (this.channel != null) {
+                caffaObject.createGrpcAccessor(this.channel);
+            }
+        } else {
+            caffaObject = new CaffaObject(classKeyword, this.sessionUuid);
         }
 
         Gson gson = new GsonBuilder()
@@ -91,8 +98,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                                 new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid))
                         .create()
                         .fromJson(jsonElement, CaffaField.class);
-                if (field != null)
-                {
+                if (field != null) {
                     caffaObject.addField(field);
                 }
             }

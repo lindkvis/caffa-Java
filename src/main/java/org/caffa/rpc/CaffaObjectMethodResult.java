@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class CaffaObjectMethodResult extends CaffaObject {
-    public CaffaObjectMethodResult(String classKeyword, String uuid, String sessionUuid) {
-        super(classKeyword, uuid, sessionUuid);
+    public CaffaObjectMethodResult(String classKeyword, String sessionUuid) {
+        super(classKeyword, sessionUuid);
     }
 
     @Override
