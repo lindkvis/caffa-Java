@@ -196,6 +196,7 @@ public class GrpcClientApp {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.getAppInfo(message);
         StringBuilder sb = new StringBuilder();
+        sb.append("v");
         sb.append(appInfo.getMajorVersion());
         sb.append(".");
         sb.append(appInfo.getMinorVersion());
