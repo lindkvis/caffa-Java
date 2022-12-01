@@ -74,7 +74,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(CaffaField.class,
-                        new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid))
+                        new CaffaFieldAdapter(caffaObject, this.channel))
                 .registerTypeAdapter(CaffaObject.class,
                         new CaffaObjectAdapter(this.channel, this.sessionUuid))
                 .create();
@@ -95,7 +95,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                 jsonElement.addProperty("keyword", key);
                 CaffaField<?> field = new GsonBuilder()
                         .registerTypeAdapter(CaffaField.class,
-                                new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid))
+                                new CaffaFieldAdapter(caffaObject, this.channel))
                         .create()
                         .fromJson(jsonElement, CaffaField.class);
                 if (field != null) {
@@ -126,7 +126,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
         for (CaffaField<?> field : caffaObject.fields()) {
             jsonObject.add(field.keyword,
-                    new CaffaFieldAdapter(caffaObject, this.channel, this.sessionUuid).serialize(field, typeOfSrc,
+                    new CaffaFieldAdapter(caffaObject, this.channel).serialize(field, typeOfSrc,
                             context));
         }
     }

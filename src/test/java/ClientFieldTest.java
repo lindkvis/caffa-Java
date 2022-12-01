@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -13,10 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import org.caffa.rpc.CaffaAppEnum;
 import org.caffa.rpc.CaffaAppEnumField;
-import org.caffa.rpc.CaffaBooleanArrayField;
+import org.caffa.rpc.CaffaObjectArrayField;
 import org.caffa.rpc.CaffaField;
-import org.caffa.rpc.CaffaFloatArrayField;
-import org.caffa.rpc.CaffaIntArrayField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.GrpcClientApp;
 import org.junit.jupiter.api.AfterEach;
@@ -67,7 +66,8 @@ public class ClientFieldTest {
 
         Boolean foundDocumentFileName = false;
         for (CaffaField<?> field : object.fields()) {
-            System.out.println("Found field: '" + field.keyword + "' (" + field.type() + ")");
+            System.out.println("Found field: '" + field.keyword + "' (" + field.type() +
+                    ")");
             if (field.keyword.equals("fileName")) {
                 foundDocumentFileName = true;
                 assertEquals(String.class, field.type());
@@ -88,18 +88,16 @@ public class ClientFieldTest {
         CaffaField<?> floatArrayField = demoObject.field("floatVector");
         assertNotNull(floatArrayField);
         floatArrayField.dump();
-        CaffaFloatArrayField typedFloatArrayField = floatArrayField.cast(CaffaFloatArrayField.class, Float.class);
+        CaffaField<Float[]> typedFloatArrayField = floatArrayField.cast(Float[].class);
         assertNotNull(typedFloatArrayField);
 
         {
-            ArrayList<Float> values2 = new ArrayList<Float>();
-            values2.add(41.4f);
-            values2.add(42.0f);
-            values2.add(-23.0f);
-            typedFloatArrayField.set(values2);
+            Float[] values2 = { 41.4f, 42.0f, -23.0f, -82.0f };
+            assertDoesNotThrow(() -> typedFloatArrayField.set(values2));
         }
-        List<Float> values = typedFloatArrayField.get();
-        assertTrue(!values.isEmpty());
+        Float[] values = typedFloatArrayField.get();
+        assertTrue(values.length == 4);
+        assertTrue(values[3] == -82.0f);
     }
 
     @Test
@@ -114,24 +112,20 @@ public class ClientFieldTest {
         CaffaField<?> intArrayField = demoObject.field("proxyIntVector");
         assertNotNull(intArrayField);
         intArrayField.dump();
-        CaffaIntArrayField typedIntArrayField = intArrayField.cast(CaffaIntArrayField.class, Integer.class);
+        CaffaField<Integer[]> typedIntArrayField = intArrayField.cast(Integer[].class);
         assertNotNull(typedIntArrayField);
 
-        ArrayList<Integer> values = typedIntArrayField.get();
+        Integer[] values = typedIntArrayField.get();
 
         {
-            ArrayList<Integer> values2 = new ArrayList<Integer>();
-            values2.add(44);
-            values2.add(43);
-            values2.add(172);
+            Integer[] values2 = { 44, 43, 172 };
 
-            typedIntArrayField.set(values2);
+            assertDoesNotThrow(() -> typedIntArrayField.set(values2));
 
-            ArrayList<Integer> values3 = typedIntArrayField.get();
-            assertTrue(!values3.isEmpty());
-            assertEquals(values2, values3);
+            Integer[] values3 = typedIntArrayField.get();
+            assertTrue(Arrays.equals(values3, values2));
         }
-        typedIntArrayField.set(values);
+        assertDoesNotThrow(() -> typedIntArrayField.set(values));
 
         System.out.print("\n");
     }
@@ -148,24 +142,22 @@ public class ClientFieldTest {
         CaffaField<?> boolArrayField = demoObject.field("boolVector");
         assertNotNull(boolArrayField);
         boolArrayField.dump();
-        CaffaBooleanArrayField typedBoolArrayField = boolArrayField.cast(CaffaBooleanArrayField.class, Boolean.class);
+        CaffaField<Boolean[]> typedBoolArrayField = boolArrayField.cast(Boolean[].class);
         assertNotNull(typedBoolArrayField);
-        ArrayList<Boolean> values = typedBoolArrayField.get();
+        Boolean[] values = typedBoolArrayField.get();
 
         {
-            ArrayList<Boolean> values2 = new ArrayList<Boolean>();
-            values2.addAll(values);
-            values2.add(true);
-            values2.add(false);
-            values2.add(true);
+            Boolean[] values2 = { true, false, true };
+            Boolean[] mergedValues = Arrays.copyOf(values, values.length + values2.length);
+            System.arraycopy(values2, 0, mergedValues, values.length, values2.length);
+            assertDoesNotThrow(() -> typedBoolArrayField.set(mergedValues));
 
-            typedBoolArrayField.set(values2);
-
-            ArrayList<Boolean> values3 = typedBoolArrayField.get();
-            assertEquals(values2.size(), values3.size());
-            assertEquals(values2, values3);
+            Boolean[] values3 = typedBoolArrayField.get();
+            assertEquals(mergedValues.length, values3.length);
+            assertTrue(Arrays.equals(values3, mergedValues));
         }
-        typedBoolArrayField.set(values);
+
+        assertDoesNotThrow(() -> typedBoolArrayField.set(values));
     }
 
     @Test
@@ -202,7 +194,8 @@ public class ClientFieldTest {
         CaffaObject demoObject = children.get(0);
         demoObject.field("enumField").dump();
         CaffaField<?> untypedEnumField = demoObject.field("enumField");
-        CaffaAppEnumField enumField = untypedEnumField.cast(CaffaAppEnumField.class, CaffaAppEnum.class);
+        CaffaAppEnumField enumField = untypedEnumField.cast(CaffaAppEnumField.class,
+                CaffaAppEnum.class);
         CaffaAppEnum originalValue = enumField.get();
 
         assertDoesNotThrow(() -> enumField.set("T3"));
@@ -214,4 +207,5 @@ public class ClientFieldTest {
         assertDoesNotThrow(() -> enumField.set(originalValue));
         assertEquals(originalValue.value(), enumField.get().value());
     }
+
 }

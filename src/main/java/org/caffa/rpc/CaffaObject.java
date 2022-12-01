@@ -93,7 +93,9 @@ public class CaffaObject {
         for (Map.Entry<String, CaffaField<?>> entry : fields.entrySet()) {
             CaffaField<?> field = entry.getValue();
             logger.debug("Getting children from field: " + entry.getKey());
-            allChildren.addAll(field.children());
+            for (CaffaObject child : field.children()) {
+                allChildren.add(child);
+            }
             logger.debug("Got children from field: " + entry.getKey());
         }
         return allChildren;
@@ -225,5 +227,9 @@ public class CaffaObject {
             logger.error("Failed to execute method with error: " + status.getDescription() + " ... " + e.getMessage());
             throw new RuntimeException(status.getDescription());
         }
+    }
+
+    public String typeString() {
+        return "object";
     }
 }
