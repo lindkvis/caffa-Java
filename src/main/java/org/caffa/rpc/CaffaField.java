@@ -3,16 +3,11 @@ package org.caffa.rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.grpc.ManagedChannel;
-
 import com.google.gson.GsonBuilder;
-import java.util.ArrayList;
-import java.util.List;
 import java.lang.reflect.Type;
 
 public class CaffaField<T extends Object> extends CaffaAbstractField {
     private final Type dataType;
-    protected final Type scalarType;
 
     private static Logger logger = LoggerFactory.getLogger(CaffaField.class);
 
@@ -22,23 +17,6 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     public CaffaField(CaffaObject owner, String keyword, Type dataType) {
         super(owner, keyword);
         this.dataType = dataType;
-        this.scalarType = dataType;
-    }
-
-    /**
-     * Constructor for when the field data type (i.e. ArrayList) is not the same as
-     * the scalar type (the content of the ArrayList)
-     *
-     * @param owner
-     * @param keyword
-     * @param dataType
-     * @param scalarType
-     */
-    public CaffaField(CaffaObject owner, String keyword, Type dataType, Type scalarType) {
-        super(owner, keyword);
-        this.dataType = dataType;
-        this.scalarType = scalarType;
-
     }
 
     public String getJson() {
@@ -53,7 +31,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
         logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
-        GenericScalar reply = this.fieldBlockingStub.getValue(fieldRequest);
+        GenericValue reply = this.fieldBlockingStub.getValue(fieldRequest);
         logger.debug("Got field reply: " + reply.getValue());
         return reply.getValue();
     }
@@ -85,15 +63,16 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public void set(T value) throws Exception {
-        logger.debug("Setting JSON for field " + this.keyword);
+        logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
         setJson(builder.create().toJson(value));
     }
 
-    public List<CaffaObject> children() {
-        return new ArrayList<>();
+    public CaffaObject[] children() {
+        CaffaObject[] emptyArray = {};
+        return emptyArray;
     }
 
     public void dump() {
@@ -113,7 +92,9 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public <U, V> U cast(Class<U> fieldType, Class<V> primitiveType) {
-        if (primitiveType == this.scalarType) {
+        System.out.println("Casting field of " + this.dataType.getTypeName() + " to "
+                + fieldType.getTypeName() + "::" + primitiveType.getTypeName());
+        if (primitiveType == this.dataType) {
             return fieldType.cast(this);
         }
         return null;
@@ -121,7 +102,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
 
     @SuppressWarnings("unchecked")
     public <V> CaffaField<V> cast(Class<V> primitiveType) {
-        if (primitiveType == this.scalarType) {
+        if (primitiveType == this.dataType) {
             return (CaffaField<V>) this;
         }
         return null;
@@ -153,7 +134,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public boolean isArray() {
-        return this.dataType == ArrayList.class;
+        return this.dataType.getClass().isArray();
     }
 
     public void setUnsigned(boolean unsigned) {
@@ -166,9 +147,9 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
 
     public String typeString() {
         if (this.getUnsigned()) {
-            return "u" + CaffaFieldFactory.dataTypes.inverse().get(this.scalarType);
+            return "u" + CaffaFieldFactory.dataTypes.inverse().get(this.dataType);
         }
-        return CaffaFieldFactory.dataTypes.inverse().get(this.scalarType);
+        return CaffaFieldFactory.dataTypes.inverse().get(this.dataType);
     }
 
 }

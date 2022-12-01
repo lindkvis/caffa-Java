@@ -34,8 +34,9 @@ public class CaffaObjectField extends CaffaField<CaffaObject> {
     }
 
     @Override
-    public final List<CaffaObject> children() {
-        return Arrays.asList(this.get());
+    public final CaffaObject[] children() {
+        CaffaObject[] singleEntry = { this.get() };
+        return singleEntry;
     }
 
     @Override

@@ -21,15 +21,13 @@ import java.util.ArrayList;
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
     private final CaffaObject object;
     private final ManagedChannel channel;
-    private final String sessionUuid;
     private static Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
 
-    public CaffaFieldAdapter(CaffaObject object, ManagedChannel channel, String sessionUuid) {
+    public CaffaFieldAdapter(CaffaObject object, ManagedChannel channel) {
         super();
 
         this.object = object;
         this.channel = channel;
-        this.sessionUuid = sessionUuid;
     }
 
     public CaffaField<?> createField(String keyword, String dataType, JsonElement valueElement) {
@@ -39,48 +37,9 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
             assert valueElement != null;
         }
 
-        if (dataType.equals("object")) {
-            logger.debug("Creating object field " + keyword + " with grpc: " + (this.channel != null));
-
-            if (this.channel != null) {
-                CaffaObjectField field = new CaffaObjectField(this.object, keyword);
-                field.createGrpcAccessor(this.channel);
-                return field;
-            }
-
-            CaffaObject caffaObject = new GsonBuilder()
-                    .registerTypeAdapter(CaffaObject.class,
-                            new CaffaObjectAdapter(this.channel, this.sessionUuid))
-                    .create()
-                    .fromJson(valueElement, CaffaObject.class);
-            return new CaffaObjectField(this.object, keyword, caffaObject);
-
-        }
-        if (dataType.equals("object[]")) {
-            logger.debug("Creating object array field " + keyword);
-
-            if (this.channel != null) {
-                CaffaObjectArrayField field = new CaffaObjectArrayField(this.object, keyword);
-                field.createGrpcAccessor(this.channel);
-                return field;
-            }
-            ArrayList<CaffaObject> objectList = new ArrayList<>();
-            JsonArray objectArray = valueElement.getAsJsonArray();
-            for (int i = 0; i < objectArray.size(); ++i) {
-                CaffaObject caffaObject = new GsonBuilder()
-                        .registerTypeAdapter(CaffaObject.class,
-                                new CaffaObjectAdapter(this.channel, this.sessionUuid))
-                        .create()
-                        .fromJson(objectArray.get(i), CaffaObject.class);
-                if (caffaObject != null) {
-                    objectList.add(caffaObject);
-                }
-            }
-            return new CaffaObjectArrayField(this.object, keyword, objectList);
-        }
-        if (dataType.endsWith("[][]"))
-        {
-            // TODO: Array of array fields are not supported in Caffa-Java yet, but we ignore them silently.
+        if (dataType.endsWith("[][]")) {
+            // TODO: Array of array fields are not supported in Caffa-Java yet, but we
+            // ignore them silently.
             return null;
         }
         logger.debug("Creating field " + keyword + " of type " + dataType);
