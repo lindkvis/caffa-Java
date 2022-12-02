@@ -31,8 +31,8 @@ public class CaffaFieldFactory {
         addCreator("int64[]", Long[].class);
         addCreator("string[]", String[].class);
 
-        fieldCreators.put("object", new CaffaObjectField(null, ""));
-        fieldCreators.put("object[]", new CaffaObjectArrayField(null, ""));
+        addCreator("object", CaffaObject.class);
+        addCreator("object[]", CaffaObject[].class);
 
         dataTypes.put("AppEnum", CaffaAppEnum.class);
         fieldCreators.put("AppEnum", new CaffaAppEnumField(null, ""));
