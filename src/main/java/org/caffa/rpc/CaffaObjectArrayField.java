@@ -18,16 +18,6 @@ import java.util.List;
 public class CaffaObjectArrayField extends CaffaField<CaffaObject[]> {
     protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectArrayField.class);
 
-    public CaffaObjectArrayField(CaffaObject owner, String keyword, CaffaObject[] value) {
-        super(owner, keyword, CaffaObject[].class);
-        assert value != null;
-        try {
-            this.set(value);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-    }
-
     public CaffaObjectArrayField(CaffaObject owner, String keyword) {
         super(owner, keyword, CaffaObject[].class);
     }
