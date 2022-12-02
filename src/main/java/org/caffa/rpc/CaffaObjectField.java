@@ -11,16 +11,6 @@ import java.util.List;
 public class CaffaObjectField extends CaffaField<CaffaObject> {
     protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectField.class);
 
-    public CaffaObjectField(CaffaObject owner, String keyword, CaffaObject value) {
-        super(owner, keyword, CaffaObject.class);
-        assert value != null;
-        try {
-            this.set(value);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-    }
-
     public CaffaObjectField(CaffaObject owner, String keyword) {
         super(owner, keyword, CaffaObject.class);
     }
