@@ -33,11 +33,6 @@ public class CaffaObjectArrayField extends CaffaField<CaffaObject[]> {
     }
 
     @Override
-    public final CaffaObject[] children() {
-        return get();
-    }
-
-    @Override
     public String dump(String prefix) {
         String result = prefix + "{\n";
         result += prefix + "  keyword = " + this.keyword + "\n";

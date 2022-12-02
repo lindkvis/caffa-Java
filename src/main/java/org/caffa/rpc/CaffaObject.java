@@ -98,40 +98,6 @@ public class CaffaObject {
         return result;
     }
 
-    public ArrayList<CaffaObject> children() {
-        ArrayList<CaffaObject> allChildren = new ArrayList<CaffaObject>();
-        logger.debug("Fields size: " + fields.size());
-        for (Map.Entry<String, CaffaField<?>> entry : fields.entrySet()) {
-            CaffaField<?> field = entry.getValue();
-            logger.debug("Getting children from field: " + entry.getKey());
-            for (CaffaObject child : field.children()) {
-                allChildren.add(child);
-            }
-            logger.debug("Got children from field: " + entry.getKey());
-        }
-        return allChildren;
-    }
-
-    public ArrayList<CaffaObject> descendantsMatchingKeyword(String keyword) {
-        ArrayList<CaffaObject> matchingObjects = new ArrayList<CaffaObject>();
-        for (CaffaObject child : children()) {
-            if (child.classKeyword.equals(keyword)) {
-                matchingObjects.add(child);
-            }
-            matchingObjects.addAll(child.descendantsMatchingKeyword(keyword));
-        }
-        return matchingObjects;
-    }
-
-    public ArrayList<CaffaObject> ancestorsMatchingKeyword(String keyword) {
-        ArrayList<CaffaObject> matchingObjects = new ArrayList<CaffaObject>();
-        matchingObjects.addAll(parent().ancestorsMatchingKeyword(keyword));
-        if (parent().classKeyword.equals(keyword)) {
-            matchingObjects.add(parent());
-        }
-        return matchingObjects;
-    }
-
     public CaffaField<?> field(String keyword) throws RuntimeException {
         if (!this.fields.containsKey(keyword)) {
             String errMsg = "Field does not exist: " + keyword;
@@ -141,15 +107,8 @@ public class CaffaObject {
         return this.fields.get(keyword);
     }
 
-    public <T> CaffaField<T> typedField(String keyword, Class<T> type) throws RuntimeException {
-        CaffaField<?> untypedField = this.fields.get(keyword);
-        if (untypedField == null) {
-            String errMsg = "Field '" + keyword + "' of type " + type.getName() + " does not exist";
-            logger.error(errMsg);
-            throw new RuntimeException(errMsg);
-
-        }
-        return untypedField.cast(type);
+    public <T> CaffaField<T> field(String keyword, Class<T> type) throws RuntimeException {
+        return field(keyword).cast(type);
     }
 
     public List<CaffaField<?>> fields() {
@@ -169,8 +128,9 @@ public class CaffaObject {
     }
 
     public String getJson() {
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel, this.sessionUuid));
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaField.class,
+                new CaffaFieldAdapter(this, this.channel)).registerTypeAdapter(CaffaObject.class,
+                        new CaffaObjectAdapter(this.channel, this.sessionUuid));
         Gson gson = builder.create();
         String jsonObject = gson.toJson(this);
         return jsonObject;
@@ -192,7 +152,8 @@ public class CaffaObject {
 
         RpcObjectList methodList = this.objectStub.listMethods(request);
         for (RpcObject method : methodList.getObjectsList()) {
-            CaffaObjectMethod caffaMethod = new GsonBuilder()
+            CaffaObjectMethod caffaMethod = new GsonBuilder().registerTypeAdapter(CaffaField.class,
+                    new CaffaFieldAdapter(this, this.channel))
                     .registerTypeAdapter(CaffaObjectMethod.class,
                             new CaffaObjectMethodAdapter(this))
                     .create()
@@ -231,6 +192,8 @@ public class CaffaObject {
             return new GsonBuilder()
                     .registerTypeAdapter(CaffaObjectMethodResult.class, new CaffaObjectMethodResultAdapter(
                             this.channel, this.sessionUuid))
+                    .registerTypeAdapter(CaffaField.class,
+                            new CaffaFieldAdapter(this, this.channel))
                     .create()
                     .fromJson(returnValue.getJson(), CaffaObjectMethodResult.class);
         } catch (Exception e) {

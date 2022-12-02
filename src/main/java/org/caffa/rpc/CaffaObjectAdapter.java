@@ -96,6 +96,8 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                 CaffaField<?> field = new GsonBuilder()
                         .registerTypeAdapter(CaffaField.class,
                                 new CaffaFieldAdapter(caffaObject, this.channel))
+                        .registerTypeAdapter(CaffaObject.class,
+                                new CaffaObjectAdapter(this.channel, this.sessionUuid))
                         .create()
                         .fromJson(jsonElement, CaffaField.class);
                 if (field != null) {
