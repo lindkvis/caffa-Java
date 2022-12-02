@@ -39,7 +39,6 @@ public class CaffaObjectArrayField extends CaffaField<CaffaObject[]> {
 
     @Override
     public String dump(String prefix) {
-        System.out.println("Dumping the object array field " + this.keyword + " with json: " + this.getJson());
         String result = prefix + "{\n";
         result += prefix + "  keyword = " + this.keyword + "\n";
         result += prefix + "  type = CaffaObjectArrayField::";
@@ -52,7 +51,6 @@ public class CaffaObjectArrayField extends CaffaField<CaffaObject[]> {
         result += prefix + "  value = [\n";
 
         for (CaffaObject object : this.get()) {
-            System.out.println("Now dumping " + object);
             assert object != null;
             result += object.dump(prefix + "  ") + "\n";
         }

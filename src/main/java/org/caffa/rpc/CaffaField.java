@@ -90,8 +90,6 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public <U, V> U cast(Class<U> fieldType, Class<V> primitiveType) {
-        System.out.println("Casting field of " + this.dataType.getTypeName() + " to "
-                + fieldType.getTypeName() + "::" + primitiveType.getTypeName());
         if (primitiveType == this.dataType) {
             return fieldType.cast(this);
         }

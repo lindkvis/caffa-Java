@@ -84,19 +84,15 @@ public class CaffaObject {
         result += prefix + "  classKeyword = " + this.classKeyword + "\n";
         result += prefix + "  uuid = " + uuid + "\n";
         result += prefix + "  fields = [\n";
-        System.out.println("Looking through fields " + this.classKeyword + "->" + this.fields);
         for (Map.Entry<String, CaffaField<?>> entry : this.fields.entrySet()) {
             CaffaField<?> field = entry.getValue();
             if (field == null) {
                 logger.error("Field " + entry.getKey() + " is null!");
             } else {
                 assert field != null;
-                System.out.println("Dumping field " + field);
                 result += field.dump(prefix + "    ");
-                System.out.println("Done dumping field " + field);
             }
         }
-        System.out.println("Done looking through fields");
         result += prefix + "  ]\n";
         result += prefix + "}\n";
         return result;
