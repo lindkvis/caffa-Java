@@ -72,7 +72,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             caffaObject = new CaffaObject(classKeyword, this.sessionUuid);
         }
 
-        Gson gson = new GsonBuilder()
+        new GsonBuilder()
                 .registerTypeAdapter(CaffaField.class,
                         new CaffaFieldAdapter(caffaObject, this.channel))
                 .registerTypeAdapter(CaffaObject.class,
