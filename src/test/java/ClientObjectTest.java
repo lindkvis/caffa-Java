@@ -65,6 +65,10 @@ public class ClientObjectTest {
         for (CaffaObject child : children) {
             System.out.println("Found child of class: " + child.classKeyword);
         }
+
+        CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects").cast(CaffaObject[].class);
+        assertEquals(3, inheritedField.get().length);
+
     }
 
     @Test
