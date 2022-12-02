@@ -60,13 +60,10 @@ public class ClientObjectTest {
     void children() {
         CaffaObject object = testApp.document("");
 
-        ArrayList<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
-        for (CaffaObject child : children) {
-            System.out.println("Found child of class: " + child.classKeyword);
-        }
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
 
-        CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects").cast(CaffaObject[].class);
+        CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects", CaffaObject[].class);
         assertEquals(3, inheritedField.get().length);
 
     }
@@ -77,8 +74,16 @@ public class ClientObjectTest {
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
-        ArrayList<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
+        ArrayList<CaffaObject> children = new ArrayList<CaffaObject>();
+
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
+        children.add(demoObject);
+
+        CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects", CaffaObject[].class);
+        children.addAll(Arrays.asList(inheritedField.get()));
+
+        assertEquals(4, children.size());
         for (CaffaObject child : children) {
             System.out.println("Found child of class: " + child.classKeyword +
                     " ... checking methods!");
@@ -110,7 +115,7 @@ public class ClientObjectTest {
             boolean status = result.field("status").cast(Boolean.class).get();
             assertTrue(status);
 
-            CaffaField<Double> doubleField = child.typedField("doubleField",
+            CaffaField<Double> doubleField = child.field("doubleField",
                     Double.class);
             assertEquals(99.0, doubleField.get());
 
@@ -125,8 +130,15 @@ public class ClientObjectTest {
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
-        ArrayList<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
+        ArrayList<CaffaObject> children = new ArrayList<CaffaObject>();
+
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
+        children.add(demoObject);
+
+        CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects", CaffaObject[].class);
+        children.addAll(Arrays.asList(inheritedField.get()));
+
         for (CaffaObject child : children) {
             String methodName = new String("copyObject");
             CaffaObjectMethod copyObjectMethod = child.method(methodName);
@@ -139,10 +151,10 @@ public class ClientObjectTest {
                     "TestValue", String.class));
             CaffaObjectMethodResult result = copyObjectMethod.execute();
 
-            CaffaField<Boolean> status = result.typedField("status", Boolean.class);
+            CaffaField<Boolean> status = result.field("status", Boolean.class);
             assertTrue(status.get());
 
-            CaffaField<Double> doubleField = child.typedField("doubleField",
+            CaffaField<Double> doubleField = child.field("doubleField",
                     Double.class);
             assertEquals(97.0, doubleField.get());
             assertEquals(43, child.field("intField").get(Integer.class));
@@ -156,7 +168,15 @@ public class ClientObjectTest {
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
-        ArrayList<CaffaObject> children = object.children();
+        ArrayList<CaffaObject> children = new ArrayList<CaffaObject>();
+
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
+        children.add(demoObject);
+
+        CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects", CaffaObject[].class);
+        children.addAll(Arrays.asList(inheritedField.get()));
+
         assertTrue(!children.isEmpty());
         for (CaffaObject child : children) {
             String methodName = new String("copyObjectDoesNotExist");

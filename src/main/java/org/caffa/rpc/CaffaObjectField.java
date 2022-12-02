@@ -42,12 +42,6 @@ public class CaffaObjectField extends CaffaField<CaffaObject> {
     }
 
     @Override
-    public final CaffaObject[] children() {
-        CaffaObject[] singleEntry = { this.get() };
-        return singleEntry;
-    }
-
-    @Override
     public CaffaField<CaffaObject> newInstance(CaffaObject owner, String keyword) {
         return new CaffaObjectField(owner, keyword);
     }

@@ -79,11 +79,9 @@ public class ClientFieldTest {
     @Test
     void floatVector() {
         CaffaObject object = testApp.document("testDocument");
-        System.out.println("Getting children!");
-        List<CaffaObject> children = object.children();
-        System.out.println("Got children!");
-        assertTrue(!children.isEmpty());
-        CaffaObject demoObject = children.get(0);
+
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
         System.out.println("Check which field was actually created:");
         CaffaField<?> floatArrayField = demoObject.field("floatVector");
         assertNotNull(floatArrayField);
@@ -103,11 +101,8 @@ public class ClientFieldTest {
     @Test
     void intVector() {
         CaffaObject object = testApp.document("testDocument");
-        System.out.println("Getting children!");
-        List<CaffaObject> children = object.children();
-        System.out.println("Got children!");
-        assertTrue(!children.isEmpty());
-        CaffaObject demoObject = children.get(0);
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
         System.out.println("Check which field was actually created:");
         CaffaField<?> intArrayField = demoObject.field("proxyIntVector");
         assertNotNull(intArrayField);
@@ -133,11 +128,8 @@ public class ClientFieldTest {
     @Test
     void boolVector() {
         CaffaObject object = testApp.document("testDocument");
-        System.out.println("Getting children!");
-        List<CaffaObject> children = object.children();
-        System.out.println("Got children!");
-        assertTrue(!children.isEmpty());
-        CaffaObject demoObject = children.get(0);
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
         System.out.println("Check which field was actually created:");
         CaffaField<?> boolArrayField = demoObject.field("boolVector");
         assertNotNull(boolArrayField);
@@ -164,9 +156,8 @@ public class ClientFieldTest {
     void doubleMember() {
         CaffaObject object = testApp.document("");
 
-        List<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
-        CaffaObject demoObject = children.get(0);
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
         System.out.println("Check that a double field was actually created:");
         System.out.println(demoObject.field("doubleField").dump());
         CaffaField<?> untypedDoubleField = demoObject.field("doubleField");
@@ -189,9 +180,8 @@ public class ClientFieldTest {
     void appEnumMember() {
         CaffaObject object = testApp.document("");
 
-        List<CaffaObject> children = object.children();
-        assertTrue(!children.isEmpty());
-        CaffaObject demoObject = children.get(0);
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
+        assertNotNull(demoObject);
         System.out.println(demoObject.field("enumField").dump());
         CaffaField<?> untypedEnumField = demoObject.field("enumField");
         CaffaAppEnumField enumField = untypedEnumField.cast(CaffaAppEnumField.class,
