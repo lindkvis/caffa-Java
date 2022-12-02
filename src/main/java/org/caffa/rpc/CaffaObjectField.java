@@ -26,11 +26,19 @@ public class CaffaObjectField extends CaffaField<CaffaObject> {
     }
 
     @Override
-    public void dump() {
-        System.out.println("CaffaObjectField {");
-        super.dump();
-        this.get().dump();
-        System.out.println("}");
+    public String dump(String prefix) {
+        String result = prefix + "{\n";
+        result += prefix + "  keyword = " + this.keyword + "\n";
+        result += prefix + "  type = CaffaObjectField::";
+        if (!this.localValue.isEmpty()) {
+            result += "local\n";
+        } else {
+            result += "grpc\n";
+        }
+
+        result += prefix + "  value = " + this.get().dump(prefix + "  ");
+        result += prefix + "}\n";
+        return result;
     }
 
     @Override

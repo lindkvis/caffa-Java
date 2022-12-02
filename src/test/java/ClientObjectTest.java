@@ -53,7 +53,7 @@ public class ClientObjectTest {
     void dumpDocument() {
         CaffaObject object = testApp.document("");
         assertTrue(!object.fields().isEmpty());
-        object.dump();
+        System.out.println(object.dump());
     }
 
     @Test

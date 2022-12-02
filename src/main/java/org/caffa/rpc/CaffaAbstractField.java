@@ -35,6 +35,11 @@ public abstract class CaffaAbstractField {
         return this.channel != null && this.fieldStub != null && this.fieldBlockingStub != null;
     }
 
+    public CaffaObject[] children() {
+        CaffaObject[] emptyArray = {};
+        return emptyArray;
+    }
+
     public void createGrpcAccessor(ManagedChannel channel) {
         assert this.owner != null;
         this.channel = channel;
@@ -48,6 +53,10 @@ public abstract class CaffaAbstractField {
 
     public abstract String typeString();
 
-    public abstract void dump();
+    public String dump() {
+        return dump("");
+    }
+
+    public abstract String dump(String prefix);
 
 }
