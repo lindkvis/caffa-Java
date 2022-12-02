@@ -80,7 +80,7 @@ public class CaffaObject {
     }
 
     public String dump(String prefix) {
-        String result = "{\n";
+        String result = prefix + "{\n";
         result += prefix + "  classKeyword = " + this.classKeyword + "\n";
         result += prefix + "  uuid = " + uuid + "\n";
         result += prefix + "  fields = [\n";

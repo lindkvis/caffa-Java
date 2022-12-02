@@ -36,7 +36,7 @@ public class CaffaObjectField extends CaffaField<CaffaObject> {
             result += "grpc\n";
         }
 
-        result += prefix + "  value = " + this.get().dump(prefix + "  ");
+        result += prefix + "  value =\n" + this.get().dump(prefix + "  ");
         result += prefix + "}\n";
         return result;
     }
