@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 
-
 public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     private ArrayList<String> validValues = new ArrayList<String>();
     private static Logger logger = LoggerFactory.getLogger(CaffaAppEnumField.class);
@@ -20,28 +19,30 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
         validValues.add(validValue);
     }
 
-    public void dump() {
-        System.out.print("CaffaField<AppEnum>(");
+    public String dump(String prefix) {
+        String result = prefix + "{\n";
+
+        result += prefix + "  keyword = " + this.keyword + "\n";
+        result += prefix + "  type = CaffaField<AppEnum>(";
         for (int index = 0; index < validValues.size(); ++index) {
             if (index > 0) {
-                System.out.print(",");
+                result += ",";
             }
-            System.out.print(validValues.get(index));
+            result += validValues.get(index);
         }
-        System.out.print(")::");
+        result += ")::";
 
         if (this.localValue != null) {
-            System.out.print("local");
+            result += "local\n";
         } else {
-            System.out.print("grpc");
+            result += "grpc\n";
         }
 
-        System.out.println(" {");
-        System.out.println("keyword = " + this.keyword);
-        if (this.localValue != null) {
-            System.out.println("value = " + this.localValue);
+        if (!this.localValue.isEmpty()) {
+            result += prefix + "  value = " + this.localValue + "\n";
         }
-        System.out.println("}");
+        result += prefix + "}\n";
+        return result;
     }
 
     @Override
@@ -67,12 +68,11 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     }
 
     @Override
-    public String typeString()
-    {
+    public String typeString() {
         String validValueString = "";
-        for (String validValue : validValues)
-        {
-            if (!validValueString.isEmpty()) validValueString += ",";
+        for (String validValue : validValues) {
+            if (!validValueString.isEmpty())
+                validValueString += ",";
             validValueString += validValue;
         }
         return "AppEnum(" + validValueString + ")";

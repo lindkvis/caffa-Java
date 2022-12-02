@@ -70,25 +70,23 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         setJson(builder.create().toJson(value));
     }
 
-    public CaffaObject[] children() {
-        CaffaObject[] emptyArray = {};
-        return emptyArray;
-    }
+    public String dump(String prefix) {
+        String result = prefix + "{\n";
+        result += prefix + "  keyword = " + this.keyword + "\n";
 
-    public void dump() {
-        System.out.print("CaffaField<" + dataType + ">::");
-        if (this.localValue != null) {
-            System.out.print("local");
+        result += prefix + "  type = CaffaField<" + dataType + ">::";
+        if (!this.localValue.isEmpty()) {
+            result += "local\n";
         } else {
-            System.out.print("grpc");
+            result += "grpc\n";
         }
 
-        System.out.println(" {");
-        System.out.println("keyword = " + this.keyword);
-        if (this.localValue != null) {
-            System.out.println("value = " + this.localValue);
+        if (!this.localValue.isEmpty()) {
+            result += prefix + "  value = " + this.localValue + "\n";
         }
-        System.out.println("}");
+        result += prefix + "}\n";
+
+        return result;
     }
 
     public <U, V> U cast(Class<U> fieldType, Class<V> primitiveType) {

@@ -75,16 +75,31 @@ public class CaffaObject {
         return this.sessionUuid;
     }
 
-    public void dump() {
-        System.out.println(this.classKeyword + " {");
-        System.out.println("uuid = " + uuid);
-        System.out.println("fields = [");
+    public String dump() {
+        return dump("");
+    }
+
+    public String dump(String prefix) {
+        String result = "{\n";
+        result += prefix + "  classKeyword = " + this.classKeyword + "\n";
+        result += prefix + "  uuid = " + uuid + "\n";
+        result += prefix + "  fields = [\n";
+        System.out.println("Looking through fields " + this.classKeyword + "->" + this.fields);
         for (Map.Entry<String, CaffaField<?>> entry : this.fields.entrySet()) {
-            System.out.print(entry.getKey() + " = ");
-            entry.getValue().dump();
+            CaffaField<?> field = entry.getValue();
+            if (field == null) {
+                logger.error("Field " + entry.getKey() + " is null!");
+            } else {
+                assert field != null;
+                System.out.println("Dumping field " + field);
+                result += field.dump(prefix + "    ");
+                System.out.println("Done dumping field " + field);
+            }
         }
-        System.out.println("]");
-        System.out.println("}");
+        System.out.println("Done looking through fields");
+        result += prefix + "  ]\n";
+        result += prefix + "}\n";
+        return result;
     }
 
     public ArrayList<CaffaObject> children() {
