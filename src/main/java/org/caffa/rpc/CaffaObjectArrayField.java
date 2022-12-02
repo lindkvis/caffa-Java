@@ -70,10 +70,4 @@ public class CaffaObjectArrayField extends CaffaField<CaffaObject[]> {
         return "object[]";
     }
 
-    @Override
-    public CaffaObject[] get() {
-        logger.debug("Getting JSON for field " + this.keyword);
-        String json = getJson();
-        return new Gson().fromJson(json, CaffaObject[].class);
-    }
 }
