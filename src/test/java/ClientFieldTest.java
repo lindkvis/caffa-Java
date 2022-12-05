@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import org.caffa.rpc.CaffaAppEnum;
 import org.caffa.rpc.CaffaAppEnumField;
-import org.caffa.rpc.CaffaObjectArrayField;
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.GrpcClientApp;

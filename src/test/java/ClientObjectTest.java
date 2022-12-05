@@ -1,5 +1,4 @@
 import org.caffa.rpc.CaffaField;
-import org.caffa.rpc.CaffaObjectArrayField;
 import org.caffa.rpc.CaffaObjectMethodResult;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaObjectMethod;
