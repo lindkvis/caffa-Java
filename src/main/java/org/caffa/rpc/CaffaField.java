@@ -36,6 +36,26 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return reply.getValue();
     }
 
+    public String getDeepCopiedJson() {
+        if (isLocalField()) {
+            logger.debug("Local value: " + this.localValue);
+            return this.localValue;
+        }
+
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
+
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session)
+                .setCopyObjectValues(true).build();
+
+        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
+        GenericValue reply = this.fieldBlockingStub.getValue(fieldRequest);
+        logger.debug("Got field reply: " + reply.getValue());
+        this.localValue = reply.getValue();
+
+        return reply.getValue();
+    }
+
     public void setJson(String value) {
         if (isLocalField()) {
             logger.debug("Setting local value: " + value);
@@ -44,6 +64,22 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
             SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
             FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
                     .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
+
+            String jsonValue = value;
+            SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
+            this.fieldBlockingStub.setValue(setterRequest);
+        }
+    }
+
+    public void setDeepCopiedJson(String value) {
+        if (isLocalField()) {
+            logger.debug("Setting local value: " + value);
+            this.localValue = value;
+        } else {
+            SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
+            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
+                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session)
+                    .setCopyObjectValues(true).build();
 
             String jsonValue = value;
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
@@ -62,12 +98,32 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return builder.create().fromJson(json, this.dataType);
     }
 
+    public T clone() {
+        logger.debug("Getting JSON for field " + this.keyword);
+        String json = getDeepCopiedJson();
+        logger.debug("Got JSON: " + json);
+
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(CaffaObject.class,
+                new CaffaObjectAdapter(this.owner.sessionUuid()));
+        builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
+        return builder.create().fromJson(json, this.dataType);
+    }
+
     public void set(T value) throws Exception {
         logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
         setJson(builder.create().toJson(value));
+    }
+
+    public void copy(T value) throws Exception {
+        logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
+
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
+                new CaffaObjectAdapter(this.owner.sessionUuid()));
+        setDeepCopiedJson(builder.create().toJson(value));
     }
 
     public String dump(String prefix) {
