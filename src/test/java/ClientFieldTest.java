@@ -100,10 +100,13 @@ public class ClientFieldTest {
     @Test
     void intVector() {
         CaffaObject object = testApp.document("testDocument");
+        CaffaObject demoObjectOriginal = object.field("demoObject", CaffaObject.class).get();
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
         System.out.println("Check which field was actually created:");
+        CaffaField<?> intArrayFieldOriginal = demoObjectOriginal.field("proxyIntVector");
         CaffaField<?> intArrayField = demoObject.field("proxyIntVector");
+        assertNotNull(intArrayFieldOriginal);
         assertNotNull(intArrayField);
         System.out.println(intArrayField.dump());
         CaffaField<Integer[]> typedIntArrayField = intArrayField.cast(Integer[].class);
@@ -118,6 +121,9 @@ public class ClientFieldTest {
 
             Integer[] values3 = typedIntArrayField.get();
             assertTrue(Arrays.equals(values3, values2));
+
+            Integer[] values4 = intArrayFieldOriginal.get(Integer[].class);
+            assertTrue(Arrays.equals(values3, values4));
         }
         assertDoesNotThrow(() -> typedIntArrayField.set(values));
 
@@ -195,6 +201,45 @@ public class ClientFieldTest {
 
         assertDoesNotThrow(() -> enumField.set(originalValue));
         assertEquals(originalValue.value(), enumField.get().value());
+    }
+
+    @Test
+    void deepCopy() {
+        CaffaObject object = testApp.document("testDocument");
+        CaffaObject demoObjectOriginal = object.field("demoObject", CaffaObject.class).get();
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).clone();
+
+        assertNotNull(demoObject);
+        System.out.println("Check which field was actually created:");
+        CaffaField<?> intArrayFieldOriginal = demoObjectOriginal.field("proxyIntVector");
+        CaffaField<?> intArrayField = demoObject.field("proxyIntVector");
+        assertNotNull(intArrayField);
+        System.out.println(intArrayField.dump());
+        CaffaField<Integer[]> typedIntArrayField = intArrayField.cast(Integer[].class);
+        assertNotNull(typedIntArrayField);
+
+        Integer[] values = typedIntArrayField.get();
+        {
+            Integer[] values2 = { 44, 43, 172 };
+
+            assertDoesNotThrow(() -> typedIntArrayField.set(values2));
+
+            Integer[] values3 = typedIntArrayField.get();
+            assertTrue(Arrays.equals(values3, values2));
+
+            // Values should not have been sent to server
+            Integer[] valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
+            assertTrue(!Arrays.equals(values3, valuesFromOriginal));
+
+            // Now copy the values to the server
+            assertDoesNotThrow(() -> object.field("demoObject", CaffaObject.class).copy(demoObject));
+            valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
+            assertTrue(Arrays.equals(values3, valuesFromOriginal));
+        }
+
+        assertDoesNotThrow(() -> typedIntArrayField.set(values));
+
+        System.out.print("\n");
     }
 
 }
