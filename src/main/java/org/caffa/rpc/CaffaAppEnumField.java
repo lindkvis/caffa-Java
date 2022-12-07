@@ -63,8 +63,7 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
             logger.error(errMsg);
             throw new IllegalArgumentException(errMsg);
         }
-
-        setJson(new GsonBuilder().create().toJson(appEnum.value()));
+        super.set(appEnum);
     }
 
     @Override

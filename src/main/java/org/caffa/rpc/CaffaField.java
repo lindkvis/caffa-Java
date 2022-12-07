@@ -32,8 +32,9 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public String getLocalJson() {
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-        new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
+        builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().toJson(this.localValue);
     }
 
