@@ -38,8 +38,8 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
             result += "grpc\n";
         }
 
-        if (!this.localValue.isEmpty()) {
-            result += prefix + "  value = " + this.localValue + "\n";
+        if (this.localValue != null) {
+            result += prefix + "  value = " + getLocalJson() + "\n";
         }
         result += prefix + "}\n";
         return result;
