@@ -12,19 +12,14 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     private static Logger logger = LoggerFactory.getLogger(CaffaField.class);
 
     public boolean unsigned;
-    protected String localValue = "";
+    protected T localValue = null;
 
     public CaffaField(CaffaObject owner, String keyword, Type dataType) {
         super(owner, keyword);
         this.dataType = dataType;
     }
 
-    public String getJson() {
-        if (isLocalField()) {
-            logger.debug("Local value: " + this.localValue);
-            return this.localValue;
-        }
-
+    public String getRemoteJson() {
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
@@ -36,10 +31,41 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return reply.getValue();
     }
 
+    public String getLocalJson() {
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
+        new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
+        return builder.create().toJson(this.localValue);
+    }
+
+    void setLocalJson(String json) {
+        logger.debug("Got JSON: " + json);
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(CaffaObject.class,
+                new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
+        builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
+        this.localValue = builder.create().fromJson(json, this.dataType);
+    }
+
+    public String getJson() {
+        if (isLocalField()) {
+            return getLocalJson();
+        }
+        return getRemoteJson();
+    }
+
+    public void setJson(String json) {
+        if (isLocalField())
+        {
+            setLocalJson(json);
+            return;
+        }
+        setRemoteJson(json);
+
+    }
+
     public String getDeepCopiedJson() {
         if (isLocalField()) {
-            logger.debug("Local value: " + this.localValue);
-            return this.localValue;
+            return getLocalJson();
         }
 
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
@@ -51,45 +77,41 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
         GenericValue reply = this.fieldBlockingStub.getValue(fieldRequest);
         logger.debug("Got field reply: " + reply.getValue());
-        this.localValue = reply.getValue();
-
+        setLocalJson(reply.getValue());
         return reply.getValue();
     }
 
-    public void setJson(String value) {
-        if (isLocalField()) {
-            logger.debug("Setting local value: " + value);
-            this.localValue = value;
-        } else {
-            SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
-            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
+    public void setRemoteJson(String value) {
+        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
+        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
+                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
-            String jsonValue = value;
-            SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
-            this.fieldBlockingStub.setValue(setterRequest);
-        }
+        String jsonValue = value;
+        SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
+        this.fieldBlockingStub.setValue(setterRequest);
     }
 
-    public void setDeepCopiedJson(String value) {
+    public void setDeepCopiedJson(String json) {
         if (isLocalField()) {
-            logger.debug("Setting local value: " + value);
-            this.localValue = value;
+            setLocalJson(json);
         } else {
             SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
             FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
                     .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session)
                     .setCopyObjectValues(true).build();
 
-            String jsonValue = value;
-            SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
+            SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(json).build();
             this.fieldBlockingStub.setValue(setterRequest);
         }
     }
 
     public T get() {
+        if (isLocalField()) {
+            return this.localValue;
+        }
+
         logger.debug("Getting JSON for field " + this.keyword);
-        String json = getJson();
+        String json = getRemoteJson();
         logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
@@ -98,11 +120,21 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return builder.create().fromJson(json, this.dataType);
     }
 
+    public void set(T value) throws Exception {
+        if (isLocalField()) {
+            this.localValue = value;
+            return;
+        }
+
+        logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
+                new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
+        setRemoteJson(builder.create().toJson(value));
+    }
+
     public T deepClone() {
-        logger.debug("Getting JSON for field " + this.keyword);
         String json = getDeepCopiedJson();
         logger.debug("Got JSON: " + json);
-
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.owner.sessionUuid()));
@@ -110,16 +142,8 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return builder.create().fromJson(json, this.dataType);
     }
 
-    public void set(T value) throws Exception {
-        logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
-
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
-        setJson(builder.create().toJson(value));
-    }
-
     public void deepCopyFrom(T value) throws Exception {
-        logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
+        System.out.println("Deep copying JSON for field " + this.keyword + " with value " + value);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.owner.sessionUuid()));
@@ -131,14 +155,14 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         result += prefix + "  keyword = " + this.keyword + "\n";
 
         result += prefix + "  type = CaffaField<" + dataType + ">::";
-        if (!this.localValue.isEmpty()) {
+        if (this.localValue != null) {
             result += "local\n";
         } else {
             result += "grpc\n";
         }
 
-        if (!this.localValue.isEmpty()) {
-            result += prefix + "  value = " + this.localValue + "\n";
+        if (this.localValue != null) {
+            result += prefix + "  value = " + getLocalJson() + "\n";
         }
         result += prefix + "}\n";
 
