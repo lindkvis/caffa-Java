@@ -48,8 +48,8 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         {
             // This mainly throws because we may have uint32-values stored which overflows
             // a regular Java int. Accept this for now.
-        this.localValue = builder.create().fromJson(json, this.dataType);
-    }
+            this.localValue = builder.create().fromJson(json, this.dataType);
+        }
         catch(Exception e)
         {
             logger.error("Failed to set value for field " + this.keyword + ": " + e.getMessage());
