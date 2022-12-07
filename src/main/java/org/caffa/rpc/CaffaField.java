@@ -44,7 +44,16 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         builder.registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.channel, this.owner.sessionUuid()));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
+        try
+        {
+            // This mainly throws because we may have uint32-values stored which overflows
+            // a regular Java int. Accept this for now.
         this.localValue = builder.create().fromJson(json, this.dataType);
+    }
+        catch(Exception e)
+        {
+            logger.error("Failed to set value for field " + this.keyword + ": " + e.getMessage());
+        }
     }
 
     public String getJson() {
