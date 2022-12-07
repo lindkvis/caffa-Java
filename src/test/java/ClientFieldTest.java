@@ -207,7 +207,7 @@ public class ClientFieldTest {
     void deepCopy() {
         CaffaObject object = testApp.document("testDocument");
         CaffaObject demoObjectOriginal = object.field("demoObject", CaffaObject.class).get();
-        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).clone();
+        CaffaObject demoObject = object.field("demoObject", CaffaObject.class).deepClone();
 
         assertNotNull(demoObject);
         System.out.println("Check which field was actually created:");
@@ -232,7 +232,7 @@ public class ClientFieldTest {
             assertTrue(!Arrays.equals(values3, valuesFromOriginal));
 
             // Now copy the values to the server
-            assertDoesNotThrow(() -> object.field("demoObject", CaffaObject.class).copy(demoObject));
+            assertDoesNotThrow(() -> object.field("demoObject", CaffaObject.class).deepCopyFrom(demoObject));
             valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
             assertTrue(Arrays.equals(values3, valuesFromOriginal));
         }
