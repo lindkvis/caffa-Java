@@ -66,8 +66,8 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         String dataType = jsonObject.get("type").getAsString();
 
         JsonElement valueElement = null;
-        if (this.channel == null) {
-            assert jsonObject.has("value");
+
+        if (jsonObject.has("value")) {
             valueElement = jsonObject.get("value");
         }
         return createField(keyword, dataType, valueElement);
@@ -83,7 +83,8 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
 
         jsonObject.addProperty("type", type);
         if (this.channel == null) {
-            JsonElement element = JsonParser.parseString(src.getJson());
+            String jsonString = src.getJson();
+            JsonElement element = JsonParser.parseString(jsonString);
             jsonObject.add("value", element);
         }
         logger.debug("Done writing field: " + src.keyword);
