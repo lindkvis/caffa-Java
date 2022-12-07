@@ -98,7 +98,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return builder.create().fromJson(json, this.dataType);
     }
 
-    public T clone() {
+    public T deepClone() {
         logger.debug("Getting JSON for field " + this.keyword);
         String json = getDeepCopiedJson();
         logger.debug("Got JSON: " + json);
@@ -118,7 +118,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         setJson(builder.create().toJson(value));
     }
 
-    public void copy(T value) throws Exception {
+    public void deepCopyFrom(T value) throws Exception {
         logger.debug("Setting JSON for field " + this.keyword + " with value " + value);
 
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
