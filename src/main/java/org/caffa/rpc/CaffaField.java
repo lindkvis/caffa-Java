@@ -153,8 +153,6 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public void deepCopyFrom(T value) throws Exception {
-        System.out.println("Deep copying JSON for field " + this.keyword + " with value " + value);
-
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.owner.sessionUuid()));
         setDeepCopiedJson(builder.create().toJson(value));
