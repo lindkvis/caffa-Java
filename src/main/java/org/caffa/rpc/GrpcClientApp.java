@@ -192,7 +192,7 @@ public class GrpcClientApp {
         return appInfo.getName();
     }
 
-    public String appVersion() {
+    public String appVersionString() {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.getAppInfo(message);
         StringBuilder sb = new StringBuilder();
@@ -203,6 +203,13 @@ public class GrpcClientApp {
         sb.append(".");
         sb.append(appInfo.getPatchVersion());
         return sb.toString();
+    }
+
+    public Integer[] appVersion() {
+        NullMessage message = NullMessage.getDefaultInstance();
+        AppInfoReply appInfo = this.appStub.getAppInfo(message);
+
+        return new Integer[]{appInfo.getMajorVersion(), appInfo.getMinorVersion(), appInfo.getPatchVersion()};
     }
 
     public CaffaObject document(String documentId) {

@@ -26,10 +26,10 @@ class ClientAppTest {
     }
 
     @Test
-    void appVersion() {
-        String appVersion = testApp.appVersion();
-        assertTrue(!appVersion.isEmpty());
-        System.out.println("Application Version: " + appVersion);
+    void appVersionString() {
+        String appVersionString = testApp.appVersionString();
+        assertTrue(!appVersionString.isEmpty());
+        System.out.println("Application Version: " + appVersionString);
     }
 
 }
