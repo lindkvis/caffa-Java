@@ -172,7 +172,7 @@ public class CaffaObject {
         return null;
     }
 
-    public CaffaObjectMethodResult execute(CaffaObjectMethod method) {
+    public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws Exception {
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
         RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
         String name = method.classKeyword;
