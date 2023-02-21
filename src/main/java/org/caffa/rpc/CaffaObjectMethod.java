@@ -22,7 +22,7 @@ public class CaffaObjectMethod extends CaffaObject {
      *
      * @return
      */
-    public CaffaObjectMethodResult execute() {
+    public CaffaObjectMethodResult execute() throws Exception {
         return self.execute(this);
     }
 

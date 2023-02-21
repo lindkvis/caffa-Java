@@ -94,22 +94,21 @@ public class GrpcClientApp {
         this(host, port, "");
     }
 
-    private SessionMessage createSession(SessionType type) {
+    private SessionMessage createSession(SessionType type) throws Exception {
         SessionMessage session = null;
         SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
 
-        // Try to get a session ten times for a total of two seconds
-        for (int i = 0; i < 10 && session == null; ++i) {
-            try {
-                session = this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL/2, TimeUnit.MILLISECONDS).createSession(parameters);
-            } catch (Exception e) {
-                logger.error("Failed to create new session: ", e);
-            }
+        try {
+            session = this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL / 2, TimeUnit.MILLISECONDS)
+                    .createSession(parameters);
+        } catch (Exception e) {
+            logger.error("Failed to create new session: ", e);
+            throw e;
         }
         return session;
     }
 
-    private SessionMessage getSession() {
+    private SessionMessage getSession() throws Exception {
         SessionMessage existingSession = null;
         lock();
         existingSession = this.session;
@@ -181,7 +180,7 @@ public class GrpcClientApp {
                 logger.debug("Shutting down channels!");
                 this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
             }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             logger.warn("Failed to shut down gracefully" + e.getMessage());
         }
     }
@@ -209,10 +208,10 @@ public class GrpcClientApp {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.getAppInfo(message);
 
-        return new Integer[]{appInfo.getMajorVersion(), appInfo.getMinorVersion(), appInfo.getPatchVersion()};
+        return new Integer[] { appInfo.getMajorVersion(), appInfo.getMinorVersion(), appInfo.getPatchVersion() };
     }
 
-    public CaffaObject document(String documentId) {
+    public CaffaObject document(String documentId) throws Exception {
         SessionMessage session = getSession();
         if (session == null)
             return null;
@@ -233,6 +232,10 @@ public class GrpcClientApp {
 
     public void unlock() {
         lock.unlock();
+    }
+
+    public boolean isLocked() {
+        return lock.isLocked();
     }
 
     private void startKeepAliveTransfer() throws Exception {
