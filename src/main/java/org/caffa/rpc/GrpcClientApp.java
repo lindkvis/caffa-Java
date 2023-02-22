@@ -60,6 +60,7 @@ public class GrpcClientApp {
         AVAILABLE,
         BUSY_BUT_AVAILABLE,
         BUSY,
+        INCOMPATIBLE,
         UNREACHABLE
     }
 
@@ -77,14 +78,23 @@ public class GrpcClientApp {
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
-    public static Status getStatus(String host, int port) {
+    public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion) {
         try {
             ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
             AppBlockingStub appStub = AppGrpc.newBlockingStub(channel);
 
+            NullMessage nullMessage = NullMessage.getDefaultInstance();
+            AppInfoReply appInfo = appStub.withDeadlineAfter(STATUS_TIMEOUT, TimeUnit.MILLISECONDS)
+                    .getAppInfo(nullMessage);
+            if (appInfo.getMajorVersion() != expectedMajorVersion
+                    || appInfo.getMinorVersion() != expectedMinorVersion) {
+                return Status.INCOMPATIBLE;
+            }
+
             SessionParameters parameters = SessionParameters.newBuilder().setType(SessionType.REGULAR).build();
             ReadyMessage ready = appStub.withDeadlineAfter(STATUS_TIMEOUT, TimeUnit.MILLISECONDS)
                     .readyForSession(parameters);
+
             if (ready.getReady() && ready.getHasOtherSessions()) {
                 return Status.BUSY_BUT_AVAILABLE;
             } else if (ready.getReady()) {
@@ -174,7 +184,7 @@ public class GrpcClientApp {
         return existingSession;
     }
 
-    private void setupLogging(String logConfigFilePath) {
+    public static void setupLogging(String logConfigFilePath) {
         File log4jConfigFile = new File(logConfigFilePath);
         if (log4jConfigFile.exists()) {
             System.out.println("Reading log file: " + log4jConfigFile.getAbsolutePath());
