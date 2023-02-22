@@ -94,18 +94,28 @@ public class GrpcClientApp {
         this(host, port, "");
     }
 
-    private SessionMessage createSession(SessionType type) throws Exception {
-        SessionMessage session = null;
-        SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
+    public SessionType getSessionType() {
+        SessionType type = SessionType.INVALID;
 
+        lock();
+        if (this.session != null) {
+            type = this.session.getType();
+        }
+        unlock();
+
+        return type;
+    }
+
+    private SessionMessage createSession(SessionType type) throws Exception {
         try {
-            session = this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL / 2, TimeUnit.MILLISECONDS)
+            SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
+            SessionMessage session = this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL / 2, TimeUnit.MILLISECONDS)
                     .createSession(parameters);
+            return session;
         } catch (Exception e) {
             logger.error("Failed to create new session: ", e);
             throw e;
         }
-        return session;
     }
 
     private SessionMessage getSession() throws Exception {
@@ -262,22 +272,19 @@ public class GrpcClientApp {
         this.executor.awaitTermination(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
-    private boolean sendKeepAliveMessage() {
-        boolean success = false;
-
+    private void sendKeepAliveMessage() {
         lock();
         if (this.session != null) {
             try {
-                this.appStub.withDeadlineAfter(KEEPALIVE_TIMEOUT, TimeUnit.MILLISECONDS)
+                SessionMessage response = this.appStub.withDeadlineAfter(KEEPALIVE_TIMEOUT, TimeUnit.MILLISECONDS)
                         .keepSessionAlive(this.session);
-                success = true;
+                this.session = response;
             } catch (Exception e) {
                 logger.error("Keepalive failed");
                 this.session = null;
             }
         }
         unlock();
-        return success;
     }
 
 }
