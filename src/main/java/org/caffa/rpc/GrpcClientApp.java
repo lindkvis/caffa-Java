@@ -56,6 +56,13 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
 public class GrpcClientApp {
+    public enum Status {
+        AVAILABLE,
+        BUSY_BUT_AVAILABLE,
+        BUSY,
+        UNREACHABLE
+    }
+
     private final AppBlockingStub appStub;
     private final ObjectAccessBlockingStub objectStub;
     private final ManagedChannel channel;
@@ -65,9 +72,30 @@ public class GrpcClientApp {
     /** Defines the keepalive interval (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 500;
     static final long KEEPALIVE_TIMEOUT = 5000;
+    static final long STATUS_TIMEOUT = 100;
     private ScheduledExecutorService executor;
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
+
+    public static Status getStatus(String host, int port) {
+        try {
+            ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+            AppBlockingStub appStub = AppGrpc.newBlockingStub(channel);
+
+            SessionParameters parameters = SessionParameters.newBuilder().setType(SessionType.REGULAR).build();
+            ReadyMessage ready = appStub.withDeadlineAfter(STATUS_TIMEOUT, TimeUnit.MILLISECONDS)
+                    .readyForSession(parameters);
+            if (ready.getReady() && ready.getHasOtherSessions()) {
+                return Status.BUSY_BUT_AVAILABLE;
+            } else if (ready.getReady()) {
+                return Status.AVAILABLE;
+            } else {
+                return Status.BUSY;
+            }
+        } catch (Exception e) {
+            return Status.UNREACHABLE;
+        }
+    }
 
     public GrpcClientApp(String host, int port, String logConfigFilePath, SessionType sessionType) throws Exception {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
