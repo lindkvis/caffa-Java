@@ -70,10 +70,11 @@ public class GrpcClientApp {
     private SessionMessage session = null;
     private final ReentrantLock lock = new ReentrantLock();
 
-    /** Defines the keepalive interval (milliseconds). */
+    /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 500;
     static final long KEEPALIVE_TIMEOUT = 5000;
     static final long STATUS_TIMEOUT = 100;
+    static final long SESSION_TIMEOUT = 1000;
     private ScheduledExecutorService executor;
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
@@ -147,7 +148,7 @@ public class GrpcClientApp {
     private SessionMessage createSession(SessionType type) throws Exception {
         try {
             SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
-            SessionMessage session = this.appStub.withDeadlineAfter(KEEPALIVE_INTERVAL / 2, TimeUnit.MILLISECONDS)
+            SessionMessage session = this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
                     .createSession(parameters);
             return session;
         } catch (Exception e) {
@@ -164,7 +165,8 @@ public class GrpcClientApp {
 
         if (existingSession != null) {
             try {
-                SessionMessage checkSession = this.appStub.checkSession(existingSession);
+                SessionMessage checkSession = this.appStub.withDeadlineAfter(KEEPALIVE_TIMEOUT, TimeUnit.MILLISECONDS)
+                        .checkSession(existingSession);
                 if (!checkSession.getUuid().equals(existingSession.getUuid())) {
                     throw new RuntimeException("Session UUID mismatch");
                 }
@@ -223,7 +225,7 @@ public class GrpcClientApp {
             SessionMessage session = getSession();
             if (session != null) {
                 logger.debug("Destroying session!");
-                this.appStub.destroySession(session);
+                this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS).destroySession(session);
 
                 logger.debug("Shutting down channels!");
                 this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
@@ -235,13 +237,15 @@ public class GrpcClientApp {
 
     public String appName() {
         NullMessage message = NullMessage.getDefaultInstance();
-        AppInfoReply appInfo = this.appStub.getAppInfo(message);
+        AppInfoReply appInfo = this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
+                .getAppInfo(message);
         return appInfo.getName();
     }
 
     public String appVersionString() {
         NullMessage message = NullMessage.getDefaultInstance();
-        AppInfoReply appInfo = this.appStub.getAppInfo(message);
+        AppInfoReply appInfo = this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
+                .getAppInfo(message);
         StringBuilder sb = new StringBuilder();
         sb.append("v");
         sb.append(appInfo.getMajorVersion());
@@ -254,7 +258,8 @@ public class GrpcClientApp {
 
     public Integer[] appVersion() {
         NullMessage message = NullMessage.getDefaultInstance();
-        AppInfoReply appInfo = this.appStub.getAppInfo(message);
+        AppInfoReply appInfo = this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
+                .getAppInfo(message);
 
         return new Integer[] { appInfo.getMajorVersion(), appInfo.getMinorVersion(), appInfo.getPatchVersion() };
     }
