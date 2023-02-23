@@ -108,6 +108,19 @@ public class GrpcClientApp {
         }
     }
 
+    /**
+     * Create a new client app. Will compare version to what the server has and
+     * refuse connection on mismatch
+     *
+     * @param host
+     * @param port
+     * @param expectedMajorVersion - use a nagative number to skip version check
+     * @param expectedMinorVersion - use a nagative number to skip version check
+     * @param logConfigFilePath
+     * @param sessionType
+     *
+     * @throws Exception
+     */
     public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
             String logConfigFilePath, SessionType sessionType) throws Exception {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
@@ -118,20 +131,21 @@ public class GrpcClientApp {
             setupLogging(logConfigFilePath);
         }
 
-        Integer[] serverVersion = this.appVersion();
+        if (expectedMajorVersion >= 0 && expectedMinorVersion >= 0) {
+            Integer[] serverVersion = this.appVersion();
 
-        assert serverVersion.length >= 2;
+            assert serverVersion.length >= 2;
 
-        if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
-            throw new RuntimeException(
-                    String.format(
-                            "Server version v%d.%d.x does not match expected version v%d.%d.x",
-                            serverVersion[0],
-                            serverVersion[1],
-                            expectedMajorVersion,
-                            expectedMinorVersion));
+            if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
+                throw new RuntimeException(
+                        String.format(
+                                "Server version v%d.%d.x does not match expected version v%d.%d.x",
+                                serverVersion[0],
+                                serverVersion[1],
+                                expectedMajorVersion,
+                                expectedMinorVersion));
+            }
         }
-
         this.session = createSession(sessionType);
         if (this.session == null) {
             throw new RuntimeException("Failed to create session");
@@ -140,11 +154,33 @@ public class GrpcClientApp {
         startKeepAliveTransfer();
     }
 
+    /**
+     * Create a new client app. Will compare version to what the server has and
+     * refuse connection on mismatch
+     *
+     * @param host
+     * @param port
+     * @param expectedMajorVersion - use a nagative number to skip version check
+     * @param expectedMinorVersion - use a nagative number to skip version check
+     * @param logConfigFilePath
+     *
+     * @throws Exception
+     */
     public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
             String logConfigFilePath) throws Exception {
         this(host, port, expectedMajorVersion, expectedMinorVersion, logConfigFilePath, SessionType.REGULAR);
     }
 
+    /**
+     * Create a new client app. Will compare version to what the server has and
+     * refuse connection on mismatch
+     *
+     * @param host
+     * @param port
+     * @param expectedMajorVersion - use a nagative number to skip version check
+     * @param expectedMinorVersion - use a nagative number to skip version check
+     * @throws Exception
+     */
     public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion) throws Exception {
         this(host, port, expectedMajorVersion, expectedMinorVersion, "");
     }
