@@ -108,13 +108,28 @@ public class GrpcClientApp {
         }
     }
 
-    public GrpcClientApp(String host, int port, String logConfigFilePath, SessionType sessionType) throws Exception {
+    public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
+            String logConfigFilePath, SessionType sessionType) throws Exception {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
 
         if (!logConfigFilePath.isEmpty()) {
             setupLogging(logConfigFilePath);
+        }
+
+        Integer[] serverVersion = this.appVersion();
+
+        assert serverVersion.length >= 2;
+
+        if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
+            throw new RuntimeException(
+                    String.format(
+                            "Server version v%d.%d.x does not match expected version v%d.%d.x",
+                            serverVersion[0],
+                            serverVersion[1],
+                            expectedMajorVersion,
+                            expectedMinorVersion));
         }
 
         this.session = createSession(sessionType);
@@ -125,12 +140,13 @@ public class GrpcClientApp {
         startKeepAliveTransfer();
     }
 
-    public GrpcClientApp(String host, int port, String logConfigFilePath) throws Exception {
-        this(host, port, logConfigFilePath, SessionType.REGULAR);
+    public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
+            String logConfigFilePath) throws Exception {
+        this(host, port, expectedMajorVersion, expectedMinorVersion, logConfigFilePath, SessionType.REGULAR);
     }
 
-    public GrpcClientApp(String host, int port) throws Exception {
-        this(host, port, "");
+    public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion) throws Exception {
+        this(host, port, expectedMajorVersion, expectedMinorVersion, "");
     }
 
     public SessionType getSessionType() {
@@ -189,11 +205,8 @@ public class GrpcClientApp {
     public static void setupLogging(String logConfigFilePath) {
         File log4jConfigFile = new File(logConfigFilePath);
         if (log4jConfigFile.exists()) {
-            System.out.println("Reading log file: " + log4jConfigFile.getAbsolutePath());
-
             PropertyConfigurator.configure(log4jConfigFile.getAbsolutePath());
         } else {
-            System.out.println("Writing log file: " + log4jConfigFile.getAbsolutePath());
             // CSOFF: Empty Block
             try {
                 FileWriter writer = new FileWriter(log4jConfigFile);
