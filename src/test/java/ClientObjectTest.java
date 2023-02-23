@@ -36,7 +36,7 @@ public class ClientObjectTest {
 
     @Test
     void document() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
 
         String classKeyword = object.classKeyword;
         assertTrue(!classKeyword.isEmpty());
@@ -50,14 +50,14 @@ public class ClientObjectTest {
 
     @Test
     void dumpDocument() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
         assertTrue(!object.fields().isEmpty());
         System.out.println(object.dump());
     }
 
     @Test
     void children() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -69,7 +69,7 @@ public class ClientObjectTest {
 
     @Test
     void methods() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
@@ -109,7 +109,7 @@ public class ClientObjectTest {
             assertEquals("AnotherValue", stringMethodArg.get());
             assertTrue(Arrays.equals(intArrayValues, intArrayMethodArg.get()));
 
-            CaffaObjectMethodResult result = method.execute();
+            CaffaObjectMethodResult result = assertDoesNotThrow(() -> method.execute());
 
             boolean status = result.field("status").cast(Boolean.class).get();
             assertTrue(status);
@@ -125,7 +125,7 @@ public class ClientObjectTest {
 
     @Test
     void specificMethod() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
@@ -148,7 +148,7 @@ public class ClientObjectTest {
                     Integer.class));
             assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument",
                     "TestValue", String.class));
-            CaffaObjectMethodResult result = copyObjectMethod.execute();
+            CaffaObjectMethodResult result = assertDoesNotThrow(() -> copyObjectMethod.execute());
 
             CaffaField<Boolean> status = result.field("status", Boolean.class);
             assertTrue(status.get());
@@ -163,7 +163,7 @@ public class ClientObjectTest {
 
     @Test
     void nonExistentMethod() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
