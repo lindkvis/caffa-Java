@@ -73,7 +73,7 @@ public class GrpcClientApp {
     /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 500;
     static final long KEEPALIVE_TIMEOUT = 5000;
-    static final long STATUS_TIMEOUT = 100;
+    static final long STATUS_TIMEOUT = 300;
     static final long SESSION_TIMEOUT = 1000;
     private ScheduledExecutorService executor;
 
