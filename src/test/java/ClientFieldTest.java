@@ -37,7 +37,7 @@ public class ClientFieldTest {
 
     @Test
     void getDocumentFileName() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         assertTrue(object != null);
         assertTrue(!object.fields().isEmpty());
 
@@ -60,7 +60,7 @@ public class ClientFieldTest {
 
     @Test
     void documentFields() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         assertTrue(!object.fields().isEmpty());
 
         Boolean foundDocumentFileName = false;
@@ -77,7 +77,7 @@ public class ClientFieldTest {
 
     @Test
     void floatVector() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -99,7 +99,7 @@ public class ClientFieldTest {
 
     @Test
     void intVector() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         CaffaObject demoObjectOriginal = object.field("demoObject", CaffaObject.class).get();
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -132,7 +132,7 @@ public class ClientFieldTest {
 
     @Test
     void boolVector() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
         System.out.println("Check which field was actually created:");
@@ -159,7 +159,7 @@ public class ClientFieldTest {
 
     @Test
     void doubleMember() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -183,7 +183,7 @@ public class ClientFieldTest {
 
     @Test
     void appEnumMember() {
-        CaffaObject object = testApp.document("");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -205,7 +205,7 @@ public class ClientFieldTest {
 
     @Test
     void deepCopy() {
-        CaffaObject object = testApp.document("testDocument");
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         CaffaObject demoObjectOriginal = object.field("demoObject", CaffaObject.class).get();
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).deepClone();
 
