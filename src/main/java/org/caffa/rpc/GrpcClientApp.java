@@ -96,6 +96,8 @@ public class GrpcClientApp {
             ReadyMessage ready = appStub.withDeadlineAfter(STATUS_TIMEOUT, TimeUnit.MILLISECONDS)
                     .readyForSession(parameters);
 
+            channel.shutdownNow().awaitTermination(100, TimeUnit.MILLISECONDS);
+
             if (ready.getReady() && ready.getHasOtherSessions()) {
                 return Status.BUSY_BUT_AVAILABLE;
             } else if (ready.getReady()) {
