@@ -195,7 +195,6 @@ public class GrpcClientApp {
     }
 
     public void cleanUp() {
-        System.out.println("CLEANING UP!");
         try {
             stopKeepAliveTransfer();
             SessionMessage session = getSession();
@@ -212,7 +211,6 @@ public class GrpcClientApp {
         } catch (Exception e) {
             logger.warn("Failed to shut down gracefully" + e.getMessage());
         }
-        System.out.println("ALL CLEANED UP!");
     }
 
     public SessionType getSessionType() {
