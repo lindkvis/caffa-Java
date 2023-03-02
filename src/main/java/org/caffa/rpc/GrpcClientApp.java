@@ -64,18 +64,19 @@ public class GrpcClientApp {
         UNREACHABLE
     }
 
+    private final ManagedChannel channel;
     private final AppBlockingStub appStub;
     private final ObjectAccessBlockingStub objectStub;
-    private final ManagedChannel channel;
+
     private SessionMessage session = null;
     private final ReentrantLock lock = new ReentrantLock();
 
     /** Defines intervals and timeouts (milliseconds). */
-    static final long KEEPALIVE_INTERVAL = 500;
+    static final long KEEPALIVE_INTERVAL = 300;
     static final long KEEPALIVE_TIMEOUT = 5000;
-    static final long STATUS_TIMEOUT = 500;
-    static final long SESSION_TIMEOUT = 3000;
-    private ScheduledExecutorService executor;
+    static final long STATUS_TIMEOUT = 1000;
+    static final long SESSION_TIMEOUT = 5000;
+    private ScheduledExecutorService executor = null;
 
     private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
@@ -89,6 +90,7 @@ public class GrpcClientApp {
                     .getAppInfo(nullMessage);
             if (appInfo.getMajorVersion() != expectedMajorVersion
                     || appInfo.getMinorVersion() != expectedMinorVersion) {
+                channel.shutdownNow().awaitTermination(200, TimeUnit.MILLISECONDS);
                 return Status.INCOMPATIBLE;
             }
 
@@ -96,7 +98,7 @@ public class GrpcClientApp {
             ReadyMessage ready = appStub.withDeadlineAfter(STATUS_TIMEOUT, TimeUnit.MILLISECONDS)
                     .readyForSession(parameters);
 
-            channel.shutdownNow().awaitTermination(100, TimeUnit.MILLISECONDS);
+            channel.shutdownNow().awaitTermination(200, TimeUnit.MILLISECONDS);
 
             if (ready.getReady() && ready.getHasOtherSessions()) {
                 return Status.BUSY_BUT_AVAILABLE;
@@ -133,27 +135,32 @@ public class GrpcClientApp {
             setupLogging(logConfigFilePath);
         }
 
-        if (expectedMajorVersion >= 0 && expectedMinorVersion >= 0) {
-            Integer[] serverVersion = this.appVersion();
+        try {
+            if (expectedMajorVersion >= 0 && expectedMinorVersion >= 0) {
+                Integer[] serverVersion = this.appVersion();
 
-            assert serverVersion.length >= 2;
+                assert serverVersion.length >= 2;
 
-            if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
-                throw new RuntimeException(
-                        String.format(
-                                "Server version v%d.%d.x does not match expected version v%d.%d.x",
-                                serverVersion[0],
-                                serverVersion[1],
-                                expectedMajorVersion,
-                                expectedMinorVersion));
+                if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "Server version v%d.%d.x does not match expected version v%d.%d.x",
+                                    serverVersion[0],
+                                    serverVersion[1],
+                                    expectedMajorVersion,
+                                    expectedMinorVersion));
+                }
             }
-        }
-        this.session = createSession(sessionType);
-        if (this.session == null) {
-            throw new RuntimeException("Failed to create session");
-        }
+            this.session = createSession(sessionType);
+            if (this.session == null) {
+                throw new RuntimeException("Failed to create session");
+            }
 
-        startKeepAliveTransfer();
+            startKeepAliveTransfer();
+        } catch(Exception e) {
+            cleanUp();
+            throw e;
+        }
     }
 
     /**
@@ -185,6 +192,27 @@ public class GrpcClientApp {
      */
     public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion) throws Exception {
         this(host, port, expectedMajorVersion, expectedMinorVersion, "");
+    }
+
+    public void cleanUp() {
+        System.out.println("CLEANING UP!");
+        try {
+            stopKeepAliveTransfer();
+            SessionMessage session = getSession();
+            if (session != null) {
+                logger.debug("Destroying session!");
+                this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS).destroySession(session);
+            }
+            
+            if (this.channel != null)
+            {
+                logger.debug("Shutting down channels!");
+                this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to shut down gracefully" + e.getMessage());
+        }
+        System.out.println("ALL CLEANED UP!");
     }
 
     public SessionType getSessionType() {
@@ -270,22 +298,6 @@ public class GrpcClientApp {
         }
     }
 
-    public void cleanUp() {
-        try {
-            stopKeepAliveTransfer();
-            SessionMessage session = getSession();
-            if (session != null) {
-                logger.debug("Destroying session!");
-                this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS).destroySession(session);
-
-                logger.debug("Shutting down channels!");
-                this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
-            }
-        } catch (Exception e) {
-            logger.warn("Failed to shut down gracefully" + e.getMessage());
-        }
-    }
-
     public String appName() {
         NullMessage message = NullMessage.getDefaultInstance();
         AppInfoReply appInfo = this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
@@ -362,8 +374,10 @@ public class GrpcClientApp {
     }
 
     private void stopKeepAliveTransfer() throws InterruptedException {
-        this.executor.shutdownNow();
-        this.executor.awaitTermination(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS);
+        if (this.executor != null) {
+            this.executor.shutdownNow();
+            this.executor.awaitTermination(KEEPALIVE_INTERVAL, TimeUnit.MILLISECONDS);
+        }
     }
 
     private void sendKeepAliveMessage() {
