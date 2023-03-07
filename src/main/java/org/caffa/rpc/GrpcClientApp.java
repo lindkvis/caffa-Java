@@ -45,6 +45,7 @@ import java.io.PrintWriter;
 import com.google.gson.GsonBuilder;
 
 import org.caffa.rpc.AppGrpc.AppBlockingStub;
+import org.caffa.rpc.CaffaFatalConnectionError.FailureType;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
 import org.caffa.rpc.SessionParameters;
 import org.caffa.rpc.SessionType;
@@ -143,9 +144,9 @@ public class GrpcClientApp {
                 assert serverVersion.length >= 2;
 
                 if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
-                    throw new IllegalStateException(
+                    throw new CaffaFatalConnectionError(CaffaFatalConnectionError.FailureType.VERSION_MISMATCH,
                             String.format(
-                                    "Server version v%d.%d.x does not match expected version v%d.%d.x",
+                                    "Server version v%d.%d.x != version v%d.%d.x",
                                     serverVersion[0],
                                     serverVersion[1],
                                     expectedMajorVersion,
@@ -154,8 +155,7 @@ public class GrpcClientApp {
             }
             this.session = createSession(sessionType);
             if (this.session == null) {
-                logger.error("Failed to create session");
-                throw new IllegalStateException("Failed to create session");
+                throw new CaffaFatalConnectionError(CaffaFatalConnectionError.FailureType.SESSION_REFUSED, "Failed to create session");
             }
 
             startKeepAliveTransfer();
@@ -239,8 +239,7 @@ public class GrpcClientApp {
                     .createSession(parameters);
             return session;
         } catch (Exception e) {
-            logger.error("Failed to create new session: ", e.getMessage());
-            throw new RuntimeException("Failed to create new session");
+            throw new CaffaFatalConnectionError(FailureType.SESSION_REFUSED, "Failed to create session");
         }
     }
 
@@ -252,11 +251,11 @@ public class GrpcClientApp {
                 SessionMessage checkSession = this.appStub.withDeadlineAfter(KEEPALIVE_TIMEOUT, TimeUnit.MILLISECONDS)
                         .checkSession(existingSession);
                 if (!checkSession.getUuid().equals(existingSession.getUuid())) {
-                    throw new RuntimeException("Session UUID mismatch");
+                    existingSession = null;
                 }
             } catch (Exception e) {
                 existingSession = null;
-                logger.warn("Could not keep alive old session: " + e.getMessage());
+                throw new CaffaFatalConnectionError(FailureType.SESSION_REFUSED, "Failed to keep alive old session " + e);
             }
         }
 
