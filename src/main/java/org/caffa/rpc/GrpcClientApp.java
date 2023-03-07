@@ -54,6 +54,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 public class GrpcClientApp {
     public enum Status {
@@ -142,7 +143,7 @@ public class GrpcClientApp {
                 assert serverVersion.length >= 2;
 
                 if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
-                    throw new RuntimeException(
+                    throw new IllegalStateException(
                             String.format(
                                     "Server version v%d.%d.x does not match expected version v%d.%d.x",
                                     serverVersion[0],
@@ -153,11 +154,17 @@ public class GrpcClientApp {
             }
             this.session = createSession(sessionType);
             if (this.session == null) {
-                throw new RuntimeException("Failed to create session");
+                logger.error("Failed to create session");
+                throw new IllegalStateException("Failed to create session");
             }
 
             startKeepAliveTransfer();
-        } catch(Exception e) {
+        }
+        catch(io.grpc.StatusRuntimeException e) {
+            cleanUp();
+            throw new CaffaFailedConnectionAttempt("Failed to connect" + e.getMessage());
+        }
+        catch(Exception e) {            
             cleanUp();
             throw e;
         }
@@ -197,7 +204,7 @@ public class GrpcClientApp {
     public void cleanUp() {
         try {
             stopKeepAliveTransfer();
-            SessionMessage session = getSession();
+            SessionMessage session = getExistingSession();
             if (session != null) {
                 logger.debug("Destroying session!");
                 this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS).destroySession(session);
@@ -209,7 +216,7 @@ public class GrpcClientApp {
                 this.channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
-            logger.warn("Failed to shut down gracefully" + e.getMessage());
+            logger.warn("Failed to shut down gracefully: " + e.getMessage());
         }
     }
 
@@ -232,16 +239,13 @@ public class GrpcClientApp {
                     .createSession(parameters);
             return session;
         } catch (Exception e) {
-            logger.error("Failed to create new session: ", e);
-            throw e;
+            logger.error("Failed to create new session: ", e.getMessage());
+            throw new RuntimeException("Failed to create new session");
         }
     }
 
     private SessionMessage getSession() throws Exception {
-        SessionMessage existingSession = null;
-        lock();
-        existingSession = this.session;
-        unlock();
+        SessionMessage existingSession = getExistingSession();
 
         if (existingSession != null) {
             try {
@@ -262,7 +266,14 @@ public class GrpcClientApp {
             existingSession = this.session;
             unlock();
         }
+        return existingSession;
+    }
 
+    private SessionMessage getExistingSession() throws Exception {
+        SessionMessage existingSession = null;
+        lock();
+        existingSession = this.session;
+        unlock();
         return existingSession;
     }
 
