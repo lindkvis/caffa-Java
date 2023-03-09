@@ -8,7 +8,8 @@ public class CaffaFatalConnectionError extends java.lang.Exception {
     {
         VERSION_MISMATCH,
         SESSION_REFUSED,
-        CONNECTION_ERROR
+        CONNECTION_ERROR,
+        LOST_CONTROL
     }
     public FailureType type;
 
