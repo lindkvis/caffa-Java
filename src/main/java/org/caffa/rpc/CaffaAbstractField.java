@@ -1,16 +1,6 @@
 package org.caffa.rpc;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.Expose;
-
 import io.grpc.ManagedChannel;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.lang.reflect.Type;
 
 public abstract class CaffaAbstractField {
     protected CaffaObject owner;

@@ -47,15 +47,12 @@ import com.google.gson.GsonBuilder;
 import org.caffa.rpc.AppGrpc.AppBlockingStub;
 import org.caffa.rpc.CaffaFatalConnectionError.FailureType;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
-import org.caffa.rpc.SessionParameters;
-import org.caffa.rpc.SessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.log4j.PropertyConfigurator;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.StatusRuntimeException;
 
 public class GrpcClientApp {
     public enum Status {
