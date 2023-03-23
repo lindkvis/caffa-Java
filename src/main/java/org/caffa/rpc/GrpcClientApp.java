@@ -276,6 +276,11 @@ public class GrpcClientApp {
         return existingSession;
     }
 
+    public static void setupNullLogging() {
+        org.apache.log4j.Logger.getRootLogger().removeAllAppenders();
+        org.apache.log4j.Logger.getRootLogger().addAppender(new org.apache.log4j.varia.NullAppender());
+    }
+
     public static void setupLogging(String logConfigFilePath) {
         File log4jConfigFile = new File(logConfigFilePath);
         if (log4jConfigFile.exists()) {
