@@ -3,8 +3,6 @@ package org.caffa.rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -16,7 +14,6 @@ import com.google.gson.JsonSerializer;
 import io.grpc.ManagedChannel;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
     private final CaffaObject object;

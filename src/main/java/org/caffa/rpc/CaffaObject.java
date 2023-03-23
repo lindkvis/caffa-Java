@@ -1,6 +1,5 @@
 package org.caffa.rpc;
 
-import java.lang.NoSuchFieldError;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,10 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.Expose;
 
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
-import org.caffa.rpc.ListMethodsRequest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.Status;

@@ -1,9 +1,6 @@
 package org.caffa.rpc;
 
 import java.lang.reflect.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;

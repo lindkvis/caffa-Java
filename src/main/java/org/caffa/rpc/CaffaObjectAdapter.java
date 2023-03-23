@@ -4,9 +4,7 @@ import java.lang.reflect.Type;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;

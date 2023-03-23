@@ -11,8 +11,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 
-import io.grpc.ManagedChannel;
-
 public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
     private final CaffaObject self;
