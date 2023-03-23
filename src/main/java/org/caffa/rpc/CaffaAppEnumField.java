@@ -7,8 +7,8 @@ import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 
 public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
-    private ArrayList<String> validValues = new ArrayList<String>();
-    private static Logger logger = LoggerFactory.getLogger(CaffaAppEnumField.class);
+    private final ArrayList<String> validValues = new ArrayList<>();
+    private static final Logger logger = LoggerFactory.getLogger(CaffaAppEnumField.class);
 
     protected CaffaAppEnumField(CaffaObject owner, String keyword) {
         super(owner, keyword, CaffaAppEnum.class);

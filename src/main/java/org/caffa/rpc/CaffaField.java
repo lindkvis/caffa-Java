@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 public class CaffaField<T extends Object> extends CaffaAbstractField {
     private final Type dataType;
 
-    private static Logger logger = LoggerFactory.getLogger(CaffaField.class);
+    private static final Logger logger = LoggerFactory.getLogger(CaffaField.class);
 
     public boolean unsigned;
     protected T localValue = null;
@@ -96,8 +96,8 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
                 .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
-        String jsonValue = value;
-        SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
+        SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(
+                value).build();
         this.fieldBlockingStub.setValue(setterRequest);
     }
 

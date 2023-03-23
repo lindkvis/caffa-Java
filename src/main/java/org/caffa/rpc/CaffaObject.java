@@ -20,14 +20,14 @@ public class CaffaObject {
     public final String classKeyword;
     public final String uuid;
 
-    private Map<String, CaffaField<?>> fields;
-    private CaffaField<?> parentField = null;
+    private final Map<String, CaffaField<?>> fields;
+    private final CaffaField<?> parentField = null;
 
     protected final String sessionUuid;
     protected ManagedChannel channel;
     private ObjectAccessBlockingStub objectStub;
 
-    private static Logger logger = LoggerFactory.getLogger(CaffaObject.class);
+    private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
     public CaffaObject(String classKeyword, String uuid, String sessionUuid) {
         assert !classKeyword.isEmpty();
@@ -129,8 +129,7 @@ public class CaffaObject {
                 new CaffaFieldAdapter(this, this.channel)).registerTypeAdapter(CaffaObject.class,
                         new CaffaObjectAdapter(this.channel, this.sessionUuid));
         Gson gson = builder.create();
-        String jsonObject = gson.toJson(this);
-        return jsonObject;
+        return gson.toJson(this);
     }
 
     public String getAddressJson() {
