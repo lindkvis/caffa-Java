@@ -10,7 +10,6 @@ public abstract class CaffaAbstractField {
     protected FieldAccessGrpc.FieldAccessBlockingStub fieldBlockingStub = null;
     protected FieldAccessGrpc.FieldAccessStub fieldStub = null;
 
-    private static Logger logger = LoggerFactory.getLogger(CaffaAbstractField.class);
 
     public CaffaAbstractField(CaffaObject owner, String keyword) {
         this.owner = owner;

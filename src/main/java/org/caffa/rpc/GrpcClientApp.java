@@ -77,7 +77,7 @@ public class GrpcClientApp {
     static final long SESSION_TIMEOUT = 5000;
     private ScheduledExecutorService executor = null;
 
-    private static Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
+    private static final Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
 
     public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion) {
         try {
@@ -117,8 +117,8 @@ public class GrpcClientApp {
      *
      * @param host
      * @param port
-     * @param expectedMajorVersion - use a nagative number to skip version check
-     * @param expectedMinorVersion - use a nagative number to skip version check
+     * @param expectedMajorVersion - use a negative number to skip version check
+     * @param expectedMinorVersion - use a negative number to skip version check
      * @param logConfigFilePath
      * @param sessionType
      *
@@ -173,8 +173,8 @@ public class GrpcClientApp {
      *
      * @param host
      * @param port
-     * @param expectedMajorVersion - use a nagative number to skip version check
-     * @param expectedMinorVersion - use a nagative number to skip version check
+     * @param expectedMajorVersion - use a negative number to skip version check
+     * @param expectedMinorVersion - use a negative number to skip version check
      * @param logConfigFilePath
      *
      * @throws Exception
@@ -190,8 +190,8 @@ public class GrpcClientApp {
      *
      * @param host
      * @param port
-     * @param expectedMajorVersion - use a nagative number to skip version check
-     * @param expectedMinorVersion - use a nagative number to skip version check
+     * @param expectedMajorVersion - use a negative number to skip version check
+     * @param expectedMinorVersion - use a negative number to skip version check
      * @throws Exception
      */
     public GrpcClientApp(String host, int port, int expectedMajorVersion, int expectedMinorVersion) throws Exception {
@@ -232,9 +232,8 @@ public class GrpcClientApp {
     private SessionMessage createSession(SessionType type) throws Exception {
         try {
             SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
-            SessionMessage session = this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
+            return this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
                     .createSession(parameters);
-            return session;
         } catch (Exception e) {
             throw new CaffaFatalConnectionError(FailureType.SESSION_REFUSED, "Failed to create session");
         }
@@ -251,7 +250,6 @@ public class GrpcClientApp {
                     existingSession = null;
                 }
             } catch (Exception e) {
-                existingSession = null;
                 throw new CaffaFatalConnectionError(FailureType.SESSION_REFUSED, "Failed to keep alive old session " + e);
             }
         }
@@ -266,9 +264,8 @@ public class GrpcClientApp {
     }
 
     private SessionMessage getExistingSession() throws Exception {
-        SessionMessage existingSession = null;
         lock();
-        existingSession = this.session;
+        SessionMessage existingSession = this.session;
         unlock();
         return existingSession;
     }
@@ -283,7 +280,6 @@ public class GrpcClientApp {
         if (log4jConfigFile.exists()) {
             PropertyConfigurator.configure(log4jConfigFile.getAbsolutePath());
         } else {
-            // CSOFF: Empty Block
             try {
                 FileWriter writer = new FileWriter(log4jConfigFile);
                 String logFile = (log4jConfigFile.getParent() + File.separator).replace("\\", "\\\\")
@@ -304,7 +300,6 @@ public class GrpcClientApp {
             } catch (Exception ex) {
                 // Do nothing
             }
-            // CSON: Empty Block
         }
     }
 

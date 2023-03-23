@@ -18,7 +18,7 @@ import java.lang.reflect.Type;
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
     private final CaffaObject object;
     private final ManagedChannel channel;
-    private static Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
 
     public CaffaFieldAdapter(CaffaObject object, ManagedChannel channel) {
         super();
@@ -46,7 +46,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
             field.createGrpcAccessor(this.channel);
         } else {
             logger.debug("Setting local value for object " + object.classKeyword + " and field " + keyword
-                    + " to: " + valueElement.toString());
+                    + " to: " + valueElement);
             field.setJson(valueElement.toString());
         }
         return field;
@@ -55,7 +55,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
     public CaffaField<?> deserialize(JsonElement json, Type type, JsonDeserializationContext context)
             throws JsonParseException {
         assert json != null;
-        logger.debug("JSON: " + json.toString());
+        logger.debug("JSON: " + json);
 
         final JsonObject jsonObject = json.getAsJsonObject();
 

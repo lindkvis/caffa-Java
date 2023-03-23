@@ -13,8 +13,6 @@ import com.google.gson.JsonSerializer;
 
 public class CaffaAppEnumAdapter
         implements JsonDeserializer<CaffaAppEnum>, JsonSerializer<CaffaAppEnum> {
-    private static Logger logger = LoggerFactory.getLogger(CaffaAppEnumAdapter.class);
-
 
     public CaffaAppEnumAdapter() {
         super();
