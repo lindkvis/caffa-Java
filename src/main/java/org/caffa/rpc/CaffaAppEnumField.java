@@ -7,29 +7,17 @@ import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 
 public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
-    private final ArrayList<String> validValues = new ArrayList<>();
-    private static final Logger logger = LoggerFactory.getLogger(CaffaAppEnumField.class);
+    private static Logger logger = LoggerFactory.getLogger(CaffaAppEnumField.class);
 
     protected CaffaAppEnumField(CaffaObject owner, String keyword) {
         super(owner, keyword, CaffaAppEnum.class);
-    }
-
-    public void addValidValue(String validValue) {
-        validValues.add(validValue);
     }
 
     public String dump(String prefix) {
         String result = prefix + "{\n";
 
         result += prefix + "  keyword = " + this.keyword + "\n";
-        result += prefix + "  type = CaffaField<AppEnum>(";
-        for (int index = 0; index < validValues.size(); ++index) {
-            if (index > 0) {
-                result += ",";
-            }
-            result += validValues.get(index);
-        }
-        result += ")::";
+        result += prefix + "  type = CaffaField<AppEnum>::";
 
         if (this.localValue != null) {
             result += "local\n";
@@ -57,22 +45,11 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     @Override
     public void set(CaffaAppEnum appEnum) throws Exception {
         logger.debug("Setting JSON for field " + this.keyword);
-        if (!this.validValues.contains(appEnum.value())) {
-            String errMsg = "The enum value " + appEnum.value() + " is not valid";
-            logger.error(errMsg);
-            throw new IllegalArgumentException(errMsg);
-        }
         super.set(appEnum);
     }
 
     @Override
     public String typeString() {
-        String validValueString = "";
-        for (String validValue : validValues) {
-            if (!validValueString.isEmpty())
-                validValueString += ",";
-            validValueString += validValue;
-        }
-        return "AppEnum(" + validValueString + ")";
+        return "AppEnum";
     }
 }

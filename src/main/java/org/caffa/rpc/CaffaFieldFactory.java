@@ -70,15 +70,7 @@ public class CaffaFieldFactory {
                 logger.error("Could not find creator for dataType: " + dataType);
                 return null;
             }
-            CaffaAppEnumField appEnumField = (CaffaAppEnumField) creator.newInstance(owner, keyword);
-
-            String validValuesString = dataType.substring(8, dataType.length() - 1);
-            String[] values = validValuesString.split(",");
-            for (String value : values) {
-                appEnumField.addValidValue(value);
-            }
-
-            return appEnumField;
+            return (CaffaAppEnumField) creator.newInstance(owner, keyword);
         }
 
         CaffaField<?> creator = creators.get(dataType);

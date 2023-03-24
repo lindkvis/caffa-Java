@@ -92,13 +92,20 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public void setRemoteJson(String value) {
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
-        FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
+        try
+        {
+            SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
+            FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
+                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
 
-        SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(
-                value).build();
-        this.fieldBlockingStub.setValue(setterRequest);
+            String jsonValue = value;
+            SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(jsonValue).build();
+            this.fieldBlockingStub.setValue(setterRequest);
+        }
+        catch(Exception e)
+        {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public void setDeepCopiedJson(String json) {
