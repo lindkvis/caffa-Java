@@ -169,7 +169,7 @@ public class CaffaObject {
             if (myMethod.classKeyword.equals(name) || myMethod.classKeyword.equals(nameWithClass))
                 return myMethod;
         }
-        return null;
+        throw new RuntimeException("Failed to find method " + nameWithClass);
     }
 
     public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws Exception {
