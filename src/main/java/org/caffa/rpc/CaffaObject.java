@@ -21,7 +21,6 @@ public class CaffaObject {
     public final String uuid;
 
     private final Map<String, CaffaField<?>> fields;
-    private final CaffaField<?> parentField = null;
 
     protected final String sessionUuid;
     protected ManagedChannel channel;
@@ -118,10 +117,6 @@ public class CaffaObject {
 
     public void addField(CaffaField<?> field) {
         this.fields.put(field.keyword, field);
-    }
-
-    public CaffaObject parent() {
-        return parentField.owner;
     }
 
     public String getJson() {
