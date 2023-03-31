@@ -72,9 +72,9 @@ public class GrpcClientApp {
 
     /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 300;
-    static final long KEEPALIVE_TIMEOUT = 5000;
+    static final long KEEPALIVE_TIMEOUT = 10000;
     static final long STATUS_TIMEOUT = 1000;
-    static final long SESSION_TIMEOUT = 5000;
+    static final long SESSION_TIMEOUT = 10000;
     private ScheduledExecutorService executor = null;
 
     private static final Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
