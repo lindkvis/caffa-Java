@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +27,8 @@ public class CaffaObject {
     protected final String sessionUuid;
     protected ManagedChannel channel;
     private ObjectAccessBlockingStub objectStub;
+
+    static final long METHOD_TIMEOUT = 5000;
 
     private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
@@ -177,7 +181,7 @@ public class CaffaObject {
                 .build();
 
         try {
-            RpcObject returnValue = this.objectStub.executeMethod(request);
+            RpcObject returnValue = this.objectStub.withDeadlineAfter(METHOD_TIMEOUT, TimeUnit.MILLISECONDS).executeMethod(request);
             logger.debug("Return value json: " + returnValue.getJson());
 
             return new GsonBuilder()
@@ -190,7 +194,7 @@ public class CaffaObject {
         } catch (Exception e) {
             Status status = Status.fromThrowable(e);
             logger.error("Failed to execute method with error: " + status.getDescription() + " ... " + e.getMessage());
-            throw new RuntimeException(status.getDescription());
+            throw new RuntimeException("Failed to complete server task: " + status.getDescription());
         }
     }
 
