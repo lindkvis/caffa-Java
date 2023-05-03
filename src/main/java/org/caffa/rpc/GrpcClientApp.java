@@ -71,7 +71,7 @@ public class GrpcClientApp {
     private final ReentrantLock lock = new ReentrantLock();
 
     /** Defines intervals and timeouts (milliseconds). */
-    static final long KEEPALIVE_INTERVAL = 500;
+    static final long KEEPALIVE_INTERVAL = 2000;
     static final long KEEPALIVE_TIMEOUT = 10000;
     static final long STATUS_TIMEOUT = 1000;
     static final long SESSION_TIMEOUT = 10000;
