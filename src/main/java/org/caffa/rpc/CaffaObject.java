@@ -145,7 +145,7 @@ public class CaffaObject {
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
         ListMethodsRequest request = ListMethodsRequest.newBuilder().setSelfObject(self).setSession(session).build();
 
-        RpcObjectList methodList = this.objectStub.listMethods(request);
+        RpcObjectList methodList = this.objectStub.withDeadlineAfter(METHOD_TIMEOUT, TimeUnit.MILLISECONDS).listMethods(request);
         for (RpcObject method : methodList.getObjectsList()) {
             CaffaObjectMethod caffaMethod = new GsonBuilder().registerTypeAdapter(CaffaField.class,
                     new CaffaFieldAdapter(this, this.channel))
