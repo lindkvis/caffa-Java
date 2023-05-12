@@ -45,7 +45,7 @@ import java.io.PrintWriter;
 import com.google.gson.GsonBuilder;
 
 import org.caffa.rpc.AppGrpc.AppBlockingStub;
-import org.caffa.rpc.CaffaFatalConnectionError.FailureType;
+import org.caffa.rpc.CaffaConnectionError.FailureType;
 import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +141,7 @@ public class GrpcClientApp {
                 assert serverVersion.length >= 2;
 
                 if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
-                    throw new CaffaFatalConnectionError(CaffaFatalConnectionError.FailureType.VERSION_MISMATCH,
+                    throw new CaffaConnectionError(CaffaConnectionError.FailureType.VERSION_MISMATCH,
                             String.format(
                                     "Server version v%d.%d.x != version v%d.%d.x",
                                     serverVersion[0],
@@ -152,7 +152,7 @@ public class GrpcClientApp {
             }
             this.session = createSession(sessionType);
             if (this.session == null) {
-                throw new CaffaFatalConnectionError(CaffaFatalConnectionError.FailureType.SESSION_REFUSED, "Failed to create session");
+                throw new CaffaConnectionError(CaffaConnectionError.FailureType.SESSION_REFUSED, "Failed to create session");
             }
 
             startKeepAliveTransfer();
@@ -235,7 +235,7 @@ public class GrpcClientApp {
             return this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
                     .createSession(parameters);
         } catch (Exception e) {
-            throw new CaffaFatalConnectionError(FailureType.SESSION_REFUSED, "Failed to create session");
+            throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "Failed to create session");
         }
     }
 
@@ -250,7 +250,7 @@ public class GrpcClientApp {
                     existingSession = null;
                 }
             } catch (Exception e) {
-                throw new CaffaFatalConnectionError(FailureType.SESSION_REFUSED, "Failed to keep alive old session " + e);
+                throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "Failed to keep alive old session " + e);
             }
         }
 

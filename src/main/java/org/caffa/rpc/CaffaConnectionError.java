@@ -3,7 +3,7 @@ package org.caffa.rpc;
 /**
  * A special and fatal connection error
  */
-public class CaffaFatalConnectionError extends java.lang.Exception {
+public class CaffaConnectionError extends java.lang.Exception {
     public enum FailureType
     {
         VERSION_MISMATCH,
@@ -13,7 +13,7 @@ public class CaffaFatalConnectionError extends java.lang.Exception {
     }
     public FailureType type;
 
-    public CaffaFatalConnectionError(FailureType type, String message) {        
+    public CaffaConnectionError(FailureType type, String message) {        
         super(message);
 
         this.type = type;
