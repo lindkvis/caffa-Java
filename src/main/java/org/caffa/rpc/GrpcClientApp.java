@@ -74,7 +74,7 @@ public class GrpcClientApp {
     static final long KEEPALIVE_INTERVAL = 2000;
     static final long KEEPALIVE_TIMEOUT = 10000;
     static final long STATUS_TIMEOUT = 1000;
-    static final long SESSION_TIMEOUT = 10000;
+    static final long SESSION_TIMEOUT = 5000;
     private ScheduledExecutorService executor = null;
 
     private static final Logger logger = LoggerFactory.getLogger(GrpcClientApp.class);
@@ -159,7 +159,7 @@ public class GrpcClientApp {
         }
         catch(io.grpc.StatusRuntimeException e) {
             cleanUp();
-            throw new CaffaFailedConnectionAttempt("Failed to connect" + e.getMessage());
+            throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "Failed to connect to server");
         }
         catch(Exception e) {            
             cleanUp();
@@ -234,8 +234,14 @@ public class GrpcClientApp {
             SessionParameters parameters = SessionParameters.newBuilder().setType(type).build();
             return this.appStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS)
                     .createSession(parameters);
-        } catch (Exception e) {
-            throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "Failed to create session");
+        } catch(io.grpc.StatusRuntimeException e) {
+            if (e.getStatus() == io.grpc.Status.UNAUTHENTICATED) {
+                throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "Server refused to create new session for client");
+            }
+            throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "Failed to connect to server");
+        }
+        catch (Exception e) {
+            throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "Failed to connect to server");
         }
     }
 
@@ -249,6 +255,11 @@ public class GrpcClientApp {
                 if (!checkSession.getUuid().equals(existingSession.getUuid())) {
                     existingSession = null;
                 }
+            } catch(io.grpc.StatusRuntimeException e) {
+                if (e.getStatus() == io.grpc.Status.UNAUTHENTICATED) {
+                    throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "Server refused to create new session for client");
+                }
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "Failed to connect to server");
             } catch (Exception e) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "Failed to keep alive old session " + e);
             }
@@ -339,7 +350,7 @@ public class GrpcClientApp {
 
         DocumentRequest request = DocumentRequest.newBuilder().setDocumentId(documentId).setSession(session).build();
 
-        RpcObject object = this.objectStub.getDocument(request);
+        RpcObject object = this.objectStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS).getDocument(request);
         String jsonString = object.getJson();
         return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, session.getUuid()))
