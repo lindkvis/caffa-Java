@@ -54,6 +54,9 @@ import org.apache.log4j.PropertyConfigurator;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import java.beans.PropertyChangeSupport;
+import java.beans.PropertyChangeListener;
+
 public class GrpcClientApp {
     public enum Status {
         AVAILABLE,
@@ -66,6 +69,8 @@ public class GrpcClientApp {
     private final ManagedChannel channel;
     private final AppBlockingStub appStub;
     private final ObjectAccessBlockingStub objectStub;
+
+    private PropertyChangeSupport propertyChangeSupport;
 
     private SessionMessage session = null;
     private final ReentrantLock lock = new ReentrantLock();
@@ -129,6 +134,7 @@ public class GrpcClientApp {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.appStub = AppGrpc.newBlockingStub(channel);
         this.objectStub = ObjectAccessGrpc.newBlockingStub(channel);
+        this.propertyChangeSupport = new PropertyChangeSupport(this);
 
         if (!logConfigFilePath.isEmpty()) {
             setupLogging(logConfigFilePath);
@@ -406,9 +412,29 @@ public class GrpcClientApp {
             } catch (Exception e) {
                 logger.error("Keepalive failed");
                 this.session = null;
+                firePropertyChange("status", true, false);
             }
         }
         unlock();
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+
+    /**
+     * Trigger a change in a property.
+     *
+     * @param propertyName name of the property that changes.
+     * @param oldValue old property value.
+     * @param newValue new property value.
+     */
+    protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+        propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
 
 }
