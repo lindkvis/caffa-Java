@@ -80,6 +80,14 @@ public class CaffaFieldFactory {
 
             return appEnumField;
         }
+        if (dataType.startsWith("object[]::")) {
+            CaffaField<?> creator = creators.get("object[]");
+            return creator.newInstance(owner, keyword);
+        }
+        if (dataType.startsWith("object::")) {
+            CaffaField<?> creator = creators.get("object");
+            return creator.newInstance(owner, keyword);
+        }
 
         if (dataType.startsWith("object")) {
             String[] typeArray = dataType.split("::");
