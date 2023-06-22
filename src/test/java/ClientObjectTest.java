@@ -39,7 +39,7 @@ public class ClientObjectTest {
     void document() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
 
-        String classKeyword = object.classKeyword;
+        String classKeyword = object.keyword;
         assertTrue(!classKeyword.isEmpty());
         System.out.println("Main Document Class Keyword: " + classKeyword);
 
@@ -85,22 +85,24 @@ public class ClientObjectTest {
 
         assertEquals(4, children.size());
         for (CaffaObject child : children) {
-            System.out.println("Found child of class: " + child.classKeyword +
+            System.out.println("Found child of class: " + child.keyword +
                     " ... checking methods!");
             ArrayList<CaffaObjectMethod> childMethods = child.methods();
-            assertEquals(1, childMethods.size());
+            assertEquals(3, childMethods.size());
             CaffaObjectMethod method = childMethods.get(0);
-            CaffaField<?> doubleMethodArg = method.field("doubleArgument");
+            CaffaField<?> doubleMethodArg = method.field("doubleValue");
             assertDoesNotThrow(() -> doubleMethodArg.set(99.0, Double.class));
-            CaffaField<?> intMethodArg = method.field("intArgument");
+            CaffaField<?> intMethodArg = method.field("intValue");
             assertDoesNotThrow(() -> intMethodArg.set(41, Integer.class));
-            CaffaField<?> stringMethodArg = method.field("stringArgument");
+            CaffaField<?> stringMethodArg = method.field("stringValue");
             assertDoesNotThrow(() -> stringMethodArg.set("AnotherValue", String.class));
 
-            CaffaField<?> intArrayMethodArgT = method.field("intArrayArgument");
+
+            CaffaObjectMethod setIntVectorMethod = child.method("setIntVector");
+            CaffaField<?> intArrayMethodArgT = setIntVectorMethod.field("intVector");
             assertNotNull(intArrayMethodArgT);
 
-            CaffaField<Integer[]> intArrayMethodArg = method.field("intArrayArgument").cast(
+            CaffaField<Integer[]> intArrayMethodArg = intArrayMethodArgT.cast(
                     Integer[].class);
             Integer[] intArrayValues = { 1, 2, 97 };
             assertDoesNotThrow(() -> intArrayMethodArg.set(intArrayValues));
@@ -108,12 +110,13 @@ public class ClientObjectTest {
             assertEquals(99.0, doubleMethodArg.get());
             assertEquals(41, intMethodArg.get());
             assertEquals("AnotherValue", stringMethodArg.get());
+
+
+
             assertTrue(Arrays.equals(intArrayValues, intArrayMethodArg.get()));
 
-            CaffaObjectMethodResult result = assertDoesNotThrow(() -> method.execute());
-
-            boolean status = result.field("status").cast(Boolean.class).get();
-            assertTrue(status);
+            assertDoesNotThrow(() -> method.execute());
+            assertDoesNotThrow(() -> setIntVectorMethod.execute());
 
             CaffaField<Double> doubleField = child.field("doubleField",
                     Double.class);
@@ -140,19 +143,17 @@ public class ClientObjectTest {
         children.addAll(Arrays.asList(inheritedField.get()));
 
         for (CaffaObject child : children) {
-            String methodName = new String("copyObject");
+            String methodName = new String("copyValues");
             CaffaObjectMethod copyObjectMethod = child.method(methodName);
+            System.out.println(copyObjectMethod.dump());
             assertNotNull(copyObjectMethod);
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleArgument", 97.0,
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleValue", 97.0,
                     Double.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("intArgument", 43,
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("intValue", 43,
                     Integer.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringArgument",
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("stringValue",
                     "TestValue", String.class));
-            CaffaObjectMethodResult result = assertDoesNotThrow(() -> copyObjectMethod.execute());
-
-            CaffaField<Boolean> status = result.field("status", Boolean.class);
-            assertTrue(status.get());
+            assertDoesNotThrow(() -> copyObjectMethod.execute());
 
             CaffaField<Double> doubleField = child.field("doubleField",
                     Double.class);

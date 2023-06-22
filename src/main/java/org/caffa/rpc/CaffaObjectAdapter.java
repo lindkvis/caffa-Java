@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -51,11 +52,14 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             throws JsonParseException {
 
         assert (json.isJsonObject());
-        final JsonObject object = json.getAsJsonObject();
+        final JsonObject container = json.getAsJsonObject();
 
-        assert object.has("class");
+        assert container.contains("type");
+        assert container.contaisn("value");
 
-        String classKeyword = object.get("class").getAsString();
+        final JsonObject object = container.get("value").getAsJsonObject();
+
+        String classKeyword = object.get("keyword").getAsString();
 
         CaffaObject caffaObject = null;
 
@@ -82,52 +86,80 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         return caffaObject;
     }
 
-    public void readFields(CaffaObject caffaObject, JsonObject object) {
-        assert caffaObject != null && object != null && object.isJsonObject();
+    public void readField(CaffaObject caffaObject, JsonElement jsonElement) {
+        CaffaField<?> field = new GsonBuilder()
+                .registerTypeAdapter(CaffaField.class,
+                        new CaffaFieldAdapter(caffaObject, this.channel))
+                .registerTypeAdapter(CaffaObject.class,
+                        new CaffaObjectAdapter(this.channel, this.sessionUuid))
+                .create()
+                .fromJson(jsonElement, CaffaField.class);
+        if (field != null) {
+            caffaObject.addField(field);
+        }
+    }
 
-        logger.debug("JSON: " + object.toString());
+    public void readFields(CaffaObject caffaObject, JsonElement containerElement) {
+        assert caffaObject != null && containerElement != null;
 
-        for (String key : object.keySet()) {
-            if (!key.equals("class") && !key.equals("uuid") && !object.get(key).isJsonNull()) {
-                JsonObject jsonElement = object.get(key).getAsJsonObject();
-                jsonElement.addProperty("keyword", key);
-                CaffaField<?> field = new GsonBuilder()
-                        .registerTypeAdapter(CaffaField.class,
-                                new CaffaFieldAdapter(caffaObject, this.channel))
-                        .registerTypeAdapter(CaffaObject.class,
-                                new CaffaObjectAdapter(this.channel, this.sessionUuid))
-                        .create()
-                        .fromJson(jsonElement, CaffaField.class);
-                if (field != null) {
-                    caffaObject.addField(field);
+        System.out.println("JSON: " + containerElement.toString());
+
+        if (containerElement.isJsonObject()) {
+            JsonObject object = containerElement.getAsJsonObject();
+         
+            for (String key : object.keySet()) {
+                if (!key.equals("keyword") && !key.equals("keyword") && !key.equals("uuid") && !object.get(key).isJsonNull()) {
+                    JsonObject fieldElement = object.get(key).getAsJsonObject();
+                    fieldElement.addProperty("keyword", key);
+                    readField(caffaObject, fieldElement);
+            
                 }
             }
-        }
+        } else if (containerElement.isJsonArray()) {
+            JsonArray array = containerElement.getAsJsonArray();
 
+            for (int i = 0; i < array.size(); ++i) {
+                JsonObject fieldElement = array.get(i).getAsJsonObject();
+                readField(caffaObject, fieldElement);
+            }
+        }
     }
 
     public JsonElement serialize(CaffaObject caffaObject, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
 
+        jsonObject.addProperty("keyword", caffaObject.keyword);
+        if (!caffaObject.uuid.isEmpty()) {
+            jsonObject.addProperty("uuid", caffaObject.uuid);
+        }
+
         writeFields(caffaObject, jsonObject, typeOfSrc, context);
         return jsonObject;
     }
 
-    public void writeFields(CaffaObject caffaObject, JsonObject jsonObject, Type typeOfSrc,
+    public void writeFields(CaffaObject caffaObject, JsonElement jsonElement, Type typeOfSrc,
             JsonSerializationContext context) {
-        logger.debug("Writing fields for object: " + caffaObject.classKeyword);
+        logger.debug("Writing fields for object: " + caffaObject.keyword);
         if (this.channel != null) {
             logger.debug("with a gRPC-connection");
         } else {
             logger.debug("without a gRPC-connection");
         }
-        jsonObject.addProperty("class", caffaObject.classKeyword);
-        jsonObject.addProperty("uuid", caffaObject.uuid);
 
-        for (CaffaField<?> field : caffaObject.fields()) {
-            jsonObject.add(field.keyword,
-                    new CaffaFieldAdapter(caffaObject, this.channel).serialize(field, typeOfSrc,
-                            context));
+        if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            for (CaffaField<?> field : caffaObject.fields()) {
+                jsonObject.add(field.keyword,
+                        new CaffaFieldAdapter(caffaObject, this.channel).serialize(field, typeOfSrc,
+                                context));
+            }
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            for (CaffaField<?> field : caffaObject.fields()) {
+                JsonElement fieldElement = new CaffaFieldAdapter(caffaObject, this.channel).serialize(field, typeOfSrc, context);
+                fieldElement.getAsJsonObject().addProperty("keyword", field.keyword);
+                jsonArray.add(fieldElement);
+            }
         }
     }
 }

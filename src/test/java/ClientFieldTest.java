@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -229,7 +230,7 @@ public class ClientFieldTest {
 
             // Values should not have been sent to server
             Integer[] valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
-            assertTrue(!Arrays.equals(values3, valuesFromOriginal));
+            assertFalse(Arrays.equals(values3, valuesFromOriginal));
 
             // Now copy the values to the server
             assertDoesNotThrow(() -> object.field("demoObject", CaffaObject.class).deepCopyFrom(demoObject));

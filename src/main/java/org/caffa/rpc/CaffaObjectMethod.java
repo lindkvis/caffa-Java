@@ -30,7 +30,7 @@ public class CaffaObjectMethod extends CaffaObject {
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
                 new CaffaObjectMethodAdapter(this.self));
-        Gson gson = builder.create();
+        Gson gson = builder.serializeNulls().create();
         return gson.toJson(this);
     }
 

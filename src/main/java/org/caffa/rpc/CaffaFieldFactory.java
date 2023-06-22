@@ -81,6 +81,11 @@ public class CaffaFieldFactory {
             return appEnumField;
         }
 
+        if (dataType.startsWith("object")) {
+            String[] typeArray = dataType.split("::");
+            dataType = typeArray[0];
+        }
+
         CaffaField<?> creator = creators.get(dataType);
         if (creator == null) {
             logger.error("Could not find creator for dataType: " + dataType);
