@@ -23,9 +23,9 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
+                .setClassKeyword(this.owner.keyword).setUuid(this.owner.uuid).setSession(session).build();
 
-        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
+        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.keyword);
         GenericValue reply = this.fieldBlockingStub.getValue(fieldRequest);
         logger.debug("Got field reply: " + reply.getValue());
         return reply.getValue();
@@ -81,10 +81,10 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
 
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session)
+                .setClassKeyword(this.owner.keyword).setUuid(this.owner.uuid).setSession(session)
                 .setCopyObjectValues(true).build();
 
-        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.classKeyword);
+        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.keyword);
         GenericValue reply = this.fieldBlockingStub.getValue(fieldRequest);
         logger.debug("Got field reply: " + reply.getValue());
         setLocalJson(reply.getValue());
@@ -94,7 +94,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     public void setRemoteJson(String value) {
         SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
         FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session).build();
+                .setClassKeyword(this.owner.keyword).setUuid(this.owner.uuid).setSession(session).build();
 
         SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(
                 value).build();
@@ -107,7 +107,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         } else {
             SessionMessage session = SessionMessage.newBuilder().setUuid(this.owner.sessionUuid()).build();
             FieldRequest fieldRequest = FieldRequest.newBuilder().setKeyword(this.keyword)
-                    .setClassKeyword(this.owner.classKeyword).setUuid(this.owner.uuid).setSession(session)
+                    .setClassKeyword(this.owner.keyword).setUuid(this.owner.uuid).setSession(session)
                     .setCopyObjectValues(true).build();
 
             SetterRequest setterRequest = SetterRequest.newBuilder().setField(fieldRequest).setValue(json).build();
@@ -163,13 +163,13 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         result += prefix + "  keyword = " + this.keyword + "\n";
 
         result += prefix + "  type = CaffaField<" + dataType + ">::";
-        if (this.localValue != null) {
+        if (isLocalField()) {
             result += "local\n";
         } else {
             result += "grpc\n";
         }
 
-        if (this.localValue != null) {
+        if (isLocalField()) {
             result += prefix + "  value = " + getLocalJson() + "\n";
         }
         result += prefix + "}\n";

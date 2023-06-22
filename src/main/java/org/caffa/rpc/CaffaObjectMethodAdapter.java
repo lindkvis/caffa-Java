@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
+
 
 public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
@@ -28,13 +30,17 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
         assert json.isJsonObject();
         final JsonObject object = json.getAsJsonObject();
 
-        assert object.has("class");
-        assert object.get("class").isJsonPrimitive();
+        assert object.has("keyword");
+        assert object.get("keyword").isJsonPrimitive();
 
-        String classKeyword = object.get("class").getAsString();
+        String classKeyword = object.get("keyword").getAsString();
 
         CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(classKeyword, this.self);
-        readFields(caffaObjectMethod, object);
+
+        if  (object.has("arguments")) {
+            JsonArray arguments = object.get("arguments").getAsJsonArray();
+            readFields(caffaObjectMethod, arguments);
+        }
 
         return caffaObjectMethod;
     }
@@ -43,9 +49,13 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     public JsonElement serialize(CaffaObject caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
 
-        writeFields(caffaObjectMethod, jsonObject, typeOfSrc, context);
+        jsonObject.addProperty("keyword", caffaObjectMethod.keyword);
+        JsonArray jsonArray = new JsonArray();
+
+        writeFields(caffaObjectMethod, jsonArray, typeOfSrc, context);
+        
+        jsonObject.add("arguments", jsonArray);
 
         return jsonObject;
     }
-
 }
