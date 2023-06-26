@@ -52,13 +52,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             throws JsonParseException {
 
         assert (json.isJsonObject());
-        final JsonObject container = json.getAsJsonObject();
-
-        assert container.contains("type");
-        assert container.contaisn("value");
-
-        final JsonObject object = container.get("value").getAsJsonObject();
-
+        final JsonObject object = json.getAsJsonObject();
         String classKeyword = object.get("keyword").getAsString();
 
         CaffaObject caffaObject = null;
