@@ -74,8 +74,8 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
 
         String type = src.typeString();
 
-        jsonObject.addProperty("keyword", src.keyword);
-        jsonObject.addProperty("type", type);
+        jsonField.addProperty("keyword", src.keyword);
+        jsonField.addProperty("type", type);
         if (src.isLocalField()) {
             String jsonString = src.getJson();
             JsonElement element = JsonParser.parseString(jsonString);
