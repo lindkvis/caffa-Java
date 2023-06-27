@@ -19,7 +19,7 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectMethodAdapter.class);
 
     public CaffaObjectMethodAdapter(CaffaObject self) {
-        super(self.sessionUuid());
+        super();
         this.self = self;
     }
 

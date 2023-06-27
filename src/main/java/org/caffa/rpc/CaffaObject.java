@@ -21,10 +21,11 @@ import io.grpc.Status;
 public class CaffaObject {
     public final String keyword;
     public final String uuid;
+    protected final String sessionUuid;
+    private final boolean hasLocalDataFields;
 
     private final Map<String, CaffaField<?>> fields;
 
-    protected final String sessionUuid;
     protected ManagedChannel channel;
     private ObjectAccessBlockingStub objectStub;
 
@@ -32,7 +33,7 @@ public class CaffaObject {
 
     private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(String keyword, String uuid, String sessionUuid) {
+    public CaffaObject(String keyword, String uuid, String sessionUuid, boolean hasLocalDataFields) {
         assert !keyword.isEmpty();
         assert !uuid.isEmpty();
         assert !sessionUuid.isEmpty();
@@ -40,16 +41,19 @@ public class CaffaObject {
         this.keyword = keyword;
         this.uuid = uuid;
         this.sessionUuid = sessionUuid;
+        this.hasLocalDataFields = hasLocalDataFields;
+
         this.fields = new TreeMap<String, CaffaField<?>>();
     }
 
-    public CaffaObject(String keyword, String sessionUuid) {
+    public CaffaObject(String keyword) {
         assert !keyword.isEmpty();
-        assert !sessionUuid.isEmpty();
 
         this.keyword = keyword;
         this.uuid = "";
-        this.sessionUuid = sessionUuid;
+        this.sessionUuid = "";
+        this.hasLocalDataFields = true;
+
         this.fields = new TreeMap<String, CaffaField<?>>();
     }
 
@@ -59,12 +63,8 @@ public class CaffaObject {
         this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
     }
 
-    public boolean isRemoteObject() {
-        return this.channel != null && this.objectStub != null;
-    }
-
     public boolean isLocalObject() {
-        return !isRemoteObject();
+        return !this.sessionUuid.isEmpty() && !this.uuid.isEmpty() && this.hasLocalDataFields;
     }
 
     public ManagedChannel channel() {
@@ -82,6 +82,7 @@ public class CaffaObject {
     public String dump(String prefix) {
         String result = prefix + "{\n";
         result += prefix + "  keyword = " + this.keyword + "\n";
+        result += prefix + "  local = " + this.isLocalObject() + "\n";
         result += prefix + "  uuid = " + uuid + "\n";
         result += prefix + "  fields = [\n";
         for (Map.Entry<String, CaffaField<?>> entry : this.fields.entrySet()) {
@@ -124,10 +125,9 @@ public class CaffaObject {
     }
 
     public String getJson() {
-        System.out.println("CaffaObject::getJson()");
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaField.class,
-                new CaffaFieldAdapter(this, this.channel)).registerTypeAdapter(CaffaObject.class,
-                        new CaffaObjectAdapter(this.channel, this.sessionUuid));
+                new CaffaFieldAdapter(this, this.channel, this.isLocalObject())).registerTypeAdapter(CaffaObject.class,
+                        new CaffaObjectAdapter(this.channel, this.sessionUuid, this.isLocalObject()));
         Gson gson = builder.serializeNulls().create();
         return gson.toJson(this);
     }
@@ -150,7 +150,7 @@ public class CaffaObject {
         for (RpcObject method : methodList.getObjectsList()) {
 
             CaffaObjectMethod caffaMethod = new GsonBuilder().registerTypeAdapter(CaffaField.class,
-                    new CaffaFieldAdapter(this, this.channel))
+                    new CaffaFieldAdapter(this, this.channel, true))
                     .registerTypeAdapter(CaffaObjectMethod.class,
                             new CaffaObjectMethodAdapter(this))
                     .create()
@@ -182,7 +182,7 @@ public class CaffaObject {
 
         try {
             RpcObject returnValue = this.objectStub.withDeadlineAfter(METHOD_TIMEOUT, TimeUnit.MILLISECONDS).executeMethod(request);
-            return new CaffaObjectMethodResult(returnValue.getJson());
+            return new CaffaObjectMethodResult(this.channel, this.sessionUuid, returnValue.getJson());
 
         } catch (Exception e) {
             Status status = Status.fromThrowable(e);

@@ -359,7 +359,7 @@ public class GrpcClientApp {
         RpcObject object = this.objectStub.withDeadlineAfter(SESSION_TIMEOUT, TimeUnit.MILLISECONDS).getDocument(request);
         String jsonString = object.getJson();
         return new GsonBuilder()
-                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, session.getUuid()))
+                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this.channel, session.getUuid(), false))
                 .create()
                 .fromJson(jsonString, CaffaObject.class);
     }

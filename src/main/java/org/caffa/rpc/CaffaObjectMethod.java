@@ -12,7 +12,7 @@ public class CaffaObjectMethod extends CaffaObject {
     public final CaffaObject self;
 
     public CaffaObjectMethod(String classKeyword, CaffaObject self) {
-        super(classKeyword, self.sessionUuid());
+        super(classKeyword);
         this.self = self;
     }
 

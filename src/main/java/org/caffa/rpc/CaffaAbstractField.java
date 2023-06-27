@@ -10,6 +10,8 @@ public abstract class CaffaAbstractField {
     protected FieldAccessGrpc.FieldAccessBlockingStub fieldBlockingStub = null;
     protected FieldAccessGrpc.FieldAccessStub fieldStub = null;
 
+    protected boolean isLocalField = false;
+
 
     public CaffaAbstractField(CaffaObject owner, String keyword) {
         this.owner = owner;
@@ -17,11 +19,7 @@ public abstract class CaffaAbstractField {
     }
 
     public boolean isLocalField() {
-        return !isRemoteField();
-    }
-
-    public boolean isRemoteField() {
-        return this.channel != null && this.fieldStub != null && this.fieldBlockingStub != null;
+        return this.isLocalField;
     }
 
     public void createGrpcAccessor(ManagedChannel channel) {
@@ -29,6 +27,10 @@ public abstract class CaffaAbstractField {
         this.channel = channel;
         this.fieldBlockingStub = FieldAccessGrpc.newBlockingStub(channel);
         this.fieldStub = FieldAccessGrpc.newStub(channel);
+    }
+
+    public void setIsLocalField(boolean isLocalField) {
+        this.isLocalField = isLocalField;
     }
 
     public abstract String getJson();

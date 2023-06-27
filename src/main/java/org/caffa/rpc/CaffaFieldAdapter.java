@@ -18,13 +18,15 @@ import java.lang.reflect.Type;
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
     private final CaffaObject object;
     private final ManagedChannel channel;
+    private final boolean createLocalFields;
     private static final Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
 
-    public CaffaFieldAdapter(CaffaObject object, ManagedChannel channel) {
+    public CaffaFieldAdapter(CaffaObject object, ManagedChannel channel, boolean createLocalFields) {
         super();
 
         this.object = object;
         this.channel = channel;
+        this.createLocalFields = createLocalFields;
     }
 
     public CaffaField<?> createField(String keyword, String dataType, JsonElement valueElement) {
@@ -40,12 +42,14 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         assert field != null;
         if (this.channel != null) {
             field.createGrpcAccessor(this.channel);
-        } else if (valueElement != null) {
+        } 
+        
+        field.setIsLocalField(createLocalFields);
+
+        if (createLocalFields && valueElement != null) {
             logger.debug("Setting local value for object " + object.keyword + " and field " + keyword
                     + " to: " + valueElement);
             field.setJson(valueElement.toString());
-        } else {
-            field.setJson("");
         }
         return field;
     }
