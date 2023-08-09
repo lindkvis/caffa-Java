@@ -11,21 +11,20 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import io.grpc.ManagedChannel;
 
 import java.lang.reflect.Type;
 
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
     private final CaffaObject object;
-    private final ManagedChannel channel;
+    private final RestClient client;
     private final boolean createLocalFields;
     private static final Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
 
-    public CaffaFieldAdapter(CaffaObject object, ManagedChannel channel, boolean createLocalFields) {
+    public CaffaFieldAdapter(CaffaObject object, RestClient client, boolean createLocalFields) {
         super();
 
         this.object = object;
-        this.channel = channel;
+        this.client = client;
         this.createLocalFields = createLocalFields;
     }
 
@@ -40,8 +39,8 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         logger.debug("Creating field " + keyword + " of type " + dataType);
         CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
         assert field != null;
-        if (this.channel != null) {
-            field.createGrpcAccessor(this.channel);
+        if (this.client != null) {
+            field.createRestAccessor(this.client);
         } 
         
         field.setIsLocalField(createLocalFields);

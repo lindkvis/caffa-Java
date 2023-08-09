@@ -17,13 +17,17 @@ public class CaffaObjectMethod extends CaffaObject {
     }
 
     /**
-     * Execute the method. This uses the gRPC accessors in the method's self-object
+     * Execute the method. This uses the RPC accessors in the method's self-object
      * since the CaffaObjectMethod itself is a purely local object.
      *
      * @return
      */
     public CaffaObjectMethodResult execute() throws Exception {
         return self.execute(this);
+    }
+
+    public CaffaObject getSelf() {
+        return this.self;
     }
 
     @Override
