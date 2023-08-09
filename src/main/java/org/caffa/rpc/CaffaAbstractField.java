@@ -1,14 +1,10 @@
 package org.caffa.rpc;
 
-import io.grpc.ManagedChannel;
-
 public abstract class CaffaAbstractField {
     protected CaffaObject owner;
     public final String keyword;
 
-    protected ManagedChannel channel = null;
-    protected FieldAccessGrpc.FieldAccessBlockingStub fieldBlockingStub = null;
-    protected FieldAccessGrpc.FieldAccessStub fieldStub = null;
+    protected RestClient client = null;
 
     protected boolean isLocalField = false;
 
@@ -22,11 +18,9 @@ public abstract class CaffaAbstractField {
         return this.isLocalField;
     }
 
-    public void createGrpcAccessor(ManagedChannel channel) {
+    public void createRestAccessor(RestClient client) {
         assert this.owner != null;
-        this.channel = channel;
-        this.fieldBlockingStub = FieldAccessGrpc.newBlockingStub(channel);
-        this.fieldStub = FieldAccessGrpc.newStub(channel);
+        this.client = client;
     }
 
     public void setIsLocalField(boolean isLocalField) {
@@ -45,4 +39,8 @@ public abstract class CaffaAbstractField {
 
     public abstract String dump(String prefix);
 
+
+    public CaffaObject getOwner() {
+        return this.owner;
+    }
 }

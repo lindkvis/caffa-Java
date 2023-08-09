@@ -2,7 +2,7 @@ import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObjectMethodResult;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaObjectMethod;
-import org.caffa.rpc.GrpcClientApp;
+import org.caffa.rpc.RestClient;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,11 +23,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ClientObjectTest {
-    private GrpcClientApp testApp;
+    private RestClient testApp;
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new GrpcClientApp("localhost", 50000, -1, -1, "log4j.properties");
+        testApp = new RestClient("localhost", 50000, -1, -1, "log4j.properties");
     }
 
     @AfterEach
@@ -37,7 +37,7 @@ public class ClientObjectTest {
 
     @Test
     void document() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         String classKeyword = object.keyword;
         assertTrue(!classKeyword.isEmpty());
@@ -51,14 +51,14 @@ public class ClientObjectTest {
 
     @Test
     void dumpDocument() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         assertTrue(!object.fields().isEmpty());
         System.out.println(object.dump());
     }
 
     @Test
     void children() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -70,7 +70,7 @@ public class ClientObjectTest {
 
     @Test
     void methods() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
@@ -129,7 +129,7 @@ public class ClientObjectTest {
 
     @Test
     void specificMethod() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
@@ -165,7 +165,7 @@ public class ClientObjectTest {
 
     @Test
     void nonExistentMethod() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 

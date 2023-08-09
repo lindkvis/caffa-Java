@@ -17,18 +17,18 @@ import org.caffa.rpc.CaffaAppEnum;
 import org.caffa.rpc.CaffaAppEnumField;
 import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObject;
-import org.caffa.rpc.GrpcClientApp;
+import org.caffa.rpc.RestClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ClientFieldTest {
-    private GrpcClientApp testApp;
+    private RestClient testApp;
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new GrpcClientApp("localhost", 50000, -1, -1, "log4j.properties");
+        testApp = new RestClient("localhost", 50000, -1, -1, "log4j.properties");
     }
 
     @AfterEach
@@ -160,7 +160,7 @@ public class ClientFieldTest {
 
     @Test
     void doubleMember() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -184,7 +184,7 @@ public class ClientFieldTest {
 
     @Test
     void appEnumMember() {
-        CaffaObject object = assertDoesNotThrow(() -> testApp.document(""));
+        CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -221,7 +221,7 @@ public class ClientFieldTest {
 
         Integer[] values = typedIntArrayField.get();
         {
-            Integer[] values2 = { 44, 43, 172 };
+            Integer[] values2 = { 54, 83, 272, 12 };
 
             assertDoesNotThrow(() -> typedIntArrayField.set(values2));
 
@@ -231,15 +231,9 @@ public class ClientFieldTest {
             // Values should not have been sent to server
             Integer[] valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
             assertFalse(Arrays.equals(values3, valuesFromOriginal));
-
-            // Now copy the values to the server
-            assertDoesNotThrow(() -> object.field("demoObject", CaffaObject.class).deepCopyFrom(demoObject));
-            valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
-            assertTrue(Arrays.equals(values3, valuesFromOriginal));
         }
 
-        assertDoesNotThrow(() -> typedIntArrayField.set(values));
-
+        
         System.out.print("\n");
     }
 

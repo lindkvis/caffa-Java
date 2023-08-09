@@ -7,8 +7,10 @@ public class CaffaConnectionError extends java.lang.Exception {
     public enum FailureType
     {
         VERSION_MISMATCH,
-        SESSION_REFUSED,
-        CONNECTION_ERROR,
+        SESSION_REFUSED, // Server refuses to accept the session
+        CONNECTION_ERROR, // Failed to connect
+        REQUEST_ERROR, // The request fails on the server
+        MALFORMED_RESPONSE, // The response is not valid JSON
         LOST_CONTROL
     }
     public FailureType type;

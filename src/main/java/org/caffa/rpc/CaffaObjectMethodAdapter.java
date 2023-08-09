@@ -38,8 +38,12 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
         CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(classKeyword, this.self);
 
         if  (object.has("arguments")) {
-            JsonArray arguments = object.get("arguments").getAsJsonArray();
-            readFields(caffaObjectMethod, arguments);
+            JsonElement arguments = object.get("arguments");
+            if (arguments.isJsonArray()) {
+                System.out.println("ARGUMENTS: " + arguments.toString());
+                JsonArray argumentArray = arguments.getAsJsonArray();
+                readFields(caffaObjectMethod, argumentArray);
+            }
         }
 
         return caffaObjectMethod;

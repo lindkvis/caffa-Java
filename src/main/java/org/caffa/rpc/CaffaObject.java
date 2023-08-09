@@ -11,39 +11,35 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import org.caffa.rpc.ObjectAccessGrpc.ObjectAccessBlockingStub;
-
-import io.grpc.ManagedChannel;
-import io.grpc.Status;
 
 public class CaffaObject {
     public final String keyword;
     public final String uuid;
-    protected final String sessionUuid;
     private final boolean hasLocalDataFields;
 
     private final Map<String, CaffaField<?>> fields;
+    private final Map<String, CaffaObjectMethod> methods;
 
-    protected ManagedChannel channel;
-    private ObjectAccessBlockingStub objectStub;
+    protected RestClient client;
 
     static final long METHOD_TIMEOUT = 5000;
 
     private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(String keyword, String uuid, String sessionUuid, boolean hasLocalDataFields) {
+    public CaffaObject(String keyword, String uuid, boolean hasLocalDataFields) {
         assert !keyword.isEmpty();
         assert !uuid.isEmpty();
-        assert !sessionUuid.isEmpty();
 
         this.keyword = keyword;
         this.uuid = uuid;
-        this.sessionUuid = sessionUuid;
         this.hasLocalDataFields = hasLocalDataFields;
 
         this.fields = new TreeMap<String, CaffaField<?>>();
+        this.methods = new TreeMap<String, CaffaObjectMethod>();
+
     }
 
     public CaffaObject(String keyword) {
@@ -51,28 +47,23 @@ public class CaffaObject {
 
         this.keyword = keyword;
         this.uuid = "";
-        this.sessionUuid = "";
         this.hasLocalDataFields = true;
 
         this.fields = new TreeMap<String, CaffaField<?>>();
+        this.methods = new TreeMap<String, CaffaObjectMethod>();
     }
 
-    void createGrpcAccessor(ManagedChannel channel) {
+    void createRestAccessor(RestClient client) {
         assert !uuid.isEmpty();
-        this.channel = channel;
-        this.objectStub = ObjectAccessGrpc.newBlockingStub(this.channel);
+        this.client = client;
     }
 
     public boolean isLocalObject() {
-        return !this.sessionUuid.isEmpty() && !this.uuid.isEmpty() && this.hasLocalDataFields;
+        return this.hasLocalDataFields;
     }
 
-    public ManagedChannel channel() {
-        return this.channel;
-    }
-
-    public String sessionUuid() {
-        return this.sessionUuid;
+    public RestClient client() {
+        return this.client;
     }
 
     public String dump() {
@@ -92,6 +83,17 @@ public class CaffaObject {
             } else {
                 assert field != null;
                 result += field.dump(prefix + "    ");
+            }
+        }
+        result += prefix + "  ]\n";
+        result += prefix + "  methods = [\n";
+        for (Map.Entry<String, CaffaObjectMethod> entry : this.methods.entrySet()) {
+            CaffaObjectMethod method = entry.getValue();
+            if (method == null) {
+                logger.error("Method " + entry.getKey() + " is null!");
+            } else {
+                assert method != null;
+                result += method.dump(prefix + "    ");
             }
         }
         result += prefix + "  ]\n";
@@ -124,10 +126,14 @@ public class CaffaObject {
         this.fields.put(field.keyword, field);
     }
 
+    public void addMethod(CaffaObjectMethod method) {
+        this.methods.put(method.keyword, method);
+    }
+
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaField.class,
-                new CaffaFieldAdapter(this, this.channel, this.isLocalObject())).registerTypeAdapter(CaffaObject.class,
-                        new CaffaObjectAdapter(this.channel, this.sessionUuid, this.isLocalObject()));
+                new CaffaFieldAdapter(this, this.client, this.isLocalObject())).registerTypeAdapter(CaffaObject.class,
+                        new CaffaObjectAdapter(this.client, this.isLocalObject()));
         Gson gson = builder.serializeNulls().create();
         return gson.toJson(this);
     }
@@ -140,55 +146,24 @@ public class CaffaObject {
     }
 
     public ArrayList<CaffaObjectMethod> methods() {
-        ArrayList<CaffaObjectMethod> methods = new ArrayList<CaffaObjectMethod>();
-
-        RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
-        ListMethodsRequest request = ListMethodsRequest.newBuilder().setSelfObject(self).setSession(session).build();
-
-        RpcObjectList methodList = this.objectStub.withDeadlineAfter(METHOD_TIMEOUT, TimeUnit.MILLISECONDS).listMethods(request);
-        for (RpcObject method : methodList.getObjectsList()) {
-
-            CaffaObjectMethod caffaMethod = new GsonBuilder().registerTypeAdapter(CaffaField.class,
-                    new CaffaFieldAdapter(this, this.channel, true))
-                    .registerTypeAdapter(CaffaObjectMethod.class,
-                            new CaffaObjectMethodAdapter(this))
-                    .create()
-                    .fromJson(method.getJson(), CaffaObjectMethod.class);
-            methods.add(caffaMethod);
+        ArrayList<CaffaObjectMethod> allMethods = new ArrayList<>();
+        for (Map.Entry<String, CaffaObjectMethod> entry : methods.entrySet()) {
+            allMethods.add(entry.getValue());
         }
-        return methods;
+        return allMethods;
     }
 
-    public CaffaObjectMethod method(String name) {
-        String nameWithClass = this.keyword + "_" + name;
-        for (CaffaObjectMethod myMethod : methods()) {
-            if (myMethod.keyword.equals(name) || myMethod.keyword.equals(nameWithClass))
-                return myMethod;
+    public CaffaObjectMethod method(String name) throws RuntimeException {
+        if (!this.methods.containsKey(name)) {
+            String errMsg = "Method does not exist: " + name;
+            logger.error(errMsg);
+            throw new RuntimeException(errMsg);
         }
-        throw new RuntimeException("Failed to find method " + name);
+        return this.methods.get(name);        
     }
 
     public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws Exception {
-        SessionMessage session = SessionMessage.newBuilder().setUuid(this.sessionUuid).build();
-        RpcObject self = RpcObject.newBuilder().setJson(getJson()).build();
-
-        String paramJson = method.getJson();
-        RpcObject params = RpcObject.newBuilder().setJson(paramJson).build();
-
-        MethodRequest request = MethodRequest.newBuilder().setSelfObject(self).setMethod(params)
-                .setSession(session)
-                .build();
-
-        try {
-            RpcObject returnValue = this.objectStub.withDeadlineAfter(METHOD_TIMEOUT, TimeUnit.MILLISECONDS).executeMethod(request);
-            return new CaffaObjectMethodResult(this.channel, this.sessionUuid, returnValue.getJson());
-
-        } catch (Exception e) {
-            Status status = Status.fromThrowable(e);
-            logger.error("Failed to execute method with error: " + status.getDescription() + " ... " + e.getMessage());
-            throw new RuntimeException("Failed to complete server task: " + status.getDescription());
-        }
+        return new CaffaObjectMethodResult(this.client, this.client.execute(method));
     }
 
     public String typeString() {
