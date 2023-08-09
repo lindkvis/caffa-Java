@@ -98,8 +98,6 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
     }
 
     public void readMethod(CaffaObject caffaObject, JsonObject jsonElement) {
-        System.out.println("SELF: " + caffaObject.uuid);
-        System.out.println(jsonElement.toString());
         CaffaObjectMethod method = new GsonBuilder().registerTypeAdapter(CaffaField.class,
                 new CaffaFieldAdapter(caffaObject, this.client, true))
                 .registerTypeAdapter(CaffaObjectMethod.class,
@@ -107,7 +105,6 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
                 .create()
                 .fromJson(jsonElement, CaffaObjectMethod.class);
         if (method != null) {
-            System.out.println("Method created: " + method.dump());
             caffaObject.addMethod(method);
         }
     }
@@ -141,7 +138,6 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         assert caffaObject != null && containerElement != null;
 
         if (containerElement.isJsonObject()) {
-            System.out.println("Reading methods from object: " + containerElement.toString());
 
             JsonObject object = containerElement.getAsJsonObject();
             if (!object.has("methods"))
@@ -150,12 +146,10 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             JsonElement methodElement = object.get("methods");
             readMethods(caffaObject, methodElement);
         } else if (containerElement.isJsonArray()) {
-            System.out.println("Reading methods from array: " + containerElement.toString());
 
             JsonArray array = containerElement.getAsJsonArray();
 
             for (JsonElement methodElement : array) {
-                System.out.println("Got method: " + methodElement.toString());
                 readMethod(caffaObject, methodElement.getAsJsonObject());
             }
         }
