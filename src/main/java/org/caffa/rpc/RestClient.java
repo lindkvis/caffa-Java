@@ -108,7 +108,7 @@ public class RestClient {
 
             request = HttpRequest
                     .newBuilder(
-                            new URI("http://" + host + ":" + port + "/session/ready?type=" + CaffaSession.Type.REGULAR))
+                            new URI("http://" + host + ":" + port + "/session/ready?type=" + CaffaSession.Type.REGULAR.getValue()))
                     .version(HttpClient.Version.HTTP_2).GET().build();
             response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 

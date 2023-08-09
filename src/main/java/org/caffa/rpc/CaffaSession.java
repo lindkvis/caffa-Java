@@ -18,6 +18,10 @@ public class CaffaSession {
                     throw new RuntimeException("Cannot convert integer " + type + " to session type");
             }
         }
+
+        public int getValue() {
+            return this.ordinal();
+        }
     }
 
     private String uuid;
