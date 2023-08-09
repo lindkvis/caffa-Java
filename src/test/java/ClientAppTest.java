@@ -21,17 +21,14 @@ class ClientAppTest {
 
     @Test
     void appInfo() {
-        System.out.println("Performing App Info request");
         String appName = assertDoesNotThrow(() ->testApp.appName());
         assertTrue(!appName.isEmpty());
-        System.out.println("Application Name: " + appName);
     }
 
     @Test
     void appVersionString() {
         String appVersionString = assertDoesNotThrow(() ->testApp.appVersionString());
         assertTrue(!appVersionString.isEmpty());
-        System.out.println("Application Version: " + appVersionString);
     }
 
 }

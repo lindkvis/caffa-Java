@@ -235,7 +235,6 @@ public class RestClient {
         try {
             lock();
             String response = performPutRequest("/session/create?type=" + type.ordinal(), SESSION_TIMEOUT, "");
-            System.out.println("Response: " + response);
 
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
@@ -343,7 +342,6 @@ public class RestClient {
     private CaffaAppInfo appInfo() throws CaffaConnectionError {
         String response = performGetRequest("/app/info", STATUS_TIMEOUT);
         try {
-            System.out.println("We got the response: " + response);
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
             CaffaAppInfo appInfo = builder.create().fromJson(response, CaffaAppInfo.class);
@@ -381,7 +379,6 @@ public class RestClient {
             return null;
 
         String response = performGetRequest("/" + documentId + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
-        System.out.println("Got DOCUMENT RESPONSE: " + response);
 
         return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, false))

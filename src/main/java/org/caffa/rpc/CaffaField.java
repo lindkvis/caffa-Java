@@ -101,7 +101,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
 
         logger.debug("Getting JSON for field " + this.keyword);
         String json = getRemoteJson();
-        System.out.println("Got JSON: " + json);
+        logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.client, false));
