@@ -93,7 +93,7 @@ public class ClientObjectTest {
             CaffaField<?> doubleMethodArg = method.field("doubleValue");
             assertDoesNotThrow(() -> doubleMethodArg.set(99.0, Double.class));
             CaffaField<?> intMethodArg = method.field("intValue");
-            assertDoesNotThrow(() -> intMethodArg.set(41, Integer.class));
+            assertDoesNotThrow(() -> intMethodArg.set(41L, Long.class));
             CaffaField<?> stringMethodArg = method.field("stringValue");
             assertDoesNotThrow(() -> stringMethodArg.set("AnotherValue", String.class));
 
@@ -102,13 +102,13 @@ public class ClientObjectTest {
             CaffaField<?> intArrayMethodArgT = setIntVectorMethod.field("intVector");
             assertNotNull(intArrayMethodArgT);
 
-            CaffaField<Integer[]> intArrayMethodArg = intArrayMethodArgT.cast(
-                    Integer[].class);
-            Integer[] intArrayValues = { 1, 2, 97 };
+            CaffaField<Long[]> intArrayMethodArg = intArrayMethodArgT.cast(
+                    Long[].class);
+            Long[] intArrayValues = { 1L, 2L, 97L };
             assertDoesNotThrow(() -> intArrayMethodArg.set(intArrayValues));
 
             assertEquals(99.0, doubleMethodArg.get());
-            assertEquals(41, intMethodArg.get());
+            assertEquals(41L, intMethodArg.get());
             assertEquals("AnotherValue", stringMethodArg.get());
 
 
@@ -122,7 +122,7 @@ public class ClientObjectTest {
                     Double.class);
             assertEquals(99.0, doubleField.get());
 
-            CaffaField<Integer[]> arrayField = child.field("proxyIntVector").cast(Integer[].class);
+            CaffaField<Long[]> arrayField = child.field("proxyIntVector").cast(Long[].class);
             assertTrue(Arrays.equals(intArrayValues, arrayField.get()));
         }
     }
@@ -149,8 +149,8 @@ public class ClientObjectTest {
             assertNotNull(copyObjectMethod);
             assertDoesNotThrow(() -> copyObjectMethod.setParam("doubleValue", 97.0,
                     Double.class));
-            assertDoesNotThrow(() -> copyObjectMethod.setParam("intValue", 43,
-                    Integer.class));
+            assertDoesNotThrow(() -> copyObjectMethod.setParam("intValue", 43L,
+                    Long.class));
             assertDoesNotThrow(() -> copyObjectMethod.setParam("stringValue",
                     "TestValue", String.class));
             assertDoesNotThrow(() -> copyObjectMethod.execute());
@@ -158,7 +158,7 @@ public class ClientObjectTest {
             CaffaField<Double> doubleField = child.field("doubleField",
                     Double.class);
             assertEquals(97.0, doubleField.get());
-            assertEquals(43, child.field("intField").get(Integer.class));
+            assertEquals(43, child.field("intField").get(Long.class));
             assertEquals("TestValue", child.field("stringField").get(String.class));
         }
     }

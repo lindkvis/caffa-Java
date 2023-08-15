@@ -12,7 +12,7 @@ public class CaffaObjectMethod extends CaffaObject {
     public final CaffaObject self;
 
     public CaffaObjectMethod(String classKeyword, CaffaObject self) {
-        super(classKeyword);
+        super(classKeyword, true);
         this.self = self;
     }
 
@@ -30,10 +30,14 @@ public class CaffaObjectMethod extends CaffaObject {
         return this.self;
     }
 
+    public String getResultSchema() {
+        return "";
+    }
+
     @Override
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
-                new CaffaObjectMethodAdapter(this.self));
+                new CaffaObjectMethodAdapter(this.self, this.keyword));
         Gson gson = builder.serializeNulls().create();
         return gson.toJson(this);
     }

@@ -17,25 +17,21 @@ public class CaffaFieldFactory {
         dataTypes = HashBiMap.create();
         fieldCreators = new HashMap<String, CaffaField<?>>();
 
-        addCreator("bool", Boolean.class);
-        addCreator("int32", Integer.class);
-        addCreator("double", Double.class);
-        addCreator("float", Float.class);
-        addCreator("int64", Long.class);
+        addCreator("boolean", Boolean.class);
+        addCreator("integer", Long.class);
+        addCreator("number", Double.class);
         addCreator("string", String.class);
 
-        addCreator("bool[]", Boolean[].class);
-        addCreator("int32[]", Integer[].class);
-        addCreator("double[]", Double[].class);
-        addCreator("float[]", Float[].class);
-        addCreator("int64[]", Long[].class);
+        addCreator("boolean[]", Boolean[].class);
+        addCreator("integer[]", Long[].class);
+        addCreator("number[]", Double[].class);
         addCreator("string[]", String[].class);
 
         addCreator("object", CaffaObject.class);
         addCreator("object[]", CaffaObject[].class);
 
-        dataTypes.put("AppEnum", CaffaAppEnum.class);
-        fieldCreators.put("AppEnum", new CaffaAppEnumField(null, ""));
+        dataTypes.put("enum", CaffaAppEnum.class);
+        fieldCreators.put("enum", new CaffaAppEnumField(null, ""));
     }
 
     public static <T> void addCreator(String typeName, Class<T> clazz) {
@@ -64,34 +60,22 @@ public class CaffaFieldFactory {
 
             return unsignedField;
         }
-        if (dataType.startsWith("AppEnum")) {
-            CaffaField<?> creator = creators.get("AppEnum");
+        if (dataType.startsWith("enum")) {
+            CaffaField<?> creator = creators.get("enum");
             if (creator == null) {
                 logger.error("Could not find creator for dataType: " + dataType);
                 return null;
             }
             CaffaAppEnumField appEnumField = (CaffaAppEnumField) creator.newInstance(owner, keyword);
 
-            String validValuesString = dataType.substring(8, dataType.length() - 1);
+            String validValuesString = dataType.substring(5, dataType.length() - 1);
             String[] values = validValuesString.split(",");
             for (String value : values) {
-                appEnumField.addValidValue(value);
+                String trimmedValue = value.replaceAll("^\"|\"$", "");
+                appEnumField.addValidValue(trimmedValue);
             }
 
             return appEnumField;
-        }
-        if (dataType.startsWith("object[]::")) {
-            CaffaField<?> creator = creators.get("object[]");
-            return creator.newInstance(owner, keyword);
-        }
-        if (dataType.startsWith("object::")) {
-            CaffaField<?> creator = creators.get("object");
-            return creator.newInstance(owner, keyword);
-        }
-
-        if (dataType.startsWith("object")) {
-            String[] typeArray = dataType.split("::");
-            dataType = typeArray[0];
         }
 
         CaffaField<?> creator = creators.get(dataType);

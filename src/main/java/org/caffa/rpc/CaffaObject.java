@@ -17,7 +17,7 @@ import com.google.gson.JsonObject;
 
 public class CaffaObject {
     public final String keyword;
-    public final String uuid;
+    public String uuid = "";
     private final boolean hasLocalDataFields;
 
     private final Map<String, CaffaField<?>> fields;
@@ -29,40 +29,26 @@ public class CaffaObject {
 
     private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(String keyword, String uuid, boolean hasLocalDataFields) {
+    public CaffaObject(String keyword, boolean hasLocalDataFields) {
         assert !keyword.isEmpty();
-        assert !uuid.isEmpty();
 
         this.keyword = keyword;
-        this.uuid = uuid;
         this.hasLocalDataFields = hasLocalDataFields;
 
         this.fields = new TreeMap<String, CaffaField<?>>();
         this.methods = new TreeMap<String, CaffaObjectMethod>();
-
     }
 
-    public CaffaObject(String keyword) {
-        assert !keyword.isEmpty();
-
-        this.keyword = keyword;
-        this.uuid = "";
-        this.hasLocalDataFields = true;
-
-        this.fields = new TreeMap<String, CaffaField<?>>();
-        this.methods = new TreeMap<String, CaffaObjectMethod>();
-    }
-
-    void createRestAccessor(RestClient client) {
-        assert !uuid.isEmpty();
+    public void createRestAccessors(RestClient client, String uuid) {
         this.client = client;
+        this.uuid = uuid;
     }
 
     public boolean isLocalObject() {
         return this.hasLocalDataFields;
     }
 
-    public RestClient client() {
+    public RestClient getClient() {
         return this.client;
     }
 
@@ -131,9 +117,8 @@ public class CaffaObject {
     }
 
     public String getJson() {
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaField.class,
-                new CaffaFieldAdapter(this, this.client, this.isLocalObject())).registerTypeAdapter(CaffaObject.class,
-                        new CaffaObjectAdapter(this.client, this.isLocalObject()));
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
+                        new CaffaObjectAdapter(this.client, null, this.hasLocalDataFields));
         Gson gson = builder.serializeNulls().create();
         return gson.toJson(this);
     }
@@ -163,7 +148,7 @@ public class CaffaObject {
     }
 
     public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws Exception {
-        return new CaffaObjectMethodResult(this.client, this.client.execute(method));
+        return new CaffaObjectMethodResult(this.client, this.client.execute(method), method.getResultSchema());
     }
 
     public String typeString() {

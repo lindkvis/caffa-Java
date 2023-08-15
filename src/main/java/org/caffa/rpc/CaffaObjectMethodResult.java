@@ -7,23 +7,27 @@ import com.google.gson.JsonParser;
 
 public class CaffaObjectMethodResult{
     private final RestClient client;
-    private final String jsonString;
-    public CaffaObjectMethodResult(RestClient client, String jsonString) {
+    private final String jsonValue;
+    private final String jsonSchema;
+    
+    public CaffaObjectMethodResult(RestClient client, String jsonValue, String jsonSchema) {
         this.client = client;
-        this.jsonString = jsonString;
+        this.jsonValue = jsonValue;
+        this.jsonSchema = jsonSchema;
     }
 
     public <T> T get(Class<T> valueType) {
-        JsonElement element = JsonParser.parseString(jsonString);
-        assert element.isJsonObject();
-        JsonObject resultObject = element.getAsJsonObject();
-        JsonElement value = resultObject.get("value");
+        JsonElement schema = JsonParser.parseString(jsonSchema);
+        JsonObject schemaObject = null;
+        if (schema.isJsonObject()) {
+            schemaObject = schema.getAsJsonObject();
+        }
 
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.client, true));
+                new CaffaObjectAdapter(client, schemaObject, true));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
-        return builder.create().fromJson(value.toString(), valueType);
+        return builder.create().fromJson(this.jsonValue, valueType);
     }
 
 }

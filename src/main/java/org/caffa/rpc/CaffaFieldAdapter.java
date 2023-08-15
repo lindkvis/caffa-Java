@@ -15,20 +15,23 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
 public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonSerializer<CaffaField<?>> {
-    private final CaffaObject object;
-    private final RestClient client;
-    private final boolean createLocalFields;
     private static final Logger logger = LoggerFactory.getLogger(CaffaFieldAdapter.class);
 
-    public CaffaFieldAdapter(CaffaObject object, RestClient client, boolean createLocalFields) {
+    private final CaffaObject object;
+    private final String keyword;
+    private final JsonObject schema;
+
+    public static final JsonObject NULL_PLACEHOLDER = new JsonObject();
+
+    public CaffaFieldAdapter(CaffaObject object, String keyword, JsonObject schema) {
         super();
 
         this.object = object;
-        this.client = client;
-        this.createLocalFields = createLocalFields;
+        this.keyword = keyword;
+        this.schema = schema;
     }
 
-    public CaffaField<?> createField(String keyword, String dataType, JsonElement valueElement) {
+    public CaffaField<?> createField(String keyword, String dataType) {
         assert this.object != null;
 
         if (dataType.endsWith("[][]")) {
@@ -39,53 +42,52 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         logger.debug("Creating field " + keyword + " of type " + dataType);
         CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
         assert field != null;
-        if (this.client != null) {
-            field.createRestAccessor(this.client);
-        } 
-        
-        field.setIsLocalField(createLocalFields);
+        field.setSchema(this.schema);
 
-        if (createLocalFields && valueElement != null) {
-            logger.debug("Setting local value for object " + object.keyword + " and field " + keyword
-                    + " to: " + valueElement);
-            field.setJson(valueElement.toString());
-        }
         return field;
     }
 
-    public CaffaField<?> deserialize(JsonElement json, Type type, JsonDeserializationContext context)
-            throws JsonParseException {
-        assert json != null;
-        logger.debug("JSON: " + json);
-
-        final JsonObject jsonField = json.getAsJsonObject();
-
-        String keyword = jsonField.get("keyword").getAsString();
-        String dataType = jsonField.get("type").getAsString();
-
-        JsonElement valueElement = null;
-
-        if (jsonField.has("value")) {
-            valueElement = jsonField.get("value");
+    private String getDataType(JsonObject jsonField) {
+        if (jsonField.has("enum")) {            
+            return "enum" + jsonField.get("enum").toString();
+        } else if (jsonField.has("$ref")) {
+            return "object";
+        } else {
+            assert jsonField.has("type");
+            String type = jsonField.get("type").getAsString();
+            if (type.equals("array")) {
+                assert jsonField.has("items");
+                JsonObject itemObject = jsonField.get("items").getAsJsonObject();
+                return getDataType(itemObject) + "[]";
+            }
+            return type;
         }
-        return createField(keyword, dataType, valueElement);
+    }
+
+    public CaffaField<?> deserialize(JsonElement value, Type type, JsonDeserializationContext context)
+            throws JsonParseException {
+        String dataType = getDataType(this.schema);
+        logger.debug("Creating field with type '" + dataType + "'");
+        
+        CaffaField<?> field = createField(this.keyword, dataType);
+        if (field.isLocalField() && !isNullPlaceHolder(value)) {
+            field.setJson(value.toString());
+        }
+        
+        return field;
     }
 
     @Override
     public JsonElement serialize(CaffaField<?> src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject jsonField = new JsonObject();
 
-        String type = src.typeString();
-
-        jsonField.addProperty("keyword", src.keyword);
-        jsonField.addProperty("type", type);
         if (src.isLocalField()) {
-            String jsonString = src.getJson();
-            JsonElement element = JsonParser.parseString(jsonString);
-            jsonField.add("value", element);
+            return JsonParser.parseString(src.getJson());
         }
-
-        logger.debug("Done writing field: " + src.keyword);
         return jsonField;
+    }
+
+    private boolean isNullPlaceHolder(JsonElement element) {
+        return element.toString().equals(NULL_PLACEHOLDER.toString());
     }
 }

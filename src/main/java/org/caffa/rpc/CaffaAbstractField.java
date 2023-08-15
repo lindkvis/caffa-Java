@@ -1,10 +1,11 @@
 package org.caffa.rpc;
 
-public abstract class CaffaAbstractField {
-    protected CaffaObject owner;
-    public final String keyword;
+import com.google.gson.JsonObject;
 
-    protected RestClient client = null;
+public abstract class CaffaAbstractField {
+    protected final CaffaObject owner;
+    public final String keyword;
+    protected JsonObject schema = null;
 
     protected boolean isLocalField = false;
 
@@ -18,11 +19,6 @@ public abstract class CaffaAbstractField {
         return this.isLocalField;
     }
 
-    public void createRestAccessor(RestClient client) {
-        assert this.owner != null;
-        this.client = client;
-    }
-
     public void setIsLocalField(boolean isLocalField) {
         this.isLocalField = isLocalField;
     }
@@ -33,6 +29,10 @@ public abstract class CaffaAbstractField {
 
     public abstract String typeString();
 
+    public void setSchema(JsonObject schema) {
+        this.schema = schema;
+    }
+
     public String dump() {
         return dump("");
     }
@@ -42,5 +42,9 @@ public abstract class CaffaAbstractField {
 
     public CaffaObject getOwner() {
         return this.owner;
+    }
+
+    public RestClient getClient() {
+        return this.owner.getClient();
     }
 }

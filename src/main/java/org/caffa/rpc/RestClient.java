@@ -378,12 +378,43 @@ public class RestClient {
         if (session == null)
             return null;
 
-        String response = performGetRequest("/" + documentId + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        String documentData = performGetRequest("/" + documentId + "?skeleton=true&session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        JsonElement documentDataJson = JsonParser.parseString(documentData);
+        assert documentDataJson.isJsonObject();
+        JsonObject documentValueObject = documentDataJson.getAsJsonObject();
+        String classKeyword = documentValueObject.get("keyword").getAsString();
 
-        return new GsonBuilder()
-                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, false))
+        String documentSchema = performGetRequest("/schemas/" + classKeyword + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
+
+        CaffaObject object = new GsonBuilder()
+                .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, documentSchemaObject,
+                    false))
                 .create()
-                .fromJson(response, CaffaObject.class);
+                .fromJson(documentData, CaffaObject.class);
+
+        return object;
+    }
+
+    public JsonObject getObjectSchema(String path) {
+        try {
+            lock();
+            if (this.session == null) {
+                throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
+            }
+         
+            String documentSchema = performGetRequest(path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+            JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
+            return documentSchemaObject;
+        } catch (CaffaConnectionError e) {
+            logger.error(e.getMessage());
+            return null;
+        } catch(Exception e) {
+            logger.error("Malformed response: " + e.getMessage());
+            return null;
+        } finally {
+            unlock();
+        }
     }
 
     public void lock() {
@@ -450,9 +481,8 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            String fullReply = performGetRequest("/object/uuid/" + fieldOwner.uuid + "/" + field.keyword + "?session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
-            JsonObject element = JsonParser.parseString(fullReply).getAsJsonObject();
-            JsonElement value = element.get("value");
+            String fullReply = performGetRequest("/object/uuid/" + fieldOwner.uuid + "/" + field.keyword + "?skeleton=true&session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
+            JsonElement value = JsonParser.parseString(fullReply);
             return value.toString();            
         } catch (CaffaConnectionError e) {
             logger.error(e.getMessage());
@@ -548,10 +578,10 @@ public class RestClient {
 
         if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
-                    "GET request failed with error: " + response.body());
+                    "PUT request failed with error: " + response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
-                    "GET request failed with error: " + response.body());
+                    "PUT request failed with error: " + response.body());
         }
         return response.body();
     }
@@ -570,10 +600,10 @@ public class RestClient {
 
         if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
-                    "GET request failed with error: " + response.body());
+                    "DELETE request failed with error: " + response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
-                    "GET request failed with error: " + response.body());
+                    "DELETE request failed with error: " + response.body());
         }
         return response.body();
     }
