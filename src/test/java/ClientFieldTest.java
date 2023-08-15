@@ -77,7 +77,7 @@ public class ClientFieldTest {
     }
 
     @Test
-    void floatVector() {
+    void doubleVector() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
@@ -86,14 +86,15 @@ public class ClientFieldTest {
         CaffaField<?> floatArrayField = demoObject.field("floatVector");
         assertNotNull(floatArrayField);
         System.out.println(floatArrayField.dump());
-        CaffaField<Float[]> typedFloatArrayField = floatArrayField.cast(Float[].class);
+        CaffaField<Double[]> typedFloatArrayField = floatArrayField.cast(Double[].class);
         assertNotNull(typedFloatArrayField);
 
         {
-            Float[] values2 = { 41.4f, 42.0f, -23.0f, -82.0f };
+            Double[] values2 = { 41.4, 42.0, -23.0, -82.0 };
             assertDoesNotThrow(() -> typedFloatArrayField.set(values2));
         }
-        Float[] values = typedFloatArrayField.get();
+        Double[] values = typedFloatArrayField.get();
+        assertNotNull(values);
         assertTrue(values.length == 4);
         assertTrue(values[3] == -82.0f);
     }
@@ -110,20 +111,20 @@ public class ClientFieldTest {
         assertNotNull(intArrayFieldOriginal);
         assertNotNull(intArrayField);
         System.out.println(intArrayField.dump());
-        CaffaField<Integer[]> typedIntArrayField = intArrayField.cast(Integer[].class);
+        CaffaField<Long[]> typedIntArrayField = intArrayField.cast(Long[].class);
         assertNotNull(typedIntArrayField);
 
-        Integer[] values = typedIntArrayField.get();
+        Long[] values = typedIntArrayField.get();
 
         {
-            Integer[] values2 = { 44, 43, 172 };
+            Long[] values2 = { 44L, 43L, 172L };
 
             assertDoesNotThrow(() -> typedIntArrayField.set(values2));
 
-            Integer[] values3 = typedIntArrayField.get();
+            Long[] values3 = typedIntArrayField.get();
             assertTrue(Arrays.equals(values3, values2));
 
-            Integer[] values4 = intArrayFieldOriginal.get(Integer[].class);
+            Long[] values4 = intArrayFieldOriginal.get(Long[].class);
             assertTrue(Arrays.equals(values3, values4));
         }
         assertDoesNotThrow(() -> typedIntArrayField.set(values));
@@ -143,6 +144,7 @@ public class ClientFieldTest {
         CaffaField<Boolean[]> typedBoolArrayField = boolArrayField.cast(Boolean[].class);
         assertNotNull(typedBoolArrayField);
         Boolean[] values = typedBoolArrayField.get();
+        assertNotNull(values);
 
         {
             Boolean[] values2 = { true, false, true };
@@ -216,20 +218,19 @@ public class ClientFieldTest {
         CaffaField<?> intArrayField = demoObject.field("proxyIntVector");
         assertNotNull(intArrayField);
         System.out.println(intArrayField.dump());
-        CaffaField<Integer[]> typedIntArrayField = intArrayField.cast(Integer[].class);
+        CaffaField<Long[]> typedIntArrayField = intArrayField.cast(Long[].class);
         assertNotNull(typedIntArrayField);
 
-        Integer[] values = typedIntArrayField.get();
         {
-            Integer[] values2 = { 54, 83, 272, 12 };
+            Long[] values2 = { 54L, 83L, 272L, 12L };
 
             assertDoesNotThrow(() -> typedIntArrayField.set(values2));
 
-            Integer[] values3 = typedIntArrayField.get();
+            Long[] values3 = typedIntArrayField.get();
             assertTrue(Arrays.equals(values3, values2));
 
             // Values should not have been sent to server
-            Integer[] valuesFromOriginal = intArrayFieldOriginal.get(Integer[].class);
+            Long[] valuesFromOriginal = intArrayFieldOriginal.get(Long[].class);
             assertFalse(Arrays.equals(values3, valuesFromOriginal));
         }
 

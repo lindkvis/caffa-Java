@@ -16,35 +16,36 @@ import com.google.gson.JsonSerializationContext;
 public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
     private final CaffaObject self;
+    private final String methodName;
     protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectMethodAdapter.class);
 
-    public CaffaObjectMethodAdapter(CaffaObject self) {
-        super();
+    public CaffaObjectMethodAdapter(CaffaObject self, String methodName) {
+        super(self.getClient(), null, true);
         this.self = self;
+        this.methodName = methodName;
     }
 
     @Override
-    public CaffaObjectMethod deserialize(JsonElement json, Type type, JsonDeserializationContext context)
+    public CaffaObjectMethod deserialize(JsonElement schema, Type type, JsonDeserializationContext context)
             throws JsonParseException {
 
-        assert json.isJsonObject();
-        final JsonObject object = json.getAsJsonObject();
+        CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.methodName, this.self);
 
-        assert object.has("keyword");
-        assert object.get("keyword").isJsonPrimitive();
+        final JsonObject schemaObject = schema.getAsJsonObject();
+        if (schemaObject.has("properties")) {
+            final JsonObject properties = schemaObject.get("properties").getAsJsonObject();
+            if (properties.has("oneOf")) {
+                final JsonObject oneOf = properties.get("oneOf").getAsJsonObject();
+                if (oneOf.has("labelledArguments")) {
+                    final JsonObject labelledArguments = oneOf.get("labelledArguments").getAsJsonObject();
 
-        String classKeyword = object.get("keyword").getAsString();
-
-        CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(classKeyword, this.self);
-
-        if  (object.has("arguments")) {
-            JsonElement arguments = object.get("arguments");
-            if (arguments.isJsonArray()) {
-                JsonArray argumentArray = arguments.getAsJsonArray();
-                readFields(caffaObjectMethod, argumentArray);
+                    for (String key : labelledArguments.keySet()) {
+                        readField(caffaObjectMethod, key, labelledArguments.get(key).getAsJsonObject(),
+                                CaffaFieldAdapter.NULL_PLACEHOLDER);
+                    }
+                }
             }
         }
-
         return caffaObjectMethod;
     }
 
@@ -52,12 +53,11 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     public JsonElement serialize(CaffaObject caffaObjectMethod, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
 
-        jsonObject.addProperty("keyword", caffaObjectMethod.keyword);
-        JsonArray jsonArray = new JsonArray();
+        JsonObject labelledArguments = new JsonObject();
 
-        writeFields(caffaObjectMethod, jsonArray, typeOfSrc, context);
+        writeFields(caffaObjectMethod, labelledArguments, typeOfSrc, context);
         
-        jsonObject.add("arguments", jsonArray);
+        jsonObject.add("labelledArguments", labelledArguments);;
 
         return jsonObject;
     }
