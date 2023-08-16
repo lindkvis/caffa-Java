@@ -403,6 +403,10 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
          
+            if (path.startsWith("#")) {
+                path = path.substring(1);
+            }
+
             String documentSchema = performGetRequest(path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
             JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
             return documentSchemaObject;
