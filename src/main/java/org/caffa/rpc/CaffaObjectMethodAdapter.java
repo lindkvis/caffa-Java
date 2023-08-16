@@ -34,15 +34,13 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
         final JsonObject schemaObject = schema.getAsJsonObject();
         if (schemaObject.has("properties")) {
             final JsonObject properties = schemaObject.get("properties").getAsJsonObject();
-            if (properties.has("oneOf")) {
-                final JsonObject oneOf = properties.get("oneOf").getAsJsonObject();
-                if (oneOf.has("labelledArguments")) {
-                    final JsonObject labelledArguments = oneOf.get("labelledArguments").getAsJsonObject();
-
-                    for (String key : labelledArguments.keySet()) {
-                        readField(caffaObjectMethod, key, labelledArguments.get(key).getAsJsonObject(),
-                                CaffaFieldAdapter.NULL_PLACEHOLDER);
-                    }
+            if (properties.has("labelledArguments")) {
+                final JsonObject labelledArguments = properties.get("labelledArguments").getAsJsonObject();
+                assert labelledArguments.has("properties");
+                final JsonObject labelledArgProperties = labelledArguments.get("properties").getAsJsonObject();
+                for (String key : labelledArgProperties.keySet()) {
+                    readField(caffaObjectMethod, key, labelledArgProperties.get(key).getAsJsonObject(),
+                            CaffaFieldAdapter.NULL_PLACEHOLDER);
                 }
             }
         }
