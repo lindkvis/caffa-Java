@@ -29,7 +29,7 @@ public class CaffaObject {
 
     private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
-    public CaffaObject(String keyword, boolean hasLocalDataFields) {
+    public CaffaObject(String keyword, boolean hasLocalDataFields, RestClient client, String uuid) {
         assert !keyword.isEmpty();
 
         this.keyword = keyword;
@@ -37,9 +37,7 @@ public class CaffaObject {
 
         this.fields = new TreeMap<String, CaffaField<?>>();
         this.methods = new TreeMap<String, CaffaObjectMethod>();
-    }
 
-    public void createRestAccessors(RestClient client, String uuid) {
         this.client = client;
         this.uuid = uuid;
     }
@@ -149,9 +147,5 @@ public class CaffaObject {
 
     public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws Exception {
         return new CaffaObjectMethodResult(this.client, this.client.execute(method), method.getResultSchema());
-    }
-
-    public String typeString() {
-        return "object";
     }
 }

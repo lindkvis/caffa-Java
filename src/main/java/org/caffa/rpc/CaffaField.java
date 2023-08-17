@@ -32,7 +32,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     public String getLocalJson() {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.getClient(), null, this.isLocalField()));
+                new CaffaObjectAdapter(this.getClient(), this.schema, this.isLocalField()));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().toJson(this.localValue);
     }
@@ -42,7 +42,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         assert this.isLocalField();
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.getClient(), null, true));
+                new CaffaObjectAdapter(this.getClient(), this.schema, true));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         try {
             // This mainly throws because we may have uint32-values stored which overflows
@@ -205,12 +205,5 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
 
     public boolean getUnsigned() {
         return this.unsigned;
-    }
-
-    public String typeString() {
-        if (this.getUnsigned()) {
-            return "u" + CaffaFieldFactory.dataTypes.inverse().get(this.dataType);
-        }
-        return CaffaFieldFactory.dataTypes.inverse().get(this.dataType);
     }
 }

@@ -10,9 +10,10 @@ import com.google.gson.GsonBuilder;
  */
 public class CaffaObjectMethod extends CaffaObject {
     public final CaffaObject self;
+    private String resultSchema = "";
 
-    public CaffaObjectMethod(String classKeyword, CaffaObject self) {
-        super(classKeyword, true);
+    public CaffaObjectMethod(String classKeyword, CaffaObject self, RestClient client) {
+        super(classKeyword, true, client, "");
         this.self = self;
     }
 
@@ -30,9 +31,14 @@ public class CaffaObjectMethod extends CaffaObject {
         return this.self;
     }
 
-    public String getResultSchema() {
-        return "";
+    public String getResultSchema() {        
+        return this.resultSchema;
     }
+
+    public void setResultSchema(String schema) {
+        this.resultSchema = schema;
+    }
+
 
     @Override
     public String getJson() {
