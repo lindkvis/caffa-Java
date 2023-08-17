@@ -27,8 +27,6 @@ public abstract class CaffaAbstractField {
 
     public abstract void setJson(String value);
 
-    public abstract String typeString();
-
     public void setSchema(JsonObject schema) {
         this.schema = schema;
     }

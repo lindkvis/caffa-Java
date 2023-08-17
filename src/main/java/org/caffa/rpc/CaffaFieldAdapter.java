@@ -20,15 +20,17 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
     private final CaffaObject object;
     private final String keyword;
     private final JsonObject schema;
+    private final boolean localField;
 
     public static final JsonObject NULL_PLACEHOLDER = new JsonObject();
 
-    public CaffaFieldAdapter(CaffaObject object, String keyword, JsonObject schema) {
+    public CaffaFieldAdapter(CaffaObject object, String keyword, JsonObject schema, boolean localField) {
         super();
 
         this.object = object;
         this.keyword = keyword;
         this.schema = schema;
+        this.localField = localField;
     }
 
     public CaffaField<?> createField(String keyword, String dataType) {
@@ -70,10 +72,12 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         logger.debug("Creating field with type '" + dataType + "'");
         
         CaffaField<?> field = createField(this.keyword, dataType);
-        if (field.isLocalField() && !isNullPlaceHolder(value)) {
-            field.setJson(value.toString());
+        if (field != null) {
+            field.setIsLocalField(this.localField);
+            if (!isNullPlaceHolder(value) && field.isLocalField()) {
+                field.setJson(value.toString());
+            }
         }
-        
         return field;
     }
 

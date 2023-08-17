@@ -29,7 +29,7 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
     public CaffaObjectMethod deserialize(JsonElement schema, Type type, JsonDeserializationContext context)
             throws JsonParseException {
 
-        CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.methodName, this.self);
+        CaffaObjectMethod caffaObjectMethod = new CaffaObjectMethod(this.methodName, this.self, this.client);
 
         final JsonObject schemaObject = schema.getAsJsonObject();
         if (schemaObject.has("properties")) {
@@ -43,6 +43,10 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
                             CaffaFieldAdapter.NULL_PLACEHOLDER);
                 }
             }
+            if (properties.has("returns")) {
+                caffaObjectMethod.setResultSchema(properties.get("returns").toString());
+            }
+
         }
         return caffaObjectMethod;
     }

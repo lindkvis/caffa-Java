@@ -1,5 +1,8 @@
 package org.caffa.rpc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -9,7 +12,8 @@ public class CaffaObjectMethodResult{
     private final RestClient client;
     private final String jsonValue;
     private final String jsonSchema;
-    
+    private static final Logger logger = LoggerFactory.getLogger(CaffaObjectMethodResult.class);
+
     public CaffaObjectMethodResult(RestClient client, String jsonValue, String jsonSchema) {
         this.client = client;
         this.jsonValue = jsonValue;

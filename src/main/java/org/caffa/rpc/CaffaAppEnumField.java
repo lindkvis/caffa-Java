@@ -31,15 +31,13 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
         }
         result += ")::";
 
-        if (this.localValue != null) {
+        if (this.isLocalField()) {
             result += "local\n";
         } else {
-            result += "grpc\n";
+            result += "rpc\n";
         }
 
-        if (this.localValue != null) {
-            result += prefix + "  value = " + getLocalJson() + "\n";
-        }
+        result += prefix + "  value = " + getLocalJson() + "\n";
         result += prefix + "}\n";
         return result;
     }
@@ -63,16 +61,5 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
             throw new IllegalArgumentException(errMsg);
         }
         super.set(appEnum);
-    }
-
-    @Override
-    public String typeString() {
-        String validValueString = "";
-        for (String validValue : validValues) {
-            if (!validValueString.isEmpty())
-                validValueString += ",";
-            validValueString += validValue;
-        }
-        return "AppEnum(" + validValueString + ")";
     }
 }

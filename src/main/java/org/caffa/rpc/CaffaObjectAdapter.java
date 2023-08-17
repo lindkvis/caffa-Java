@@ -18,7 +18,7 @@ import com.google.gson.JsonSerializer;
 public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSerializer<CaffaObject> {
     protected static final Logger logger = LoggerFactory.getLogger(CaffaObjectAdapter.class);
 
-    private final RestClient client;
+    protected final RestClient client;
     protected final JsonObject schemaObject;
     private final boolean createLocalFields;
 
@@ -64,9 +64,8 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             uuid = valueObject.get("uuid").getAsString();
         }
 
-        CaffaObject caffaObject = new CaffaObject(classKeyword, createLocalFields);
-        caffaObject.createRestAccessors(client, uuid);
-
+        CaffaObject caffaObject = new CaffaObject(classKeyword, createLocalFields, client, uuid);
+        
         if (schemaObject.has("properties")) {
             JsonObject properties = schemaObject.get("properties").getAsJsonObject();
             readFields(caffaObject, properties, valueObject);
@@ -86,13 +85,12 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
         CaffaField<?> field = new GsonBuilder()
                 .registerTypeAdapter(CaffaField.class,
-                        new CaffaFieldAdapter(caffaObject, keyword, schema))
+                        new CaffaFieldAdapter(caffaObject, keyword, schema, createLocalFields))
                 .registerTypeAdapter(CaffaObject.class,
                         new CaffaObjectAdapter(this.client, schema, this.createLocalFields))
                 .create()
                 .fromJson(value, CaffaField.class);
         if (field != null) {
-            field.setIsLocalField(createLocalFields);
             caffaObject.addField(field);
         }
     }
@@ -150,7 +148,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             for (CaffaField<?> field : caffaObject.fields()) {
                 jsonObject.add(field.keyword,
-                        new CaffaFieldAdapter(caffaObject, field.keyword, null).serialize(field,
+                        new CaffaFieldAdapter(caffaObject, field.keyword, null, this.createLocalFields).serialize(field,
                                 typeOfSrc,
                                 context));
             }
