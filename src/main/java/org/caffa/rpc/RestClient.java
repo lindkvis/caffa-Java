@@ -34,7 +34,9 @@
 //
 package org.caffa.rpc;
 
+import java.net.Authenticator;
 import java.util.concurrent.TimeUnit;
+import java.util.Base64;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,8 +44,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.time.Duration;
+import javax.net.ssl.SSLContext;
 
 import com.google.gson.GsonBuilder;
+import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -58,6 +62,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.HttpURLConnection;
+import java.net.PasswordAuthentication;
 import java.net.URI;
 
 import java.beans.PropertyChangeSupport;
@@ -78,6 +83,13 @@ public class RestClient {
     private PropertyChangeSupport propertyChangeSupport;
 
     private CaffaSession session = null;
+    private SSLContext sslContext = null;
+    private String protocolTag = "http://";
+    private HttpClient httpClient = null;
+    private String username = "";
+    private String password = "";
+    private CaffaSession.Type sessionType;
+
     private final ReentrantLock lock = new ReentrantLock();
 
     /** Defines intervals and timeouts (milliseconds). */
@@ -141,39 +153,22 @@ public class RestClient {
      *
      * @throws Exception
      */
-    public RestClient(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
-            String logConfigFilePath, CaffaSession.Type sessionType) throws Exception {
+    public RestClient(String host, int port,
+            String logConfigFilePath, CaffaSession.Type sessionType, SSLContext sslContext) throws Exception {
 
         this.hostname = host;
         this.port = port;
         this.propertyChangeSupport = new PropertyChangeSupport(this);
+        this.sslContext = sslContext;
+        this.sessionType = sessionType;
+
+        if (sslContext != null) {
+            this.protocolTag = "https://";
+        }
 
         if (!logConfigFilePath.isEmpty()) {
             setupLogging(logConfigFilePath);
-        }
-
-        try {
-            if (expectedMajorVersion >= 0 && expectedMinorVersion >= 0) {
-                Integer[] serverVersion = this.appVersion();
-
-                assert serverVersion.length >= 2;
-
-                if (serverVersion[0] != expectedMajorVersion || serverVersion[1] != expectedMinorVersion) {
-                    throw new CaffaConnectionError(FailureType.VERSION_MISMATCH,
-                            String.format(
-                                    "Server version v%d.%d.x != version v%d.%d.x",
-                                    serverVersion[0],
-                                    serverVersion[1],
-                                    expectedMajorVersion,
-                                    expectedMinorVersion));
-                }
-            }
-            this.session = createSession(sessionType);
-            startKeepAliveTransfer();
-        } catch (CaffaConnectionError e) {
-            cleanUp();
-            throw e;         
-        }
+        }        
     }
 
     /**
@@ -188,9 +183,8 @@ public class RestClient {
      *
      * @throws Exception
      */
-    public RestClient(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
-            String logConfigFilePath) throws Exception {
-        this(host, port, expectedMajorVersion, expectedMinorVersion, logConfigFilePath, CaffaSession.Type.REGULAR);
+    public RestClient(String host, int port, String logConfigFilePath) throws Exception {
+        this(host, port, logConfigFilePath, CaffaSession.Type.REGULAR, null);
     }
 
     /**
@@ -203,8 +197,22 @@ public class RestClient {
      * @param expectedMinorVersion - use a negative number to skip version check
      * @throws Exception
      */
-    public RestClient(String host, int port, int expectedMajorVersion, int expectedMinorVersion) throws Exception {
-        this(host, port, expectedMajorVersion, expectedMinorVersion, "");
+    public RestClient(String host, int port) throws Exception {
+        this(host, port,"");
+    }
+
+    public void connect(String username, String password) throws Exception {
+        try {
+            this.username = username;
+            this.password = password;
+            this.httpClient = createHttpClient(username, password);
+
+            this.session = this.createSession(sessionType);
+            startKeepAliveTransfer();
+        } catch (CaffaConnectionError e) {
+            cleanUp();
+            throw e;         
+        }
     }
 
     public void cleanUp() {
@@ -550,12 +558,39 @@ public class RestClient {
         propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
 
+    private HttpClient createHttpClient(String username, String password) throws Exception {
+        HttpClient client = null;
+        if (!username.isEmpty() && !password.isEmpty()) {
+            Authenticator authenticator = new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(username, password.toCharArray());
+                }
+            };
+            if (this.sslContext != null) {
+                client = HttpClient.newBuilder().authenticator(authenticator).sslContext(this.sslContext).build();
+            } else {
+                client = HttpClient.newBuilder().authenticator(authenticator).build();
+            }
+        } else {
+            if (this.sslContext != null) {
+                client = HttpClient.newBuilder().sslContext(this.sslContext).build();
+            } else {
+                client = HttpClient.newBuilder().build();
+            }
+        }
+        return client;
+    }
+
     private String performGetRequest(String path, long timeOutMilliSeconds) throws CaffaConnectionError {
         HttpResponse<String> response = null;
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();
-            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
+                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();                    
+            if (this.httpClient == null) {
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
+            }
+            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
@@ -572,10 +607,13 @@ public class RestClient {
     private String performPutRequest(String path, long timeOutMilliSeconds, String body) throws CaffaConnectionError {
         HttpResponse<String> response = null;
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + this.hostname + ":" + this.port + path))
+            HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
                     .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds))
                     .PUT(HttpRequest.BodyPublishers.ofString(body)).build();
-            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            if (this.httpClient == null) {
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
+            }
+            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
@@ -594,10 +632,13 @@ public class RestClient {
             throws CaffaConnectionError {
         HttpResponse<String> response = null;
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + this.hostname + ":" + this.port + path))
+            HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
                     .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).DELETE()
                     .build();
-            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            if (this.httpClient == null) {
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
+            }        
+            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }

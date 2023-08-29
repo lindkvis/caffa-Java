@@ -1,5 +1,5 @@
 # caffa-Java
-Java grpc client code for caffa (http://github.com/lindkvis/caffa)
+Java REST client code for caffa (http://github.com/lindkvis/caffa)
 
 # Pre-requisites
 gradle (i.e. sudo apt install gradle)
