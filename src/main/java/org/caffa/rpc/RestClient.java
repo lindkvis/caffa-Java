@@ -102,27 +102,17 @@ public class RestClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
 
-    public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion) {
+    public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info"))
-                    .version(HttpClient.Version.HTTP_2).GET().build();
-            HttpResponse<String> response = HttpClient.newHttpClient().send(request,
-                    HttpResponse.BodyHandlers.ofString());
-
-            GsonBuilder builder = new GsonBuilder();
-            builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
-            CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
-
-            if (appInfo.majorVersion != expectedMajorVersion
-                    || appInfo.minorVersion != expectedMinorVersion) {
+            if (!checkCompatibility(host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion)) {
                 return Status.INCOMPATIBLE;
             }
 
-            request = HttpRequest
+            HttpRequest request = HttpRequest
                     .newBuilder(
                             new URI("http://" + host + ":" + port + "/session/ready?type=" + CaffaSession.Type.REGULAR.getValue()))
                     .version(HttpClient.Version.HTTP_2).GET().build();
-            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
             JsonObject result = JsonParser.parseString(response.body()).getAsJsonObject();
             boolean ready = result.get("ready").getAsBoolean();
@@ -140,16 +130,39 @@ public class RestClient {
         }
     }
 
+    public static boolean checkCompatibility(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info")).version(HttpClient.Version.HTTP_2).GET().build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request,HttpResponse.BodyHandlers.ofString());
+
+            GsonBuilder builder = new GsonBuilder();
+            builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
+            CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
+
+            if (appInfo.majorVersion != expectedMajorVersion || appInfo.minorVersion != expectedMinorVersion) {
+                return false;
+            }
+
+            boolean serverIsDevelopmentVersion = appInfo.patchVersion >= 50;
+
+            if (developmentVersion != serverIsDevelopmentVersion) {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Create a new client app. Will compare version to what the server has and
      * refuse connection on mismatch
      *
      * @param host
      * @param port
-     * @param expectedMajorVersion - use a negative number to skip version check
-     * @param expectedMinorVersion - use a negative number to skip version check
      * @param logConfigFilePath
      * @param sessionType
+     * @param sslContext
      *
      * @throws Exception
      */
@@ -177,8 +190,6 @@ public class RestClient {
      *
      * @param host
      * @param port
-     * @param expectedMajorVersion - use a negative number to skip version check
-     * @param expectedMinorVersion - use a negative number to skip version check
      * @param logConfigFilePath
      *
      * @throws Exception
@@ -193,8 +204,6 @@ public class RestClient {
      *
      * @param host
      * @param port
-     * @param expectedMajorVersion - use a negative number to skip version check
-     * @param expectedMinorVersion - use a negative number to skip version check
      * @throws Exception
      */
     public RestClient(String host, int port) throws Exception {
