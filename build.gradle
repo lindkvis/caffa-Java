@@ -7,13 +7,9 @@ repositories {
     google()
 }
 
-def grpcVersion = "1.43.0"
-def protobufVersion = "3.19.1"
-
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
-    implementation "com.google.api.grpc:proto-google-common-protos:2.7.0"
     implementation 'log4j:log4j:1.2.17'
     implementation 'org.slf4j:slf4j-api:1.7.28'
     implementation 'org.slf4j:slf4j-log4j12:1.7.28'

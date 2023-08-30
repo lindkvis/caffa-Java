@@ -594,7 +594,7 @@ public class RestClient {
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
-        if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
                     "GET request failed with error: " + response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
@@ -614,17 +614,20 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
             }
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+                throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
+                        "PUT request failed with error: " + response.body());
+            } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+                throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
+                        "PUT request failed with error: " + response.body());
+            }
+        } catch(CaffaConnectionError e) {
+            throw e;
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
 
-        if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-            throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
-                    "PUT request failed with error: " + response.body());
-        } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-            throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
-                    "PUT request failed with error: " + response.body());
-        }
         return response.body();
     }
 
