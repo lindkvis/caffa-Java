@@ -27,7 +27,8 @@ public class ClientObjectTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new RestClient("localhost", 50000, -1, -1, "log4j.properties");
+        testApp = new RestClient("localhost", 50000,  "log4j.properties");
+        testApp.connect("test", "password");
     }
 
     @AfterEach
