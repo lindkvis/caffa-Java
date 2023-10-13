@@ -97,7 +97,7 @@ public class RestClient {
     static final long KEEPALIVE_TIMEOUT = 5000;
     static final long STATUS_TIMEOUT = 1000;
     static final long SESSION_TIMEOUT = 5000;
-    static final long REQUEST_TIMEOUT = 5000;
+    static final long REQUEST_TIMEOUT = 10000;
     private ScheduledExecutorService executor = null;
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
