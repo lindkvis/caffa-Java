@@ -111,7 +111,7 @@ public class RestClient {
             HttpRequest request = HttpRequest
                     .newBuilder(
                             new URI("http://" + host + ":" + port + "/session/ready?type=" + CaffaSession.Type.REGULAR.getValue()))
-                    .version(HttpClient.Version.HTTP_2).GET().build();
+                    .version(HttpClient.Version.HTTP_1_1).GET().build();
             HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
             JsonObject result = JsonParser.parseString(response.body()).getAsJsonObject();
