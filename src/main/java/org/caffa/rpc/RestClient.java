@@ -102,21 +102,35 @@ public class RestClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
 
+    public static HttpClient createBasicHttpClient() {
+        HttpClient client = HttpClient.newBuilder()
+        .version(HttpClient.Version.HTTP_1_1)
+        .connectTimeout(Duration.ofMillis(STATUS_TIMEOUT))
+        .build();
+        return client;
+    }
+
     public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
         try {
-            if (!checkCompatibility(host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion)) {
+            HttpClient client = createBasicHttpClient();
+
+            if (!checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion)) {
                 return Status.INCOMPATIBLE;
             }
-
+            
             HttpRequest request = HttpRequest
                     .newBuilder(
                             new URI("http://" + host + ":" + port + "/session/ready?type=" + CaffaSession.Type.REGULAR.getValue()))
-                    .version(HttpClient.Version.HTTP_1_1).GET().build();
-            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             JsonObject result = JsonParser.parseString(response.body()).getAsJsonObject();
             boolean ready = result.get("ready").getAsBoolean();
             boolean hasOtherSessions = result.get("other_sessions").getAsBoolean();
+
+            client = null;
+            System.gc();
 
             if (ready && hasOtherSessions) {
                 return Status.BUSY_BUT_AVAILABLE;
@@ -131,9 +145,17 @@ public class RestClient {
     }
 
     public static boolean checkCompatibility(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
+        HttpClient client = createBasicHttpClient();
+        boolean compatible = checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion);
+        client = null;
+        System.gc();
+        return compatible;
+    }
+
+    public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info")).version(HttpClient.Version.HTTP_2).GET().build();
-            HttpResponse<String> response = HttpClient.newHttpClient().send(request,HttpResponse.BodyHandlers.ofString());
+            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info")).version(HttpClient.Version.HTTP_1_1).GET().build();
+            HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
 
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
@@ -595,7 +617,7 @@ public class RestClient {
         HttpResponse<String> response = null;
         try {
             HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();                    
+                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();                    
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
             }
@@ -617,7 +639,7 @@ public class RestClient {
         HttpResponse<String> response = null;
         try {
             HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds))
+                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds))
                     .PUT(HttpRequest.BodyPublishers.ofString(body)).build();
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
@@ -645,7 +667,7 @@ public class RestClient {
         HttpResponse<String> response = null;
         try {
             HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).DELETE()
+                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).DELETE()
                     .build();
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
