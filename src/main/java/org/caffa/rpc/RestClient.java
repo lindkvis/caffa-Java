@@ -74,8 +74,11 @@ public class RestClient {
         BUSY_BUT_AVAILABLE,
         BUSY,
         INCOMPATIBLE,
-        UNREACHABLE
+        UNREACHABLE,
+        TOO_MANY_REQUESTS
     }
+
+    private static final int TOO_MANY_REQUESTS = 429;
 
     private String hostname;
     private int port;
@@ -114,16 +117,19 @@ public class RestClient {
         try {
             HttpClient client = createBasicHttpClient();
 
-            if (!checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion)) {
-                return Status.INCOMPATIBLE;
-            }
-            
             HttpRequest request = HttpRequest
                     .newBuilder(
                             new URI("http://" + host + ":" + port + "/session/ready?type=" + CaffaSession.Type.REGULAR.getValue()))
                     .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == TOO_MANY_REQUESTS) {
+                return Status.TOO_MANY_REQUESTS;
+            }
+
+            if (!checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion)) {
+                return Status.INCOMPATIBLE;
+            }        
 
             JsonObject result = JsonParser.parseString(response.body()).getAsJsonObject();
             boolean ready = result.get("ready").getAsBoolean();
@@ -625,7 +631,10 @@ public class RestClient {
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
-        if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+        if (response.statusCode() == TOO_MANY_REQUESTS) {
+            throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS,
+                    "GET request failed with error: " + response.body());
+        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
                     "GET request failed with error: " + response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
@@ -646,7 +655,10 @@ public class RestClient {
             }
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+            if (response.statusCode() == TOO_MANY_REQUESTS) {
+                throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS,
+                        "PUT request failed with error: " + response.body());
+            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
                         "PUT request failed with error: " + response.body());
             } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
@@ -677,7 +689,10 @@ public class RestClient {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
 
-        if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        if (response.statusCode() == TOO_MANY_REQUESTS) {
+            throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS,
+                    "DELETE request failed with error: " + response.body());
+        } else if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
                     "DELETE request failed with error: " + response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
