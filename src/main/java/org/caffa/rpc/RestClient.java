@@ -150,33 +150,34 @@ public class RestClient {
         }
     }
 
-    public static boolean checkCompatibility(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
-        HttpClient client = createBasicHttpClient();
-        boolean compatible = checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion);
-        client = null;
-        System.gc();
-        return compatible;
+    public static boolean checkCompatibility(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) throws Exception {
+        try {
+            HttpClient client = createBasicHttpClient();
+            boolean compatible = checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion);
+            client = null;
+            System.gc();
+            return compatible;
+        } catch(Exception e) {
+            throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "Failed to connect to check compatibility " + e);
+        }
     }
 
-    public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
-        try {
-            HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info")).version(HttpClient.Version.HTTP_1_1).GET().build();
-            HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
+    public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info")).version(HttpClient.Version.HTTP_1_1).GET().build();
+        HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
 
-            GsonBuilder builder = new GsonBuilder();
-            builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
-            CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
+        CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
 
-            if (appInfo.majorVersion != expectedMajorVersion || appInfo.minorVersion != expectedMinorVersion) {
-                return false;
-            }
+        System.out.println("Succeeded in asking for version");
+        if (appInfo.majorVersion != expectedMajorVersion || appInfo.minorVersion != expectedMinorVersion) {
+            return false;
+        }
 
-            boolean serverIsDevelopmentVersion = appInfo.patchVersion >= 50;
+        boolean serverIsDevelopmentVersion = appInfo.patchVersion >= 50;
 
-            if (developmentVersion != serverIsDevelopmentVersion) {
-                return false;
-            }
-        } catch (Exception e) {
+        if (developmentVersion != serverIsDevelopmentVersion) {
             return false;
         }
         return true;
