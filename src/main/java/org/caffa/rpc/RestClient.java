@@ -170,7 +170,6 @@ public class RestClient {
         builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
         CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
 
-        System.out.println("Succeeded in asking for version");
         if (appInfo.majorVersion != expectedMajorVersion || appInfo.minorVersion != expectedMinorVersion) {
             return false;
         }
