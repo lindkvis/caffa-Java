@@ -45,6 +45,8 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.time.Duration;
 import javax.net.ssl.SSLContext;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.gson.GsonBuilder;
 import com.google.common.net.HttpHeaders;
@@ -92,13 +94,14 @@ public class RestClient {
     private String username = "";
     private String password = "";
     private CaffaSession.Type sessionType;
+    private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
 
     private final ReentrantLock lock = new ReentrantLock();
 
     /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 2000;
     static final long KEEPALIVE_TIMEOUT = 5000;
-    static final long STATUS_TIMEOUT = 1000;
+    static final long STATUS_TIMEOUT = 2000;
     static final long SESSION_TIMEOUT = 5000;
     static final long REQUEST_TIMEOUT = 10000;
     private ScheduledExecutorService executor = null;
@@ -429,8 +432,9 @@ public class RestClient {
         JsonObject documentValueObject = documentDataJson.getAsJsonObject();
         String classKeyword = documentValueObject.get("keyword").getAsString();
 
-        String documentSchema = performGetRequest("/schemas/" + classKeyword + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
-        JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
+        String path = "/schemas/" + classKeyword;
+        JsonObject documentSchemaObject = unlockedObjectSchema(path, session);
+
 
         CaffaObject object = new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, documentSchemaObject,
@@ -439,6 +443,18 @@ public class RestClient {
                 .fromJson(documentData, CaffaObject.class);
 
         return object;
+    }
+
+    private JsonObject unlockedObjectSchema(String path, CaffaSession session) throws CaffaConnectionError {
+        if (schemaCache.containsKey(path)) {
+            return schemaCache.get(path);
+        }
+
+        String documentSchema = performGetRequest(path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
+
+        schemaCache.put(path, documentSchemaObject);
+        return documentSchemaObject;
     }
 
     public JsonObject getObjectSchema(String path) {
@@ -451,10 +467,8 @@ public class RestClient {
             if (path.startsWith("#")) {
                 path = path.substring(1);
             }
+            return unlockedObjectSchema(path, session);
 
-            String documentSchema = performGetRequest(path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
-            JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
-            return documentSchemaObject;
         } catch (CaffaConnectionError e) {
             logger.error(e.getMessage());
             return null;
@@ -566,7 +580,7 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject self = method.getSelf();
-            String response = performPutRequest("/object/uuid/" + self.uuid + "/" + method.keyword + "?session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT, method.getJson());
+            String response = performPutRequest("/object/uuid/" + self.uuid + "/" + method.keyword + "?session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT, method.getJson());            
             return response;
         } catch (CaffaConnectionError e) {
             logger.error(e.getMessage());
