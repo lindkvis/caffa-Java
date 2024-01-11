@@ -646,14 +646,11 @@ public class RestClient {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
         }
         if (response.statusCode() == TOO_MANY_REQUESTS) {
-            throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS,
-                    "GET request failed with error: " + response.body());
-        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
-            throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
-                    "GET request failed with error: " + response.body());
+            throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
+        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-            throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
-                    "GET request failed with error: " + response.body());
+            throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
         }
         return response.body();
     }
@@ -670,14 +667,11 @@ public class RestClient {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == TOO_MANY_REQUESTS) {
-                throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS,
-                        "PUT request failed with error: " + response.body());
-            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
-                throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
-                        "PUT request failed with error: " + response.body());
+                throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
+            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
             } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-                throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
-                        "PUT request failed with error: " + response.body());
+                throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
             }
         } catch(CaffaConnectionError e) {
             throw e;
@@ -704,14 +698,11 @@ public class RestClient {
         }
 
         if (response.statusCode() == TOO_MANY_REQUESTS) {
-            throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS,
-                    "DELETE request failed with error: " + response.body());
-        } else if (response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-            throw new CaffaConnectionError(FailureType.SESSION_REFUSED,
-                    "DELETE request failed with error: " + response.body());
+            throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
+        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-            throw new CaffaConnectionError(FailureType.REQUEST_ERROR,
-                    "DELETE request failed with error: " + response.body());
+            throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
         }
         return response.body();
     }
