@@ -263,7 +263,7 @@ public class RestClient {
                 destroySession();
             }
         } catch (Exception e) {
-            logger.warn("Failed to shut down gracefully: " + e.getMessage());
+            logger.warn("Failed to shut down gracefully");
         }
     }
 
