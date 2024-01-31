@@ -99,10 +99,10 @@ public class RestClient {
     private final ReentrantLock lock = new ReentrantLock();
 
     /** Defines intervals and timeouts (milliseconds). */
-    static final long KEEPALIVE_INTERVAL = 2000;
-    static final long KEEPALIVE_TIMEOUT = 5000;
-    static final long STATUS_TIMEOUT = 2000;
-    static final long SESSION_TIMEOUT = 5000;
+    static final long KEEPALIVE_INTERVAL = 5000;
+    static final long KEEPALIVE_TIMEOUT = 8000;
+    static final long STATUS_TIMEOUT = 8000;
+    static final long SESSION_TIMEOUT = 8000;
     static final long REQUEST_TIMEOUT = 10000;
     private ScheduledExecutorService executor = null;
 
