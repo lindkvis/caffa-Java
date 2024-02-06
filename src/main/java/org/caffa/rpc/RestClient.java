@@ -316,8 +316,8 @@ public class RestClient {
         try {
             lock();
             existingSession = getExistingSession();
-            String response = performPutRequest("/session/check?session_uuid=" + existingSession.getUuid(),
-                    SESSION_TIMEOUT, "");
+            String response = performGetRequest("/session/check?session_uuid=" + existingSession.getUuid(),
+                    SESSION_TIMEOUT);
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
             CaffaSession checkSession = builder.create().fromJson(response, CaffaSession.class);
