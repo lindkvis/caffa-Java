@@ -100,9 +100,9 @@ public class RestClient {
 
     /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 5000;
-    static final long KEEPALIVE_TIMEOUT = 8000;
-    static final long STATUS_TIMEOUT = 8000;
-    static final long SESSION_TIMEOUT = 8000;
+    static final long KEEPALIVE_TIMEOUT = 10000;
+    static final long STATUS_TIMEOUT = 10000;
+    static final long SESSION_TIMEOUT = 10000;
     static final long REQUEST_TIMEOUT = 10000;
     private ScheduledExecutorService executor = null;
 
