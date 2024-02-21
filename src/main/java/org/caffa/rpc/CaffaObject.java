@@ -25,8 +25,6 @@ public class CaffaObject {
 
     protected RestClient client;
 
-    static final long METHOD_TIMEOUT = 5000;
-
     private static final Logger logger = LoggerFactory.getLogger(CaffaObject.class);
 
     public CaffaObject(String keyword, boolean hasLocalDataFields, RestClient client, String uuid) {
