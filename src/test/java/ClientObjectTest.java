@@ -88,6 +88,12 @@ public class ClientObjectTest {
         for (CaffaObject child : children) {
             System.out.println("Found child of class: " + child.keyword +
                     " ... checking methods!");
+
+
+            CaffaField<Double> doubleField = child.field("doubleField", Double.class);
+            assertDoesNotThrow(() -> doubleField.set(111.0));
+            assertEquals(111.0, doubleField.get());
+
             ArrayList<CaffaObjectMethod> childMethods = child.methods();
             assertEquals(3, childMethods.size());
             CaffaObjectMethod method = childMethods.get(0);
@@ -119,8 +125,6 @@ public class ClientObjectTest {
             assertDoesNotThrow(() -> method.execute());
             assertDoesNotThrow(() -> setIntVectorMethod.execute());
 
-            CaffaField<Double> doubleField = child.field("doubleField",
-                    Double.class);
             assertEquals(99.0, doubleField.get());
 
             CaffaField<Long[]> arrayField = child.field("proxyIntVector").cast(Long[].class);

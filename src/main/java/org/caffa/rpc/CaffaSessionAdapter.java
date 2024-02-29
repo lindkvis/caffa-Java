@@ -23,7 +23,13 @@ public class CaffaSessionAdapter
 
         if (json.isJsonObject()) {
             JsonObject jsonObject = json.getAsJsonObject();
-            return new CaffaSession(jsonObject.get("session_uuid").getAsString(), CaffaSession.Type.fromInt(jsonObject.get("type").getAsInt()));
+            String uuid = jsonObject.get("uuid").getAsString();
+            String typeString = jsonObject.get("type").getAsString();
+            boolean valid = jsonObject.get("valid").getAsBoolean();
+            if (valid) {
+                CaffaSession.Type typeFound = CaffaSession.Type.fromString(typeString);
+                return new CaffaSession(uuid, typeFound);
+            }
         }
         return null;
     }

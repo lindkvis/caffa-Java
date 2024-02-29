@@ -65,20 +65,33 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
         }
 
         CaffaObject caffaObject = new CaffaObject(classKeyword, createLocalFields, client, uuid);
-        
-        if (schemaObject.has("properties")) {
-            JsonObject properties = schemaObject.get("properties").getAsJsonObject();
-            readFields(caffaObject, properties, valueObject);
-            if (properties.has("methods")) {
-                JsonObject methods = properties.get("methods").getAsJsonObject();
-                if (methods.has("properties")) {
-                    JsonObject methodProperties = methods.get("properties").getAsJsonObject();
-                    readMethods(caffaObject, methodProperties);
+        readProperties(caffaObject, schemaObject, valueObject);
+
+        return caffaObject;
+    }
+
+    private void readProperties(CaffaObject caffaObject, JsonObject schemaObject, JsonObject valueObject) {
+        if (schemaObject.has("allOf")) {
+            JsonArray allOfArray = schemaObject.get("allOf").getAsJsonArray();
+            for (JsonElement entry : allOfArray) {
+                JsonObject entryObject = entry.getAsJsonObject();
+                if (entryObject.has("properties")) {
+                    JsonObject properties = entryObject.get("properties").getAsJsonObject();
+                    readFields(caffaObject, properties, valueObject);
+                    if (properties.has("methods")) {
+                        JsonObject methods = properties.get("methods").getAsJsonObject();
+                        if (methods.has("properties")) {
+                            JsonObject methodProperties = methods.get("properties").getAsJsonObject();
+                            readMethods(caffaObject, methodProperties);
+                        }
+                    }
+                } else if (entryObject.has("$ref")) {
+                    String schemaLocation = entryObject.get("$ref").getAsString();
+                    JsonObject subSchemaObject = client.getObjectSchema(schemaLocation);
+                    readProperties(caffaObject, subSchemaObject, valueObject);
                 }
             }
         }
-
-        return caffaObject;
     }
 
     public void readField(CaffaObject caffaObject, String keyword, JsonObject schema, JsonElement value) {
