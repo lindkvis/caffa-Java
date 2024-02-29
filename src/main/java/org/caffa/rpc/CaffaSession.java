@@ -19,6 +19,17 @@ public class CaffaSession {
             }
         }
 
+        public static Type fromString(String type) {
+            if (type.equals(INVALID.name())) {
+                return INVALID;
+            } else if (type.equals(REGULAR.name())) {
+                return REGULAR;
+            } else if (type.equals(OBSERVING.name())) {
+                return OBSERVING;
+            }
+            throw new RuntimeException("Cannot convert type " + type + " to session type");
+        }
+
         public int getValue() {
             return this.ordinal();
         }
