@@ -431,7 +431,7 @@ public class RestClient {
         JsonObject documentValueObject = documentDataJson.getAsJsonObject();
         String classKeyword = documentValueObject.get("keyword").getAsString();
 
-        String path = "/components/object_schemas/" + classKeyword;
+        String path = schemaRoot() + "/components/object_schemas/" + classKeyword;
         JsonObject documentSchemaObject = unlockedObjectSchema(path, session);
 
 
@@ -449,11 +449,15 @@ public class RestClient {
             return schemaCache.get(path);
         }
 
-        String documentSchema = performGetRequest("/openapi.json" + path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        String documentSchema = performGetRequest(path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
         JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
 
         schemaCache.put(path, documentSchemaObject);
         return documentSchemaObject;
+    }
+
+    private String schemaRoot() {
+        return "/openapi.json";
     }
 
     public JsonObject getObjectSchema(String path) {
@@ -464,7 +468,7 @@ public class RestClient {
             }
          
             if (path.startsWith("#")) {
-                path = path.substring(1);
+                path = schemaRoot() + path.substring(1);
             }
             return unlockedObjectSchema(path, session);
 
