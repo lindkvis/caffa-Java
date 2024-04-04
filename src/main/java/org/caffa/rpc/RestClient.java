@@ -36,7 +36,6 @@ package org.caffa.rpc;
 
 import java.net.Authenticator;
 import java.util.concurrent.TimeUnit;
-import java.util.Base64;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
@@ -49,8 +48,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.GsonBuilder;
-import com.google.common.net.HttpHeaders;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -91,8 +88,6 @@ public class RestClient {
     private SSLContext sslContext = null;
     private String protocolTag = "http://";
     private HttpClient httpClient = null;
-    private String username = "";
-    private String password = "";
     private CaffaSession.Type sessionType;
     private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
 
@@ -110,24 +105,27 @@ public class RestClient {
 
     public static HttpClient createBasicHttpClient() {
         HttpClient client = HttpClient.newBuilder()
-        .version(HttpClient.Version.HTTP_1_1)
-        .connectTimeout(Duration.ofMillis(STATUS_TIMEOUT))
-        .build();
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofMillis(STATUS_TIMEOUT))
+                .build();
         return client;
     }
 
-    public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) {
+    public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
+            boolean developmentVersion) {
         try {
             HttpClient client = createBasicHttpClient();
 
-            if (!checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion)) {
+            if (!checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion,
+                    developmentVersion)) {
                 return Status.INCOMPATIBLE;
-            }        
+            }
 
             HttpRequest request = HttpRequest
-                .newBuilder(
-                    new URI("http://" + host + ":" + port + "/sessions/?type=" + CaffaSession.Type.REGULAR.name()))
-                .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
+                    .newBuilder(
+                            new URI("http://" + host + ":" + port + "/sessions/?type="
+                                    + CaffaSession.Type.REGULAR.name()))
+                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == TOO_MANY_REQUESTS) {
@@ -153,21 +151,26 @@ public class RestClient {
         }
     }
 
-    public static boolean checkCompatibility(String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) throws Exception {
+    public static boolean checkCompatibility(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
+            boolean developmentVersion) throws Exception {
         try {
             HttpClient client = createBasicHttpClient();
-            boolean compatible = checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion, developmentVersion);
+            boolean compatible = checkCompatibility(client, host, port, expectedMajorVersion, expectedMinorVersion,
+                    developmentVersion);
             client = null;
             System.gc();
             return compatible;
-        } catch(Exception e) {
-            throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "Failed to connect to check compatibility " + e);
+        } catch (Exception e) {
+            throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
+                    "Failed to connect to check compatibility " + e);
         }
     }
 
-    public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion, int expectedMinorVersion, boolean developmentVersion) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info")).version(HttpClient.Version.HTTP_1_1).GET().build();
-        HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
+    public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion,
+            int expectedMinorVersion, boolean developmentVersion) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info"))
+                .version(HttpClient.Version.HTTP_1_1).GET().build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
@@ -212,7 +215,7 @@ public class RestClient {
 
         if (!logConfigFilePath.isEmpty()) {
             setupLogging(logConfigFilePath);
-        }        
+        }
     }
 
     /**
@@ -238,19 +241,17 @@ public class RestClient {
      * @throws Exception
      */
     public RestClient(String host, int port) throws Exception {
-        this(host, port,"");
+        this(host, port, "");
     }
 
     public void connect(String username, String password) throws Exception {
         try {
-            this.username = username;
-            this.password = password;
             this.httpClient = createHttpClient(username, password);
             this.session = this.createSession(sessionType);
             startKeepAliveTransfer();
         } catch (CaffaConnectionError e) {
             cleanUp();
-            throw e;         
+            throw e;
         }
     }
 
@@ -425,7 +426,8 @@ public class RestClient {
         if (session == null)
             return null;
 
-        String documentData = performGetRequest("/documents/" + documentId + "?skeleton=true&session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        String documentData = performGetRequest(
+                "/documents/" + documentId + "?skeleton=true&session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
         JsonElement documentDataJson = JsonParser.parseString(documentData);
         assert documentDataJson.isJsonObject();
         JsonObject documentValueObject = documentDataJson.getAsJsonObject();
@@ -434,10 +436,9 @@ public class RestClient {
         String path = schemaRoot() + "/components/object_schemas/" + classKeyword;
         JsonObject documentSchemaObject = unlockedObjectSchema(path, session);
 
-
         CaffaObject object = new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, documentSchemaObject,
-                    false))
+                        false))
                 .create()
                 .fromJson(documentData, CaffaObject.class);
 
@@ -466,16 +467,16 @@ public class RestClient {
             if (this.session == null) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
-         
+
             if (path.startsWith("#")) {
                 path = schemaRoot() + path.substring(1);
             }
             return unlockedObjectSchema(path, session);
 
         } catch (CaffaConnectionError e) {
-            logger.error(e.getMessage());
+            logger.error("Get object schema error: " + e.getMessage());
             return null;
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.error("Malformed response: " + e.getMessage());
             return null;
         } finally {
@@ -547,13 +548,14 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            String fullReply = performGetRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?skeleton=true&session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
+            String fullReply = performGetRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword
+                    + "?skeleton=true&session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
             JsonElement value = JsonParser.parseString(fullReply);
-            return value.toString();            
+            return value.toString();
         } catch (CaffaConnectionError e) {
-            logger.error(e.getMessage());
+            logger.error("Get field value error: " + e.getMessage());
             return "";
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.error("Malformed response: " + e.getMessage());
             return "";
         } finally {
@@ -568,25 +570,28 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            performPutRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT, value);
+            performPutRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?session_uuid="
+                    + this.session.getUuid(), REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
-            logger.error(e.getMessage());
+            logger.error("Set field value error for " + field.keyword + ": " + e.type + " " + e.getMessage());
         } finally {
             unlock();
         }
     }
 
     public String execute(CaffaObjectMethod method) {
-         try {
+        try {
             lock();
             if (this.session == null) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject self = method.getSelf();
-            String response = performPostRequest("/objects/" + self.uuid + "/methods/" + method.keyword + "?session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT, method.getJson());            
+            String response = performPostRequest(
+                    "/objects/" + self.uuid + "/methods/" + method.keyword + "?session_uuid=" + this.session.getUuid(),
+                    REQUEST_TIMEOUT, method.getJson());
             return response;
         } catch (CaffaConnectionError e) {
-            logger.error(e.getMessage());
+            logger.error("Object method execute error: " + e.getMessage());
             return "";
         } finally {
             unlock();
@@ -639,10 +644,12 @@ public class RestClient {
     private String performGetRequest(String path, long timeOutMilliSeconds) throws CaffaConnectionError {
         HttpResponse<String> response = null;
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();                    
+            HttpRequest request = HttpRequest
+                    .newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
+                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();
             if (this.httpClient == null) {
-                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
+                        "No server connection established. Call connect()");
             }
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
@@ -650,7 +657,8 @@ public class RestClient {
         }
         if (response.statusCode() == TOO_MANY_REQUESTS) {
             throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
-        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
+                || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
@@ -661,22 +669,26 @@ public class RestClient {
     private String performPutRequest(String path, long timeOutMilliSeconds, String body) throws CaffaConnectionError {
         HttpResponse<String> response = null;
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
+            HttpRequest request = HttpRequest
+                    .newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
                     .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds))
                     .PUT(HttpRequest.BodyPublishers.ofString(body)).build();
             if (this.httpClient == null) {
-                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
+                        "No server connection established. Call connect()");
             }
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == TOO_MANY_REQUESTS) {
                 throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
-            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
+                    || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
-            } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            } else if (response.statusCode() != HttpURLConnection.HTTP_OK &&
+                       response.statusCode() != HttpURLConnection.HTTP_ACCEPTED) {
                 throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
             }
-        } catch(CaffaConnectionError e) {
+        } catch (CaffaConnectionError e) {
             throw e;
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
@@ -693,18 +705,21 @@ public class RestClient {
                     .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds))
                     .POST(HttpRequest.BodyPublishers.ofString(body)).build();
             if (this.httpClient == null) {
-                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
+                        "No server connection established. Call connect()");
             }
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == TOO_MANY_REQUESTS) {
                 throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
-            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
+                    || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
-            } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            } else if (response.statusCode() != HttpURLConnection.HTTP_OK &&
+                       response.statusCode() != HttpURLConnection.HTTP_ACCEPTED) {
                 throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
             }
-        } catch(CaffaConnectionError e) {
+        } catch (CaffaConnectionError e) {
             throw e;
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
@@ -717,12 +732,14 @@ public class RestClient {
             throws CaffaConnectionError {
         HttpResponse<String> response = null;
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
+            HttpRequest request = HttpRequest
+                    .newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
                     .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).DELETE()
                     .build();
             if (this.httpClient == null) {
-                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, "No server connection established. Call connect()");
-            }        
+                throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
+                        "No server connection established. Call connect()");
+            }
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.CONNECTION_ERROR, e.getMessage());
@@ -730,7 +747,8 @@ public class RestClient {
 
         if (response.statusCode() == TOO_MANY_REQUESTS) {
             throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
-        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
+                || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
