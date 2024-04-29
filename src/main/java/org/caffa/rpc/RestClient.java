@@ -579,7 +579,7 @@ public class RestClient {
         }
     }
 
-    public String execute(CaffaObjectMethod method) {
+    public String execute(CaffaObjectMethod method) throws CaffaConnectionError {
         try {
             lock();
             if (this.session == null) {
@@ -592,7 +592,7 @@ public class RestClient {
             return response;
         } catch (CaffaConnectionError e) {
             logger.error("Object method execute error: " + e.getMessage());
-            return "";
+            throw e;
         } finally {
             unlock();
         }
