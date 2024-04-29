@@ -105,7 +105,7 @@ public class RestClient {
 
     public static HttpClient createBasicHttpClient() {
         HttpClient client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
+                .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(STATUS_TIMEOUT))
                 .build();
         return client;
@@ -125,7 +125,7 @@ public class RestClient {
                     .newBuilder(
                             new URI("http://" + host + ":" + port + "/sessions/?type="
                                     + CaffaSession.Type.REGULAR.name()))
-                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
+                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == TOO_MANY_REQUESTS) {
@@ -169,7 +169,7 @@ public class RestClient {
     public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion,
             int expectedMinorVersion, boolean developmentVersion) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info"))
-                .version(HttpClient.Version.HTTP_1_1).GET().build();
+                .version(HttpClient.Version.HTTP_2).GET().build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         GsonBuilder builder = new GsonBuilder();
@@ -646,7 +646,7 @@ public class RestClient {
         try {
             HttpRequest request = HttpRequest
                     .newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();
+                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).GET().build();
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
                         "No server connection established. Call connect()");
@@ -671,7 +671,7 @@ public class RestClient {
         try {
             HttpRequest request = HttpRequest
                     .newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds))
+                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds))
                     .PUT(HttpRequest.BodyPublishers.ofString(body)).build();
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
@@ -702,7 +702,7 @@ public class RestClient {
         try {
             String url = this.protocolTag + this.hostname + ":" + this.port + path;
             HttpRequest request = HttpRequest.newBuilder(new URI(url))
-                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds))
+                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds))
                     .POST(HttpRequest.BodyPublishers.ofString(body)).build();
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
@@ -734,7 +734,7 @@ public class RestClient {
         try {
             HttpRequest request = HttpRequest
                     .newBuilder(new URI(this.protocolTag + this.hostname + ":" + this.port + path))
-                    .version(HttpClient.Version.HTTP_1_1).timeout(Duration.ofMillis(timeOutMilliSeconds)).DELETE()
+                    .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(timeOutMilliSeconds)).DELETE()
                     .build();
             if (this.httpClient == null) {
                 throw new CaffaConnectionError(FailureType.CONNECTION_ERROR,
