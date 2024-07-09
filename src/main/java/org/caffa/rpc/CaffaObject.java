@@ -143,7 +143,7 @@ public class CaffaObject {
         return this.methods.get(name);        
     }
 
-    public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws Exception {
+    public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws CaffaConnectionError {
         return new CaffaObjectMethodResult(this.client, this.client.execute(method), method.getResultSchema());
     }
 }

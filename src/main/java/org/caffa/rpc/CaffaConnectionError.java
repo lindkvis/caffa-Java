@@ -12,6 +12,7 @@ public class CaffaConnectionError extends java.lang.Exception {
         REQUEST_ERROR, // The request fails on the server
         MALFORMED_RESPONSE, // The response is not valid JSON
         LOST_CONTROL,
+        SERVER_ERROR,
         TOO_MANY_REQUESTS
     }
     public FailureType type;
