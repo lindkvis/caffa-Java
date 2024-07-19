@@ -7,7 +7,4 @@ build
 bin/
 caffa-Java.code-workspace
 dist/
-gradlew
-gradlew.bat
-gradle/
 log4j.*

@@ -29,9 +29,8 @@ test {
 }
 
 java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
-  }
+  sourceCompatibility = 17
+  targetCompatibility = 17
 }
 
 jar {
