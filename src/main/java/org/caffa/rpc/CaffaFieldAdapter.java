@@ -75,7 +75,11 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
         if (field != null) {
             field.setIsLocalField(this.localField);
             if (!isNullPlaceHolder(value) && field.isLocalField()) {
-                field.setJson(value.toString());
+                try {
+                    field.setJson(value.toString());
+                } catch(CaffaConnectionError e) {
+                    throw new JsonParseException(e.getMessage());
+                }
             }
         }
         return field;

@@ -60,7 +60,7 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         return getRemoteJson();
     }
 
-    public void setJson(String json) {
+    public void setJson(String json) throws CaffaConnectionError {
         if (isLocalField()) {
             setLocalJson(json);
             return;
@@ -69,27 +69,8 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
 
     }
 
-    public String getDeepCopiedJson() {
-        if (isLocalField()) {
-            return getLocalJson();
-        }
-
-        logger.debug("Trying to get field value for " + this.keyword + " class " + this.owner.keyword);
-        String reply = this.getClient().getFieldValue(this);
-        logger.debug("Got field reply: " + reply);
-        return reply;
-    }
-
-    public void setRemoteJson(String value) {
+    public void setRemoteJson(String value) throws CaffaConnectionError {
         this.getClient().setFieldValue(this, value);
-    }
-
-    public void setDeepCopiedJson(String json) {
-        if (isLocalField()) {
-            setLocalJson(json);
-        } else {
-            setRemoteJson(json);
-        }
     }
 
     public T get() {
@@ -121,19 +102,13 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
     }
 
     public T deepClone() {
-        String json = getDeepCopiedJson();
+        String json = getJson();
         logger.debug("Got JSON: " + json);
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(CaffaObject.class,
                 new CaffaObjectAdapter(this.getClient(), this.schema, true));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
-    }
-
-    public void deepCopyFrom(T value) throws Exception {
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
-                new CaffaObjectAdapter(this.getClient(), this.schema, true));
-        setDeepCopiedJson(builder.create().toJson(value));
     }
 
     public String dump(String prefix) {

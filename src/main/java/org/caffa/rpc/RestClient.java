@@ -563,7 +563,7 @@ public class RestClient {
         }
     }
 
-    public void setFieldValue(CaffaAbstractField field, String value) {
+    public void setFieldValue(CaffaAbstractField field, String value) throws CaffaConnectionError {
         try {
             lock();
             if (this.session == null) {
@@ -574,6 +574,7 @@ public class RestClient {
                     + this.session.getUuid(), REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
             logger.error("Set field value error for " + field.keyword + ": " + e.type + " " + e.getMessage());
+            throw e;
         } finally {
             unlock();
         }

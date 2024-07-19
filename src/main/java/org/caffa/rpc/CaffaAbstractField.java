@@ -25,7 +25,7 @@ public abstract class CaffaAbstractField {
 
     public abstract String getJson();
 
-    public abstract void setJson(String value);
+    public abstract void setJson(String value) throws CaffaConnectionError;
 
     public void setSchema(JsonObject schema) {
         this.schema = schema;

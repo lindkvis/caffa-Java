@@ -38,26 +38,24 @@ public class ClientFieldTest {
     }
 
     @Test
-    void getDocumentFileName() {
+    void getDocumentId() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         assertTrue(object != null);
         assertTrue(!object.fields().isEmpty());
 
         System.out.println(object.dump());
 
-        String key = "fileName";
+        String key = "id";
         CaffaField<?> field = object.field(key);
         assertNotNull(field);
         assertEquals(key, field.keyword);
 
-        CaffaField<String> fileNameField = field.cast(String.class);
-        String originalValue = fileNameField.get();
-        assertEquals("dummyFileName", originalValue);
-        assertDoesNotThrow(() -> fileNameField.set("TestValue"));
-        String value = fileNameField.get();
-        assertEquals("TestValue", value);
-        assertDoesNotThrow(() -> fileNameField.set(originalValue));
-        assertEquals(originalValue, fileNameField.get());
+        CaffaField<String> idField = field.cast(String.class);
+        String originalValue = idField.get();
+        assertEquals("testDocument", originalValue);
+        assertThrows(Exception.class, () -> idField.set("TestValue"));
+        String value = idField.get();
+        assertEquals("testDocument", value);        
     }
 
     @Test
@@ -65,16 +63,16 @@ public class ClientFieldTest {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         assertTrue(!object.fields().isEmpty());
 
-        Boolean foundDocumentFileName = false;
+        Boolean foundIdField = false;
         for (CaffaField<?> field : object.fields()) {
             System.out.println("Found field: '" + field.keyword + "' (" + field.type() +
                     ")");
-            if (field.keyword.equals("fileName")) {
-                foundDocumentFileName = true;
+            if (field.keyword.equals("id")) {
+                foundIdField = true;
                 assertEquals(String.class, field.type());
             }
         }
-        assertTrue(foundDocumentFileName);
+        assertTrue(foundIdField);
     }
 
     @Test
