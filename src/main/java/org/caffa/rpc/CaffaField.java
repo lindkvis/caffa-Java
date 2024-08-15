@@ -73,6 +73,14 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
         this.getClient().setFieldValue(this, value);
     }
 
+    public void setDeepCopiedJson(String json) throws CaffaConnectionError {
+        if (isLocalField()) {
+            setLocalJson(json);
+        } else {
+            setRemoteJson(json);
+        }
+    }
+
     public T get() {
         if (isLocalField()) {
             logger.debug("WAS LOCAL FIELD: " + keyword);
@@ -109,6 +117,12 @@ public class CaffaField<T extends Object> extends CaffaAbstractField {
                 new CaffaObjectAdapter(this.getClient(), this.schema, true));
         builder.registerTypeAdapter(CaffaAppEnum.class, new CaffaAppEnumAdapter());
         return builder.create().fromJson(json, this.dataType);
+    }
+
+    public void deepCopyFrom(T value) throws Exception {
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObject.class,
+                new CaffaObjectAdapter(this.getClient(), this.schema, true));
+        setDeepCopiedJson(builder.create().toJson(value));
     }
 
     public String dump(String prefix) {
