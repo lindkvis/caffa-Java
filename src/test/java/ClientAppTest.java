@@ -8,10 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class ClientAppTest {
     private RestClient testApp;
+    private final String hostname = "127.0.0.1";
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new RestClient("localhost", 50000, "log4j.properties");
+        testApp = new RestClient(hostname, 50000, "log4j.properties");
         testApp.connect("test", "password");
     }
 
