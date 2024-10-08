@@ -92,10 +92,11 @@ public class RestClient {
     private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
 
     private final ReentrantLock lock = new ReentrantLock();
+    private int consecutiveKeepAliveFailures = 0;
 
     /** Defines intervals and timeouts (milliseconds). */
-    static final long KEEPALIVE_INTERVAL = 5000;
-    static final long KEEPALIVE_TIMEOUT = 12000;
+    static final long KEEPALIVE_INTERVAL = 1000;
+    static final long KEEPALIVE_TIMEOUT = 2000;
     static final long STATUS_TIMEOUT = 15000;
     static final long SESSION_TIMEOUT = 15000;
     static final long REQUEST_TIMEOUT = 15000;
@@ -527,15 +528,20 @@ public class RestClient {
             lock();
             if (this.session != null) {
                 String response = performPutRequest("/sessions/" + this.session.getUuid(),
-                        KEEPALIVE_INTERVAL, "");
+                        KEEPALIVE_TIMEOUT, "");
                 GsonBuilder builder = new GsonBuilder();
                 builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
                 this.session = builder.create().fromJson(response, CaffaSession.class);
+                consecutiveKeepAliveFailures = 0;
             }
         } catch (Exception e) {
-            logger.error("Keepalive failed");
-            this.session = null;
-            firePropertyChange("status", true, false);
+            if (++consecutiveKeepAliveFailures >= 5) { // Allow five failures before aborting
+                logger.error("Keepalive failed " + consecutiveKeepAliveFailures + " times");
+                this.session = null;
+                firePropertyChange("status", true, false);
+            } else {
+                logger.warn("Keepalive failed " + consecutiveKeepAliveFailures + " times. Will try again. ");
+            }
         } finally {
             unlock();
         }
