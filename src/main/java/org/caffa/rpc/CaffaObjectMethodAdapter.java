@@ -58,7 +58,7 @@ public class CaffaObjectMethodAdapter extends CaffaObjectAdapter {
 
         writeFields(caffaObjectMethod, labelledArguments, typeOfSrc, context);
         
-        jsonObject.add("labelledArguments", labelledArguments);;
+        jsonObject.add("labelledArguments", labelledArguments);
 
         return jsonObject;
     }

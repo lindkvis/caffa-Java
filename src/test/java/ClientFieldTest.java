@@ -57,7 +57,7 @@ public class ClientFieldTest {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         assertTrue(!object.fields().isEmpty());
 
-        Boolean foundIdField = false;
+        boolean foundIdField = false;
         for (CaffaField<?> field : object.fields()) {
             System.out.println("Found field: '" + field.keyword + "' (" + field.type() +
                     ")");

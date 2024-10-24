@@ -7,7 +7,7 @@ import com.google.gson.GsonBuilder;
 
 import java.lang.reflect.Type;
 
-public class CaffaField<T extends Object> extends CaffaAbstractField {
+public class CaffaField<T> extends CaffaAbstractField {
     private final Type dataType;
 
     private static final Logger logger = LoggerFactory.getLogger(CaffaField.class);

@@ -181,10 +181,7 @@ public class RestClient {
 
         boolean serverIsDevelopmentVersion = appInfo.patchVersion >= 50;
 
-        if (developmentVersion != serverIsDevelopmentVersion) {
-            return false;
-        }
-        return true;
+        return developmentVersion == serverIsDevelopmentVersion;
     }
 
     /**
