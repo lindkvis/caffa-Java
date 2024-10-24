@@ -154,7 +154,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
     public void writeFields(CaffaObject caffaObject, JsonElement jsonElement, Type typeOfSrc,
             JsonSerializationContext context) {
-        logger.debug("Writing fields for object: " + caffaObject.keyword);
+        logger.debug("Writing fields for object: {}", caffaObject.keyword);
 
         if (jsonElement.isJsonObject()) {
             JsonObject jsonObject = jsonElement.getAsJsonObject();

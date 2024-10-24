@@ -58,7 +58,7 @@ public class CaffaObject {
         for (Map.Entry<String, CaffaField<?>> entry : this.fields.entrySet()) {
             CaffaField<?> field = entry.getValue();
             if (field == null) {
-                logger.error("Field " + entry.getKey() + " is null!");
+                logger.error("Field {} is null!", entry.getKey());
             } else {
                 assert field != null;
                 result += field.dump(prefix + "    ");
@@ -69,7 +69,7 @@ public class CaffaObject {
         for (Map.Entry<String, CaffaObjectMethod> entry : this.methods.entrySet()) {
             CaffaObjectMethod method = entry.getValue();
             if (method == null) {
-                logger.error("Method " + entry.getKey() + " is null!");
+                logger.error("Method {} is null!", entry.getKey());
             } else {
                 assert method != null;
                 result += method.dump(prefix + "    ");

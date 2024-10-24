@@ -47,13 +47,13 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     }
 
     public void set(String value) throws Exception {
-        logger.debug("Setting string value for app enum field " + this.keyword);
+        logger.debug("Setting string value for app enum field {}", this.keyword);
         set(new CaffaAppEnum(value));
     }
 
     @Override
     public void set(CaffaAppEnum appEnum) throws Exception {
-        logger.debug("Setting JSON for field " + this.keyword);
+        logger.debug("Setting JSON for field {}", this.keyword);
         if (!this.validValues.contains(appEnum.value())) {
             String errMsg = "The enum value " + appEnum.value() + " is not valid";
             logger.error(errMsg);

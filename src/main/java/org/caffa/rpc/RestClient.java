@@ -466,10 +466,10 @@ public class RestClient {
             return unlockedObjectSchema(path, session);
 
         } catch (CaffaConnectionError e) {
-            logger.error("Get object schema error: " + e.getMessage());
+            logger.error("Get object schema error: {}", e.getMessage());
             return null;
         } catch (Exception e) {
-            logger.error("Malformed response: " + e.getMessage());
+            logger.error("Malformed response when getting object schema: {}", e.getMessage());
             return null;
         } finally {
             unlock();
@@ -540,10 +540,10 @@ public class RestClient {
             JsonElement value = JsonParser.parseString(fullReply);
             return value.toString();
         } catch (CaffaConnectionError e) {
-            logger.error("Get field value error: " + e.getMessage());
+            logger.error("Get field value error: {}", e.getMessage());
             return "";
         } catch (Exception e) {
-            logger.error("Malformed response: " + e.getMessage());
+            logger.error("Malformed response when getting field value: {}", e.getMessage());
             return "";
         } finally {
             unlock();
@@ -560,7 +560,7 @@ public class RestClient {
             performPutRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?session_uuid="
                     + this.session.getUuid(), REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
-            logger.error("Set field value error for " + field.keyword + ": " + e.type + " " + e.getMessage());
+            logger.error("Set field value error for {}: {} {}", field.keyword, e.type, e.getMessage());
             throw e;
         } finally {
             unlock();
@@ -578,7 +578,7 @@ public class RestClient {
                     "/objects/" + self.uuid + "/methods/" + method.keyword + "?session_uuid=" + this.session.getUuid(),
                     REQUEST_TIMEOUT, method.getJson());
         } catch (CaffaConnectionError e) {
-            logger.error("Object method execute error: " + e.getMessage());
+            logger.error("Object method execute error: {}", e.getMessage());
             throw e;
         } finally {
             unlock();
