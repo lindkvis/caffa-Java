@@ -50,34 +50,34 @@ public class CaffaObject {
     }
 
     public String dump(String prefix) {
-        String result = prefix + "{\n";
-        result += prefix + "  keyword = " + this.keyword + "\n";
-        result += prefix + "  local = " + this.isLocalObject() + "\n";
-        result += prefix + "  uuid = " + uuid + "\n";
-        result += prefix + "  fields = [\n";
+        StringBuilder result = new StringBuilder(prefix + "{\n");
+        result.append(prefix).append("  keyword = ").append(this.keyword).append("\n");
+        result.append(prefix).append("  local = ").append(this.isLocalObject()).append("\n");
+        result.append(prefix).append("  uuid = ").append(uuid).append("\n");
+        result.append(prefix).append("  fields = [\n");
         for (Map.Entry<String, CaffaField<?>> entry : this.fields.entrySet()) {
             CaffaField<?> field = entry.getValue();
             if (field == null) {
                 logger.error("Field {} is null!", entry.getKey());
             } else {
                 assert field != null;
-                result += field.dump(prefix + "    ");
+                result.append(field.dump(prefix + "    "));
             }
         }
-        result += prefix + "  ]\n";
-        result += prefix + "  methods = [\n";
+        result.append(prefix).append("  ]\n");
+        result.append(prefix).append("  methods = [\n");
         for (Map.Entry<String, CaffaObjectMethod> entry : this.methods.entrySet()) {
             CaffaObjectMethod method = entry.getValue();
             if (method == null) {
                 logger.error("Method {} is null!", entry.getKey());
             } else {
                 assert method != null;
-                result += method.dump(prefix + "    ");
+                result.append(method.dump(prefix + "    "));
             }
         }
-        result += prefix + "  ]\n";
-        result += prefix + "}\n";
-        return result;
+        result.append(prefix).append("  ]\n");
+        result.append(prefix).append("}\n");
+        return result.toString();
     }
 
     public CaffaField<?> field(String keyword) throws RuntimeException {

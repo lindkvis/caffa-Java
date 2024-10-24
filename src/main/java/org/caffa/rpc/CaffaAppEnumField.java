@@ -18,27 +18,27 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     }
 
     public String dump(String prefix) {
-        String result = prefix + "{\n";
+        StringBuilder result = new StringBuilder(prefix + "{\n");
 
-        result += prefix + "  keyword = " + this.keyword + "\n";
-        result += prefix + "  type = CaffaField<AppEnum>(";
+        result.append(prefix).append("  keyword = ").append(this.keyword).append("\n");
+        result.append(prefix).append("  type = CaffaField<AppEnum>(");
         for (int index = 0; index < validValues.size(); ++index) {
             if (index > 0) {
-                result += ",";
+                result.append(",");
             }
-            result += validValues.get(index);
+            result.append(validValues.get(index));
         }
-        result += ")::";
+        result.append(")::");
 
         if (this.isLocalField()) {
-            result += "local\n";
+            result.append("local\n");
         } else {
-            result += "rpc\n";
+            result.append("rpc\n");
         }
 
-        result += prefix + "  value = " + getLocalJson() + "\n";
-        result += prefix + "}\n";
-        return result;
+        result.append(prefix).append("  value = ").append(getLocalJson()).append("\n");
+        result.append(prefix).append("}\n");
+        return result.toString();
     }
 
     @Override

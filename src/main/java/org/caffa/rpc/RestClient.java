@@ -400,14 +400,12 @@ public class RestClient {
 
     public String appVersionString() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        StringBuilder sb = new StringBuilder();
-        sb.append("v");
-        sb.append(appInfo.majorVersion());
-        sb.append(".");
-        sb.append(appInfo.minorVersion());
-        sb.append(".");
-        sb.append(appInfo.patchVersion());
-        return sb.toString();
+        return "v" +
+                appInfo.majorVersion() +
+                "." +
+                appInfo.minorVersion() +
+                "." +
+                appInfo.patchVersion();
     }
 
     public Integer[] appVersion() throws CaffaConnectionError {

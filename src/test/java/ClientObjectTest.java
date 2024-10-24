@@ -144,7 +144,7 @@ public class ClientObjectTest {
         children.addAll(Arrays.asList(inheritedField.get()));
 
         for (CaffaObject child : children) {
-            String methodName = new String("copyValues");
+            String methodName = "copyValues";
             CaffaObjectMethod copyObjectMethod = child.method(methodName);
             System.out.println(copyObjectMethod.dump());
             assertNotNull(copyObjectMethod);
@@ -181,7 +181,7 @@ public class ClientObjectTest {
 
         assertTrue(!children.isEmpty());
         for (CaffaObject child : children) {
-            String methodName = new String("copyObjectDoesNotExist");
+            String methodName = "copyObjectDoesNotExist";
             assertThrows( RuntimeException.class, () -> child.method(methodName));
         }
     }
