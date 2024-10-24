@@ -15,7 +15,7 @@ public class CaffaConnectionError extends java.lang.Exception {
         SERVER_ERROR,
         TOO_MANY_REQUESTS
     }
-    public FailureType type;
+    public final FailureType type;
 
     public CaffaConnectionError(FailureType type, String message) {        
         super(message);

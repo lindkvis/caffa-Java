@@ -9,8 +9,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 public class CaffaFieldFactory {
-    public static BiMap<String, Class<?>> dataTypes;
-    public static Map<String, CaffaField<?>> fieldCreators;
+    public static final BiMap<String, Class<?>> dataTypes;
+    public static final Map<String, CaffaField<?>> fieldCreators;
     protected static final Logger logger = LoggerFactory.getLogger(CaffaFieldFactory.class);
 
     static {

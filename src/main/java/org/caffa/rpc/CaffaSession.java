@@ -35,8 +35,8 @@ public class CaffaSession {
         }
     }
 
-    private String uuid;
-    private Type type;
+    private final String uuid;
+    private final Type type;
 
     CaffaSession(String uuid, Type type) {
         this.uuid = uuid;

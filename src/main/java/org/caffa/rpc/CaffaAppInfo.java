@@ -1,11 +1,11 @@
 package org.caffa.rpc;
 
 public class CaffaAppInfo {
-    public int majorVersion;
-    public int minorVersion;
-    public int patchVersion;
-    public String name;
-    public int type;
+    public final int majorVersion;
+    public final int minorVersion;
+    public final int patchVersion;
+    public final String name;
+    public final int type;
 
     public CaffaAppInfo(String name, int majorVersion, int minorVersion, int patchVersion, int type)
     {

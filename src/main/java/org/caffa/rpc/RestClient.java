@@ -79,16 +79,16 @@ public class RestClient {
 
     private static final int TOO_MANY_REQUESTS = 429;
 
-    private String hostname;
-    private int port;
+    private final String hostname;
+    private final int port;
 
-    private PropertyChangeSupport propertyChangeSupport;
+    private final PropertyChangeSupport propertyChangeSupport;
 
     private CaffaSession session = null;
     private SSLContext sslContext = null;
     private String protocolTag = "http://";
     private HttpClient httpClient = null;
-    private CaffaSession.Type sessionType;
+    private final CaffaSession.Type sessionType;
     private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
 
     private final ReentrantLock lock = new ReentrantLock();
