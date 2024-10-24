@@ -3,19 +3,14 @@ import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.CaffaObjectMethod;
 import org.caffa.rpc.RestClient;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.Arrays;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientObjectTest {
     private RestClient testApp;
@@ -37,7 +32,7 @@ public class ClientObjectTest {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
         String classKeyword = object.keyword();
-        assertTrue(!classKeyword.isEmpty());
+        assertFalse(classKeyword.isEmpty());
         System.out.println("Main Document Class Keyword: " + classKeyword);
 
         String uuid = object.uuid();
@@ -49,7 +44,7 @@ public class ClientObjectTest {
     @Test
     void dumpDocument() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
-        assertTrue(!object.fields().isEmpty());
+        assertFalse(object.fields().isEmpty());
         System.out.println(object.dump());
     }
 
@@ -115,8 +110,7 @@ public class ClientObjectTest {
             assertEquals("AnotherValue", stringMethodArg.get());
 
 
-
-            assertTrue(Arrays.equals(intArrayValues, intArrayMethodArg.get()));
+            assertArrayEquals(intArrayValues, intArrayMethodArg.get());
 
             assertDoesNotThrow(() -> method.execute());
             assertDoesNotThrow(() -> setIntVectorMethod.execute());
@@ -124,7 +118,7 @@ public class ClientObjectTest {
             assertEquals(99.0, doubleField.get());
 
             CaffaField<Long[]> arrayField = child.field("proxyIntVector").cast(Long[].class);
-            assertTrue(Arrays.equals(intArrayValues, arrayField.get()));
+            assertArrayEquals(intArrayValues, arrayField.get());
         }
     }
 
@@ -179,7 +173,7 @@ public class ClientObjectTest {
         CaffaField<CaffaObject[]> inheritedField = object.field("inheritedDemoObjects", CaffaObject[].class);
         children.addAll(Arrays.asList(inheritedField.get()));
 
-        assertTrue(!children.isEmpty());
+        assertFalse(children.isEmpty());
         for (CaffaObject child : children) {
             String methodName = "copyObjectDoesNotExist";
             assertThrows( RuntimeException.class, () -> child.method(methodName));

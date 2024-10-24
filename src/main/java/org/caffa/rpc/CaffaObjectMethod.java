@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 /**
- * An Caffa Object Method for remote calls on a specified "self"-object
- * Objects of this type always store values locally and they will be serialised
+ * A Caffa Object Method for remote calls on a specified "self"-object
+ * Objects of this type always store values locally, and they will be serialised
  * and sent when executing the method.
  */
 public class CaffaObjectMethod extends CaffaObject {
@@ -21,7 +21,7 @@ public class CaffaObjectMethod extends CaffaObject {
      * Execute the method. This uses the RPC accessors in the method's self-object
      * since the CaffaObjectMethod itself is a purely local object.
      *
-     * @return
+     * @return Result of executing the method.
      */
     public CaffaObjectMethodResult execute() throws CaffaConnectionError {
         return self.execute(this);
