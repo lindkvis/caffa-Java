@@ -1,10 +1,9 @@
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.caffa.rpc.RestClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class ClientAppTest {
     private RestClient testApp;
@@ -24,13 +23,13 @@ class ClientAppTest {
     @Test
     void appInfo() {
         String appName = assertDoesNotThrow(() ->testApp.appName());
-        assertTrue(!appName.isEmpty());
+        assertFalse(appName.isEmpty());
     }
 
     @Test
     void appVersionString() {
         String appVersionString = assertDoesNotThrow(() ->testApp.appVersionString());
-        assertTrue(!appVersionString.isEmpty());
+        assertFalse(appVersionString.isEmpty());
     }
 
 }

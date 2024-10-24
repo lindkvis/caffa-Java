@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 
 public abstract class CaffaAbstractField {
     protected final CaffaObject owner;
-    public final String keyword;
+    protected final String keyword;
     protected JsonObject schema = null;
 
     protected boolean isLocalField = false;
@@ -45,4 +45,6 @@ public abstract class CaffaAbstractField {
     public RestClient getClient() {
         return this.owner.getClient();
     }
+
+    public String keyword() { return this.keyword; }
 }

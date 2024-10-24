@@ -9,7 +9,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -144,9 +143,9 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
     public JsonElement serialize(CaffaObject caffaObject, Type typeOfSrc, JsonSerializationContext context) {
         final JsonObject jsonObject = new JsonObject();
 
-        jsonObject.addProperty("keyword", caffaObject.keyword);
-        if (!caffaObject.uuid.isEmpty()) {
-            jsonObject.addProperty("uuid", caffaObject.uuid);
+        jsonObject.addProperty("keyword", caffaObject.keyword());
+        if (!caffaObject.uuid().isEmpty()) {
+            jsonObject.addProperty("uuid", caffaObject.uuid());
         }
 
         writeFields(caffaObject, jsonObject, typeOfSrc, context);
@@ -155,7 +154,7 @@ public class CaffaObjectAdapter implements JsonDeserializer<CaffaObject>, JsonSe
 
     public void writeFields(CaffaObject caffaObject, JsonElement jsonElement, Type typeOfSrc,
             JsonSerializationContext context) {
-        logger.debug("Writing fields for object: " + caffaObject.keyword);
+        logger.debug("Writing fields for object: {}", caffaObject.keyword());
 
         if (jsonElement.isJsonObject()) {
             JsonObject jsonObject = jsonElement.getAsJsonObject();

@@ -9,13 +9,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 public class CaffaFieldFactory {
-    public static BiMap<String, Class<?>> dataTypes;
-    public static Map<String, CaffaField<?>> fieldCreators;
+    public static final BiMap<String, Class<?>> dataTypes;
+    public static final Map<String, CaffaField<?>> fieldCreators;
     protected static final Logger logger = LoggerFactory.getLogger(CaffaFieldFactory.class);
 
     static {
         dataTypes = HashBiMap.create();
-        fieldCreators = new HashMap<String, CaffaField<?>>();
+        fieldCreators = new HashMap<>();
 
         addCreator("boolean", Boolean.class);
         addCreator("integer", Long.class);
@@ -40,7 +40,7 @@ public class CaffaFieldFactory {
     }
 
     public static CaffaField<?> createField(CaffaObject owner, String keyword, String dataType) {
-        logger.debug("Creating field of type " + dataType);
+        logger.debug("Creating field of type {}", dataType);
         return createFieldWithCreators(owner, keyword, dataType, fieldCreators);
     }
 
@@ -50,7 +50,7 @@ public class CaffaFieldFactory {
         if (dataType.startsWith("uint")) {
             CaffaField<?> creator = creators.get(dataType.replace("uint", "int"));
             if (creator == null) {
-                logger.error("Could not find creator for dataType: " + dataType);
+                logger.error("Could not find creator for uint dataType: {}", dataType);
                 return null;
             }
             CaffaField<?> unsignedField = creator.newInstance(owner,
@@ -63,7 +63,7 @@ public class CaffaFieldFactory {
         if (dataType.startsWith("enum")) {
             CaffaField<?> creator = creators.get("enum");
             if (creator == null) {
-                logger.error("Could not find creator for dataType: " + dataType);
+                logger.error("Could not find creator for enum dataType: {}", dataType);
                 return null;
             }
             CaffaAppEnumField appEnumField = (CaffaAppEnumField) creator.newInstance(owner, keyword);
@@ -80,7 +80,7 @@ public class CaffaFieldFactory {
 
         CaffaField<?> creator = creators.get(dataType);
         if (creator == null) {
-            logger.error("Could not find creator for dataType: " + dataType);
+            logger.error("Could not find creator for dataType: {}", dataType);
             return null;
         }
         return creator.newInstance(owner, keyword);

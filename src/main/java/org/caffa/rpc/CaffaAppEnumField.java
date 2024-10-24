@@ -3,7 +3,6 @@ package org.caffa.rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 
 public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
@@ -19,27 +18,27 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     }
 
     public String dump(String prefix) {
-        String result = prefix + "{\n";
+        StringBuilder result = new StringBuilder(prefix + "{\n");
 
-        result += prefix + "  keyword = " + this.keyword + "\n";
-        result += prefix + "  type = CaffaField<AppEnum>(";
+        result.append(prefix).append("  keyword = ").append(this.keyword).append("\n");
+        result.append(prefix).append("  type = CaffaField<AppEnum>(");
         for (int index = 0; index < validValues.size(); ++index) {
             if (index > 0) {
-                result += ",";
+                result.append(",");
             }
-            result += validValues.get(index);
+            result.append(validValues.get(index));
         }
-        result += ")::";
+        result.append(")::");
 
         if (this.isLocalField()) {
-            result += "local\n";
+            result.append("local\n");
         } else {
-            result += "rpc\n";
+            result.append("rpc\n");
         }
 
-        result += prefix + "  value = " + getLocalJson() + "\n";
-        result += prefix + "}\n";
-        return result;
+        result.append(prefix).append("  value = ").append(getLocalJson()).append("\n");
+        result.append(prefix).append("}\n");
+        return result.toString();
     }
 
     @Override
@@ -48,13 +47,13 @@ public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
     }
 
     public void set(String value) throws Exception {
-        logger.debug("Setting string value for app enum field " + this.keyword);
+        logger.debug("Setting string value for app enum field {}", this.keyword);
         set(new CaffaAppEnum(value));
     }
 
     @Override
     public void set(CaffaAppEnum appEnum) throws Exception {
-        logger.debug("Setting JSON for field " + this.keyword);
+        logger.debug("Setting JSON for field {}", this.keyword);
         if (!this.validValues.contains(appEnum.value())) {
             String errMsg = "The enum value " + appEnum.value() + " is not valid";
             logger.error(errMsg);

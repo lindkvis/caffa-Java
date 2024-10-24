@@ -1,17 +1,4 @@
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.lang.IllegalArgumentException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.caffa.rpc.CaffaAppEnum;
 import org.caffa.rpc.CaffaAppEnumField;
@@ -19,9 +6,10 @@ import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.RestClient;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientFieldTest {
     private RestClient testApp;
@@ -41,15 +29,15 @@ public class ClientFieldTest {
     @Test
     void getDocumentId() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
-        assertTrue(object != null);
-        assertTrue(!object.fields().isEmpty());
+        assertNotNull(object);
+        assertFalse(object.fields().isEmpty());
 
         System.out.println(object.dump());
 
         String key = "id";
         CaffaField<?> field = object.field(key);
         assertNotNull(field);
-        assertEquals(key, field.keyword);
+        assertEquals(key, field.keyword());
 
         CaffaField<String> idField = field.cast(String.class);
         String originalValue = idField.get();
@@ -62,13 +50,13 @@ public class ClientFieldTest {
     @Test
     void documentFields() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
-        assertTrue(!object.fields().isEmpty());
+        assertFalse(object.fields().isEmpty());
 
-        Boolean foundIdField = false;
+        boolean foundIdField = false;
         for (CaffaField<?> field : object.fields()) {
-            System.out.println("Found field: '" + field.keyword + "' (" + field.type() +
+            System.out.println("Found field: '" + field.keyword() + "' (" + field.type() +
                     ")");
-            if (field.keyword.equals("id")) {
+            if (field.keyword().equals("id")) {
                 foundIdField = true;
                 assertEquals(String.class, field.type());
             }
@@ -95,8 +83,8 @@ public class ClientFieldTest {
         }
         Double[] values = typedFloatArrayField.get();
         assertNotNull(values);
-        assertTrue(values.length == 4);
-        assertTrue(values[3] == -82.0f);
+        assertEquals(4, values.length);
+        assertEquals(-82.0f, values[3]);
     }
 
     @Test
@@ -122,10 +110,10 @@ public class ClientFieldTest {
             assertDoesNotThrow(() -> typedIntArrayField.set(values2));
 
             Long[] values3 = typedIntArrayField.get();
-            assertTrue(Arrays.equals(values3, values2));
+            assertArrayEquals(values3, values2);
 
             Long[] values4 = intArrayFieldOriginal.get(Long[].class);
-            assertTrue(Arrays.equals(values3, values4));
+            assertArrayEquals(values3, values4);
         }
         assertDoesNotThrow(() -> typedIntArrayField.set(values));
 
@@ -154,7 +142,7 @@ public class ClientFieldTest {
 
             Boolean[] values3 = typedBoolArrayField.get();
             assertEquals(mergedValues.length, values3.length);
-            assertTrue(Arrays.equals(values3, mergedValues));
+            assertArrayEquals(values3, mergedValues);
         }
 
         assertDoesNotThrow(() -> typedBoolArrayField.set(values));
@@ -227,7 +215,7 @@ public class ClientFieldTest {
             assertDoesNotThrow(() -> typedIntArrayField.set(values2));
 
             Long[] values3 = typedIntArrayField.get();
-            assertTrue(Arrays.equals(values3, values2));
+            assertArrayEquals(values3, values2);
 
             // Values should not have been sent to server
             Long[] valuesFromOriginal = intArrayFieldOriginal.get(Long[].class);

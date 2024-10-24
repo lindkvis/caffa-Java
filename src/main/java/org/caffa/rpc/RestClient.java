@@ -79,17 +79,17 @@ public class RestClient {
 
     private static final int TOO_MANY_REQUESTS = 429;
 
-    private String hostname;
-    private int port;
+    private final String hostname;
+    private final int port;
 
-    private PropertyChangeSupport propertyChangeSupport;
+    private final PropertyChangeSupport propertyChangeSupport;
 
     private CaffaSession session = null;
     private SSLContext sslContext = null;
     private String protocolTag = "http://";
     private HttpClient httpClient = null;
-    private CaffaSession.Type sessionType;
-    private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
+    private final CaffaSession.Type sessionType;
+    private final Map<String, JsonObject> schemaCache = new HashMap<>();
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -104,11 +104,10 @@ public class RestClient {
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
 
     public static HttpClient createBasicHttpClient() {
-        HttpClient client = HttpClient.newBuilder()
+        return HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(STATUS_TIMEOUT))
                 .build();
-        return client;
     }
 
     public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
@@ -176,16 +175,13 @@ public class RestClient {
         builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
         CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
 
-        if (appInfo.majorVersion != expectedMajorVersion || appInfo.minorVersion != expectedMinorVersion) {
+        if (appInfo.majorVersion() != expectedMajorVersion || appInfo.minorVersion() != expectedMinorVersion) {
             return false;
         }
 
-        boolean serverIsDevelopmentVersion = appInfo.patchVersion >= 50;
+        boolean serverIsDevelopmentVersion = appInfo.patchVersion() >= 50;
 
-        if (developmentVersion != serverIsDevelopmentVersion) {
-            return false;
-        }
-        return true;
+        return developmentVersion == serverIsDevelopmentVersion;
     }
 
     /**
@@ -286,8 +282,7 @@ public class RestClient {
 
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
-            CaffaSession session = builder.create().fromJson(response, CaffaSession.class);
-            return session;
+            return builder.create().fromJson(response, CaffaSession.class);
         } catch (CaffaConnectionError e) {
             throw e;
         } catch (Exception e) {
@@ -392,8 +387,7 @@ public class RestClient {
         try {
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
-            CaffaAppInfo appInfo = builder.create().fromJson(response, CaffaAppInfo.class);
-            return appInfo;
+            return builder.create().fromJson(response, CaffaAppInfo.class);
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.MALFORMED_RESPONSE, e.getMessage());
         }
@@ -401,24 +395,22 @@ public class RestClient {
 
     public String appName() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        return appInfo.name;
+        return appInfo.name();
     }
 
     public String appVersionString() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        StringBuilder sb = new StringBuilder();
-        sb.append("v");
-        sb.append(appInfo.majorVersion);
-        sb.append(".");
-        sb.append(appInfo.minorVersion);
-        sb.append(".");
-        sb.append(appInfo.patchVersion);
-        return sb.toString();
+        return "v" +
+                appInfo.majorVersion() +
+                "." +
+                appInfo.minorVersion() +
+                "." +
+                appInfo.patchVersion();
     }
 
     public Integer[] appVersion() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        return new Integer[] { appInfo.majorVersion, appInfo.minorVersion, appInfo.patchVersion };
+        return new Integer[] { appInfo.majorVersion(), appInfo.minorVersion(), appInfo.patchVersion() };
     }
 
     public CaffaObject document(String documentId) throws Exception {
@@ -436,13 +428,11 @@ public class RestClient {
         String path = schemaRoot() + "/components/object_schemas/" + classKeyword;
         JsonObject documentSchemaObject = unlockedObjectSchema(path, session);
 
-        CaffaObject object = new GsonBuilder()
+        return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, documentSchemaObject,
                         false))
                 .create()
                 .fromJson(documentData, CaffaObject.class);
-
-        return object;
     }
 
     private JsonObject unlockedObjectSchema(String path, CaffaSession session) throws CaffaConnectionError {
@@ -474,10 +464,10 @@ public class RestClient {
             return unlockedObjectSchema(path, session);
 
         } catch (CaffaConnectionError e) {
-            logger.error("Get object schema error: " + e.getMessage());
+            logger.error("Get object schema error: {}", e.getMessage());
             return null;
         } catch (Exception e) {
-            logger.error("Malformed response: " + e.getMessage());
+            logger.error("Malformed response when getting object schema: {}", e.getMessage());
             return null;
         } finally {
             unlock();
@@ -500,12 +490,7 @@ public class RestClient {
         try {
             this.executor = Executors.newSingleThreadScheduledExecutor();
             this.executor.scheduleAtFixedRate(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            sendKeepAliveMessage();
-                        }
-                    },
+                    this::sendKeepAliveMessage,
                     KEEPALIVE_INTERVAL,
                     KEEPALIVE_INTERVAL,
                     TimeUnit.MILLISECONDS);
@@ -548,15 +533,15 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            String fullReply = performGetRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword
+            String fullReply = performGetRequest("/objects/" + fieldOwner.uuid() + "/fields/" + field.keyword
                     + "?skeleton=true&session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
             JsonElement value = JsonParser.parseString(fullReply);
             return value.toString();
         } catch (CaffaConnectionError e) {
-            logger.error("Get field value error: " + e.getMessage());
+            logger.error("Get field value error: {}", e.getMessage());
             return "";
         } catch (Exception e) {
-            logger.error("Malformed response: " + e.getMessage());
+            logger.error("Malformed response when getting field value: {}", e.getMessage());
             return "";
         } finally {
             unlock();
@@ -570,10 +555,10 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            performPutRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?session_uuid="
+            performPutRequest("/objects/" + fieldOwner.uuid() + "/fields/" + field.keyword + "?session_uuid="
                     + this.session.getUuid(), REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
-            logger.error("Set field value error for " + field.keyword + ": " + e.type + " " + e.getMessage());
+            logger.error("Set field value error for {}: {} {}", field.keyword, e.type, e.getMessage());
             throw e;
         } finally {
             unlock();
@@ -587,12 +572,11 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject self = method.getSelf();
-            String response = performPostRequest(
-                    "/objects/" + self.uuid + "/methods/" + method.keyword + "?session_uuid=" + this.session.getUuid(),
+            return performPostRequest(
+                    "/objects/" + self.uuid() + "/methods/" + method.keyword() + "?session_uuid=" + this.session.getUuid(),
                     REQUEST_TIMEOUT, method.getJson());
-            return response;
         } catch (CaffaConnectionError e) {
-            logger.error("Object method execute error: " + e.getMessage());
+            logger.error("Object method execute error: {}", e.getMessage());
             throw e;
         } finally {
             unlock();

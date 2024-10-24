@@ -41,7 +41,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
             // ignore them silently.
             return null;
         }
-        logger.debug("Creating field " + keyword + " of type " + dataType);
+        logger.debug("Creating field {} of type {}", keyword, dataType);
         CaffaField<?> field = CaffaFieldFactory.createField(this.object, keyword, dataType);
         assert field != null;
         field.setSchema(this.schema);
@@ -69,7 +69,7 @@ public class CaffaFieldAdapter implements JsonDeserializer<CaffaField<?>>, JsonS
     public CaffaField<?> deserialize(JsonElement value, Type type, JsonDeserializationContext context)
             throws JsonParseException {
         String dataType = getDataType(this.schema);
-        logger.debug("Creating field with type '" + dataType + "'");
+        logger.debug("Creating field with type '{}'", dataType);
         
         CaffaField<?> field = createField(this.keyword, dataType);
         if (field != null) {
