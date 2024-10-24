@@ -5,13 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.IllegalArgumentException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.caffa.rpc.CaffaAppEnum;
 import org.caffa.rpc.CaffaAppEnumField;
@@ -19,7 +13,6 @@ import org.caffa.rpc.CaffaField;
 import org.caffa.rpc.CaffaObject;
 import org.caffa.rpc.RestClient;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

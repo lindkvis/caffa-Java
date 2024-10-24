@@ -3,7 +3,6 @@ package org.caffa.rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 
 public class CaffaAppEnumField extends CaffaField<CaffaAppEnum> {
