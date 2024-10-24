@@ -36,11 +36,11 @@ public class ClientObjectTest {
     void document() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
 
-        String classKeyword = object.keyword;
+        String classKeyword = object.keyword();
         assertTrue(!classKeyword.isEmpty());
         System.out.println("Main Document Class Keyword: " + classKeyword);
 
-        String uuid = object.uuid;
+        String uuid = object.uuid();
         System.out.println("uuid: " + uuid);
 
         assertFalse(uuid.isEmpty());
@@ -82,7 +82,7 @@ public class ClientObjectTest {
 
         assertEquals(4, children.size());
         for (CaffaObject child : children) {
-            System.out.println("Found child of class: " + child.keyword +
+            System.out.println("Found child of class: " + child.keyword() +
                     " ... checking methods!");
 
 

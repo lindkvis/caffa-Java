@@ -13,8 +13,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 public class CaffaObject {
-    public final String keyword;
-    public String uuid = "";
+    private final String keyword;
+    private final String uuid;
     private final boolean hasLocalDataFields;
 
     private final Map<String, CaffaField<?>> fields;
@@ -106,7 +106,7 @@ public class CaffaObject {
     }
 
     public void addMethod(CaffaObjectMethod method) {
-        this.methods.put(method.keyword, method);
+        this.methods.put(method.keyword(), method);
     }
 
     public String getJson() {
@@ -142,5 +142,13 @@ public class CaffaObject {
 
     public CaffaObjectMethodResult execute(CaffaObjectMethod method) throws CaffaConnectionError {
         return new CaffaObjectMethodResult(this.client, this.client.execute(method), method.getResultSchema());
+    }
+
+    public String keyword() {
+        return this.keyword;
+    }
+
+    public String uuid() {
+        return this.uuid;
     }
 }

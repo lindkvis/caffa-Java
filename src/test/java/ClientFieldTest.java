@@ -42,7 +42,7 @@ public class ClientFieldTest {
         String key = "id";
         CaffaField<?> field = object.field(key);
         assertNotNull(field);
-        assertEquals(key, field.keyword);
+        assertEquals(key, field.keyword());
 
         CaffaField<String> idField = field.cast(String.class);
         String originalValue = idField.get();
@@ -59,9 +59,9 @@ public class ClientFieldTest {
 
         boolean foundIdField = false;
         for (CaffaField<?> field : object.fields()) {
-            System.out.println("Found field: '" + field.keyword + "' (" + field.type() +
+            System.out.println("Found field: '" + field.keyword() + "' (" + field.type() +
                     ")");
-            if (field.keyword.equals("id")) {
+            if (field.keyword().equals("id")) {
                 foundIdField = true;
                 assertEquals(String.class, field.type());
             }

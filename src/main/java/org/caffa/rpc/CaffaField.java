@@ -21,7 +21,7 @@ public class CaffaField<T> extends CaffaAbstractField {
     }
 
     public String getRemoteJson() {
-        logger.debug("Trying to get field value for {} class {}, uuid {}", this.keyword, this.owner.keyword, this.owner.uuid);
+        logger.debug("Trying to get field value for {} class {}, uuid {}", this.keyword, this.owner.keyword(), this.owner.uuid());
         String reply = this.getClient().getFieldValue(this);
         logger.debug("Got field reply: {}", reply);
         return reply;

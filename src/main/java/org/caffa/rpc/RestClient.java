@@ -533,7 +533,7 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            String fullReply = performGetRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword
+            String fullReply = performGetRequest("/objects/" + fieldOwner.uuid() + "/fields/" + field.keyword
                     + "?skeleton=true&session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
             JsonElement value = JsonParser.parseString(fullReply);
             return value.toString();
@@ -555,7 +555,7 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
-            performPutRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?session_uuid="
+            performPutRequest("/objects/" + fieldOwner.uuid() + "/fields/" + field.keyword + "?session_uuid="
                     + this.session.getUuid(), REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
             logger.error("Set field value error for {}: {} {}", field.keyword, e.type, e.getMessage());
@@ -573,7 +573,7 @@ public class RestClient {
             }
             CaffaObject self = method.getSelf();
             return performPostRequest(
-                    "/objects/" + self.uuid + "/methods/" + method.keyword + "?session_uuid=" + this.session.getUuid(),
+                    "/objects/" + self.uuid() + "/methods/" + method.keyword() + "?session_uuid=" + this.session.getUuid(),
                     REQUEST_TIMEOUT, method.getJson());
         } catch (CaffaConnectionError e) {
             logger.error("Object method execute error: {}", e.getMessage());

@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
  * and sent when executing the method.
  */
 public class CaffaObjectMethod extends CaffaObject {
-    public final CaffaObject self;
+    private final CaffaObject self;
     private String resultSchema = "";
 
     public CaffaObjectMethod(String classKeyword, CaffaObject self, RestClient client) {
@@ -43,7 +43,7 @@ public class CaffaObjectMethod extends CaffaObject {
     @Override
     public String getJson() {
         GsonBuilder builder = new GsonBuilder().registerTypeAdapter(CaffaObjectMethod.class,
-                new CaffaObjectMethodAdapter(this.self, this.keyword));
+                new CaffaObjectMethodAdapter(this.self, this.keyword()));
         Gson gson = builder.serializeNulls().create();
         return gson.toJson(this);
     }
