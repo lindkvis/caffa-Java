@@ -175,11 +175,11 @@ public class RestClient {
         builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
         CaffaAppInfo appInfo = builder.create().fromJson(response.body(), CaffaAppInfo.class);
 
-        if (appInfo.majorVersion != expectedMajorVersion || appInfo.minorVersion != expectedMinorVersion) {
+        if (appInfo.majorVersion() != expectedMajorVersion || appInfo.minorVersion() != expectedMinorVersion) {
             return false;
         }
 
-        boolean serverIsDevelopmentVersion = appInfo.patchVersion >= 50;
+        boolean serverIsDevelopmentVersion = appInfo.patchVersion() >= 50;
 
         return developmentVersion == serverIsDevelopmentVersion;
     }
@@ -395,24 +395,24 @@ public class RestClient {
 
     public String appName() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        return appInfo.name;
+        return appInfo.name();
     }
 
     public String appVersionString() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
         StringBuilder sb = new StringBuilder();
         sb.append("v");
-        sb.append(appInfo.majorVersion);
+        sb.append(appInfo.majorVersion());
         sb.append(".");
-        sb.append(appInfo.minorVersion);
+        sb.append(appInfo.minorVersion());
         sb.append(".");
-        sb.append(appInfo.patchVersion);
+        sb.append(appInfo.patchVersion());
         return sb.toString();
     }
 
     public Integer[] appVersion() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        return new Integer[] { appInfo.majorVersion, appInfo.minorVersion, appInfo.patchVersion };
+        return new Integer[] { appInfo.majorVersion(), appInfo.minorVersion(), appInfo.patchVersion() };
     }
 
     public CaffaObject document(String documentId) throws Exception {
