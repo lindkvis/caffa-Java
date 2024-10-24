@@ -104,11 +104,10 @@ public class RestClient {
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
 
     public static HttpClient createBasicHttpClient() {
-        HttpClient client = HttpClient.newBuilder()
+        return HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(STATUS_TIMEOUT))
                 .build();
-        return client;
     }
 
     public static Status getStatus(String host, int port, int expectedMajorVersion, int expectedMinorVersion,
@@ -286,8 +285,7 @@ public class RestClient {
 
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
-            CaffaSession session = builder.create().fromJson(response, CaffaSession.class);
-            return session;
+            return builder.create().fromJson(response, CaffaSession.class);
         } catch (CaffaConnectionError e) {
             throw e;
         } catch (Exception e) {
@@ -392,8 +390,7 @@ public class RestClient {
         try {
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaAppInfo.class, new CaffaAppInfoAdapter());
-            CaffaAppInfo appInfo = builder.create().fromJson(response, CaffaAppInfo.class);
-            return appInfo;
+            return builder.create().fromJson(response, CaffaAppInfo.class);
         } catch (Exception e) {
             throw new CaffaConnectionError(FailureType.MALFORMED_RESPONSE, e.getMessage());
         }
@@ -436,13 +433,11 @@ public class RestClient {
         String path = schemaRoot() + "/components/object_schemas/" + classKeyword;
         JsonObject documentSchemaObject = unlockedObjectSchema(path, session);
 
-        CaffaObject object = new GsonBuilder()
+        return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, documentSchemaObject,
                         false))
                 .create()
                 .fromJson(documentData, CaffaObject.class);
-
-        return object;
     }
 
     private JsonObject unlockedObjectSchema(String path, CaffaSession session) throws CaffaConnectionError {
@@ -587,10 +582,9 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject self = method.getSelf();
-            String response = performPostRequest(
+            return performPostRequest(
                     "/objects/" + self.uuid + "/methods/" + method.keyword + "?session_uuid=" + this.session.getUuid(),
                     REQUEST_TIMEOUT, method.getJson());
-            return response;
         } catch (CaffaConnectionError e) {
             logger.error("Object method execute error: " + e.getMessage());
             throw e;
