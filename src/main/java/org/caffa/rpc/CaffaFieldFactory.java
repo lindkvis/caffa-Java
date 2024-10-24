@@ -15,7 +15,7 @@ public class CaffaFieldFactory {
 
     static {
         dataTypes = HashBiMap.create();
-        fieldCreators = new HashMap<String, CaffaField<?>>();
+        fieldCreators = new HashMap<>();
 
         addCreator("boolean", Boolean.class);
         addCreator("integer", Long.class);

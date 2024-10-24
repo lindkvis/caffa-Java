@@ -71,7 +71,7 @@ public class ClientObjectTest {
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
-        ArrayList<CaffaObject> children = new ArrayList<CaffaObject>();
+        ArrayList<CaffaObject> children = new ArrayList<>();
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -134,7 +134,7 @@ public class ClientObjectTest {
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
-        ArrayList<CaffaObject> children = new ArrayList<CaffaObject>();
+        ArrayList<CaffaObject> children = new ArrayList<>();
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);
@@ -170,7 +170,7 @@ public class ClientObjectTest {
         ArrayList<CaffaObjectMethod> methods = object.methods();
         assertTrue(methods.isEmpty());
 
-        ArrayList<CaffaObject> children = new ArrayList<CaffaObject>();
+        ArrayList<CaffaObject> children = new ArrayList<>();
 
         CaffaObject demoObject = object.field("demoObject", CaffaObject.class).get();
         assertNotNull(demoObject);

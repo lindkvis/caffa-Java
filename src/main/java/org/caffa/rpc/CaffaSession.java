@@ -7,16 +7,12 @@ public class CaffaSession {
         OBSERVING;
 
         public static Type fromInt(int type) {
-            switch (type) {
-                case 0:
-                    return INVALID;
-                case 1:
-                    return REGULAR;
-                case 2:
-                    return OBSERVING;
-                default:
-                    throw new RuntimeException("Cannot convert integer " + type + " to session type");
-            }
+            return switch (type) {
+                case 0 -> INVALID;
+                case 1 -> REGULAR;
+                case 2 -> OBSERVING;
+                default -> throw new RuntimeException("Cannot convert integer " + type + " to session type");
+            };
         }
 
         public static Type fromString(String type) {

@@ -30,8 +30,8 @@ public class CaffaObject {
         this.keyword = keyword;
         this.hasLocalDataFields = hasLocalDataFields;
 
-        this.fields = new TreeMap<String, CaffaField<?>>();
-        this.methods = new TreeMap<String, CaffaObjectMethod>();
+        this.fields = new TreeMap<>();
+        this.methods = new TreeMap<>();
 
         this.client = client;
         this.uuid = uuid;

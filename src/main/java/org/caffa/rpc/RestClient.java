@@ -89,7 +89,7 @@ public class RestClient {
     private String protocolTag = "http://";
     private HttpClient httpClient = null;
     private final CaffaSession.Type sessionType;
-    private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
+    private final Map<String, JsonObject> schemaCache = new HashMap<>();
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -492,12 +492,7 @@ public class RestClient {
         try {
             this.executor = Executors.newSingleThreadScheduledExecutor();
             this.executor.scheduleAtFixedRate(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            sendKeepAliveMessage();
-                        }
-                    },
+                    this::sendKeepAliveMessage,
                     KEEPALIVE_INTERVAL,
                     KEEPALIVE_INTERVAL,
                     TimeUnit.MILLISECONDS);
