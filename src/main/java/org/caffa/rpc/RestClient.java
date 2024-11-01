@@ -35,6 +35,7 @@
 package org.caffa.rpc;
 
 import java.net.Authenticator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -91,6 +92,7 @@ public class RestClient {
     private CaffaSession.Type sessionType;
     private final Map<String, JsonObject> schemaCache = new HashMap<String, JsonObject>();
 
+    private final AtomicBoolean disconnecting = new AtomicBoolean(false);
     private final ReentrantLock lock = new ReentrantLock();
     private int consecutiveKeepAliveFailures = 0;
 
@@ -247,6 +249,7 @@ public class RestClient {
 
     public void connect(String username, String password) throws Exception {
         try {
+            this.disconnecting.set(false);
             this.httpClient = createHttpClient(username, password);
             this.session = this.createSession(sessionType);
             startKeepAliveTransfer();
@@ -475,10 +478,14 @@ public class RestClient {
             return unlockedObjectSchema(path, session);
 
         } catch (CaffaConnectionError e) {
-            logger.error("Get object schema error: " + e.getMessage());
+            if (!this.disconnecting.get()) {
+                logger.error("Get object schema error: " + e.getMessage());
+            }
             return null;
         } catch (Exception e) {
-            logger.error("Malformed response: " + e.getMessage());
+            if (!this.disconnecting.get()) {
+                logger.error("Malformed response: " + e.getMessage());
+            }
             return null;
         } finally {
             unlock();
@@ -535,11 +542,12 @@ public class RestClient {
             }
         } catch (Exception e) {
             if (++consecutiveKeepAliveFailures >= 5) { // Allow five failures before aborting
+                this.disconnecting.set(true);
                 logger.error("Keepalive failed " + consecutiveKeepAliveFailures + " times");
                 this.session = null;
                 firePropertyChange("status", true, false);
             } else {
-                logger.warn("Keepalive failed " + consecutiveKeepAliveFailures + " times. Will try again. ");
+                logger.debug("Keepalive failed " + consecutiveKeepAliveFailures + " times. Will try again. ");
             }
         }
     }
@@ -556,10 +564,14 @@ public class RestClient {
             JsonElement value = JsonParser.parseString(fullReply);
             return value.toString();
         } catch (CaffaConnectionError e) {
-            logger.error("Get field value error: " + e.getMessage());
+            if (!this.disconnecting.get()) {
+                logger.error("Get field value error: " + e.getMessage());
+            }
             return "";
         } catch (Exception e) {
-            logger.error("Malformed response: " + e.getMessage());
+            if (!this.disconnecting.get()) {
+                logger.error("Malformed response: " + e.getMessage());
+            }
             return "";
         } finally {
             unlock();
@@ -576,7 +588,9 @@ public class RestClient {
             performPutRequest("/objects/" + fieldOwner.uuid + "/fields/" + field.keyword + "?session_uuid="
                     + this.session.getUuid(), REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
-            logger.error("Set field value error for " + field.keyword + ": " + e.type + " " + e.getMessage());
+            if (!this.disconnecting.get()) {
+                logger.error("Set field value error for " + field.keyword + ": " + e.type + " " + e.getMessage());
+            }
         } finally {
             unlock();
         }
@@ -594,7 +608,9 @@ public class RestClient {
                     REQUEST_TIMEOUT, method.getJson());
             return response;
         } catch (CaffaConnectionError e) {
-            logger.error("Object method execute error: " + e.getMessage());
+            if (!this.disconnecting.get()) {
+                logger.error("Object method execute error: " + e.getMessage());
+            }
             throw e;
         } finally {
             unlock();
