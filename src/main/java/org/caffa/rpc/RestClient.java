@@ -35,6 +35,7 @@
 package org.caffa.rpc;
 
 import java.net.Authenticator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -397,7 +398,7 @@ public class RestClient {
 
     public String appName() throws CaffaConnectionError {
         CaffaAppInfo appInfo = this.appInfo();
-        return appInfo.name;
+        return appInfo.name();
     }
 
     public String appVersionString() throws CaffaConnectionError {
