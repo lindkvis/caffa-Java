@@ -525,7 +525,6 @@ public class RestClient {
 
     private void sendKeepAliveMessage() {
         try {
-            lock();
             if (this.session != null) {
                 String response = performPutRequest("/sessions/" + this.session.getUuid(),
                         KEEPALIVE_TIMEOUT, "");
@@ -542,8 +541,6 @@ public class RestClient {
             } else {
                 logger.warn("Keepalive failed " + consecutiveKeepAliveFailures + " times. Will try again. ");
             }
-        } finally {
-            unlock();
         }
     }
 
