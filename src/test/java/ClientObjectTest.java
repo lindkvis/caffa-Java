@@ -64,7 +64,7 @@ public class ClientObjectTest {
     void methods() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         ArrayList<CaffaObjectMethod> methods = object.methods();
-        assertTrue(methods.isEmpty());
+        assertFalse(methods.isEmpty());
 
         ArrayList<CaffaObject> children = new ArrayList<>();
 
@@ -126,7 +126,7 @@ public class ClientObjectTest {
     void specificMethod() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         ArrayList<CaffaObjectMethod> methods = object.methods();
-        assertTrue(methods.isEmpty());
+        assertFalse(methods.isEmpty());
 
         ArrayList<CaffaObject> children = new ArrayList<>();
 
@@ -162,7 +162,7 @@ public class ClientObjectTest {
     void nonExistentMethod() {
         CaffaObject object = assertDoesNotThrow(() -> testApp.document("testDocument"));
         ArrayList<CaffaObjectMethod> methods = object.methods();
-        assertTrue(methods.isEmpty());
+        assertFalse(methods.isEmpty());
 
         ArrayList<CaffaObject> children = new ArrayList<>();
 
