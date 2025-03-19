@@ -181,10 +181,7 @@ public class RestClient {
         if (appInfo.majorVersion() != expectedMajorVersion || appInfo.minorVersion() != expectedMinorVersion) {
             return false;
         }
-
-        boolean serverIsDevelopmentVersion = appInfo.patchVersion() >= 50;
-
-        return developmentVersion == serverIsDevelopmentVersion;
+        return true;
     }
 
     /**
