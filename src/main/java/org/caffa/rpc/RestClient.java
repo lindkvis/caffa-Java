@@ -259,7 +259,7 @@ public class RestClient {
                 destroySession();
             }
         } catch (Exception e) {
-            logger.warn("Failed to shut down gracefully");
+            logger.warn("Failed to shut down gracefully " + e.getMessage());
         }
     }
 
@@ -750,7 +750,7 @@ public class RestClient {
         } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
                 || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
-        } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+        } else if (response.statusCode() != HttpURLConnection.HTTP_OK && response.statusCode() != HttpURLConnection.HTTP_ACCEPTED) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
         }
         return response.body();
