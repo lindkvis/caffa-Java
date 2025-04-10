@@ -171,7 +171,7 @@ public class RestClient {
     public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion,
             int expectedMinorVersion, boolean developmentVersion) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info"))
-                .version(HttpClient.Version.HTTP_2).GET().build();
+                .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         GsonBuilder builder = new GsonBuilder();
