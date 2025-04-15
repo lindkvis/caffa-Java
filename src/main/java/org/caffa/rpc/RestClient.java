@@ -97,8 +97,8 @@ public class RestClient {
     private int consecutiveKeepAliveFailures = 0;
 
     /** Defines intervals and timeouts (milliseconds). */
-    static final long KEEPALIVE_INTERVAL = 1000;
-    static final long KEEPALIVE_TIMEOUT = 1500;
+    static final long KEEPALIVE_INTERVAL = 2000;
+    static final long KEEPALIVE_TIMEOUT = 1000;
     static final long STATUS_TIMEOUT = 15000;
     static final long SESSION_TIMEOUT = 15000;
     static final long REQUEST_TIMEOUT = 15000;
@@ -522,7 +522,7 @@ public class RestClient {
                 consecutiveKeepAliveFailures = 0;
             }
         } catch (Exception e) {
-            if (++consecutiveKeepAliveFailures >= 5) { // Allow five failures before aborting
+            if (++consecutiveKeepAliveFailures >= 10) { // Allow ten failures before aborting
                 this.disconnecting.set(true);
                 logger.error("Keepalive failed " + consecutiveKeepAliveFailures + " times");
                 this.session = null;
