@@ -590,7 +590,7 @@ public class RestClient {
                     REQUEST_TIMEOUT, method.getJson());
         } catch (CaffaConnectionError e) {
             if (!this.disconnecting.get()) {
-                logger.error("Object method execute error: {}", e.getMessage());
+                logger.error("Object method {} execute error: {}", method.keyword(), e.getMessage());
             }
             throw e;
         } finally {
