@@ -85,11 +85,11 @@ public class RestClient {
 
     private final PropertyChangeSupport propertyChangeSupport;
 
-    private CaffaSession session = null;
     private SSLContext sslContext = null;
     private String protocolTag = "http://";
     private HttpClient httpClient = null;
-    private final CaffaSession.Type sessionType;
+    private final CaffaSession.Type initialSessionType;
+    private String sessionUuid = "";
     private final Map<String, JsonObject> schemaCache = new HashMap<>();
 
     private final AtomicBoolean disconnecting = new AtomicBoolean(false);
@@ -203,7 +203,7 @@ public class RestClient {
         this.port = port;
         this.propertyChangeSupport = new PropertyChangeSupport(this);
         this.sslContext = sslContext;
-        this.sessionType = sessionType;
+        this.initialSessionType = sessionType;
 
         if (sslContext != null) {
             this.protocolTag = "https://";
@@ -243,7 +243,7 @@ public class RestClient {
     public void connect(String username, String password) throws Exception {
         try {
             this.httpClient = createHttpClient(username, password);
-            this.session = this.createSession(sessionType);
+            this.sessionUuid = this.createSession(initialSessionType).getUuid();
             startKeepAliveTransfer();
         } catch (CaffaConnectionError e) {
             cleanUp();
@@ -254,8 +254,7 @@ public class RestClient {
     public void cleanUp() {
         try {
             stopKeepAliveTransfer();
-            CaffaSession session = getExistingSession();
-            if (session != null) {
+            if (!this.sessionUuid.isEmpty()) {
                 destroySession();
             }
         } catch (Exception e) {
@@ -263,13 +262,22 @@ public class RestClient {
         }
     }
 
-    public CaffaSession.Type getSessionType() {
+    public CaffaSession.Type getInitialSessionType() {
+        return this.initialSessionType;
+    }
+
+    public CaffaSession.Type getCurrentSessionType() {
         CaffaSession.Type type = CaffaSession.Type.INVALID;
 
         lock();
-        if (this.session != null) {
-            type = this.session.getType();
+        try {
+            type = getSession().getType();
+        } catch (CaffaConnectionError e) {
+            logger.error("Failed to retrieve session " + this.sessionUuid);
+            this.sessionUuid = "";
+            this.disconnecting.set(true);
         }
+
         unlock();
 
         return type;
@@ -295,9 +303,10 @@ public class RestClient {
     private void destroySession() throws CaffaConnectionError {
         try {
             lock();
-            if (this.session == null)
+            if (this.sessionUuid.isEmpty())
                 return;
-            performDeleteRequest("/sessions/" + this.session.getUuid(), SESSION_TIMEOUT, "");
+            performDeleteRequest("/sessions/" + this.sessionUuid, SESSION_TIMEOUT, "");
+            this.sessionUuid = "";
         } catch (CaffaConnectionError e) {
             throw e;
         } finally {
@@ -306,47 +315,21 @@ public class RestClient {
     }
 
     private CaffaSession getSession() throws CaffaConnectionError {
-        CaffaSession existingSession = null;
-
         try {
             lock();
-            existingSession = getExistingSession();
-            String response = performGetRequest("/sessions/" + existingSession.getUuid(),
+            System.out.println("Retrieving session " + this.sessionUuid);
+            String response = performGetRequest("/sessions/" + this.sessionUuid,
                     SESSION_TIMEOUT);
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
-            CaffaSession checkSession = builder.create().fromJson(response, CaffaSession.class);
-
-            if (!checkSession.getUuid().equals(existingSession.getUuid())) {
-                existingSession = null;
-            }
+            return builder.create().fromJson(response, CaffaSession.class);
         } catch (CaffaConnectionError e) {
             throw e;
         } catch (Exception e) {
-            throw new CaffaConnectionError(FailureType.MALFORMED_RESPONSE, "Failed to keep alive old session " + e);
+            throw new CaffaConnectionError(FailureType.MALFORMED_RESPONSE, "Failed to retrieve session" + e);
         } finally {
             unlock();
         }
-
-        if (existingSession == null) {
-            try {
-                lock();
-                this.session = createSession(CaffaSession.Type.REGULAR);
-                existingSession = this.session;
-            } catch (CaffaConnectionError e) {
-                throw e;
-            } finally {
-                unlock();
-            }
-        }
-        return existingSession;
-    }
-
-    private CaffaSession getExistingSession() {
-        lock();
-        CaffaSession existingSession = this.session;
-        unlock();
-        return existingSession;
     }
 
     public static void setupNullLogging() {
@@ -414,19 +397,18 @@ public class RestClient {
     }
 
     public CaffaObject document(String documentId) throws Exception {
-        CaffaSession session = getSession();
-        if (session == null)
+        if (this.sessionUuid.isEmpty())
             return null;
 
         String documentData = performGetRequest(
-                "/documents/" + documentId + "?skeleton=true&session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+                "/documents/" + documentId + "?skeleton=true&session_uuid=" + this.sessionUuid, REQUEST_TIMEOUT);
         JsonElement documentDataJson = JsonParser.parseString(documentData);
         assert documentDataJson.isJsonObject();
         JsonObject documentValueObject = documentDataJson.getAsJsonObject();
         String classKeyword = documentValueObject.get("keyword").getAsString();
 
         String path = schemaRoot() + "/components/object_schemas/" + classKeyword;
-        JsonObject documentSchemaObject = unlockedObjectSchema(path, session);
+        JsonObject documentSchemaObject = unlockedObjectSchema(path, this.sessionUuid);
 
         return new GsonBuilder()
                 .registerTypeAdapter(CaffaObject.class, new CaffaObjectAdapter(this, documentSchemaObject,
@@ -435,12 +417,12 @@ public class RestClient {
                 .fromJson(documentData, CaffaObject.class);
     }
 
-    private JsonObject unlockedObjectSchema(String path, CaffaSession session) throws CaffaConnectionError {
+    private JsonObject unlockedObjectSchema(String path, String sessionUuid) throws CaffaConnectionError {
         if (schemaCache.containsKey(path)) {
             return schemaCache.get(path);
         }
 
-        String documentSchema = performGetRequest(path + "?session_uuid=" + session.getUuid(), REQUEST_TIMEOUT);
+        String documentSchema = performGetRequest(path + "?session_uuid=" + sessionUuid, REQUEST_TIMEOUT);
         JsonObject documentSchemaObject = JsonParser.parseString(documentSchema).getAsJsonObject();
 
         schemaCache.put(path, documentSchemaObject);
@@ -454,14 +436,15 @@ public class RestClient {
     public JsonObject getObjectSchema(String path) {
         try {
             lock();
-            if (this.session == null) {
-                throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
+            if (this.sessionUuid.isEmpty()) {
+                System.out.println("No session UUID set");
+                throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No current session");
             }
 
             if (path.startsWith("#")) {
                 path = schemaRoot() + path.substring(1);
             }
-            return unlockedObjectSchema(path, session);
+            return unlockedObjectSchema(path, this.sessionUuid);
 
         } catch (CaffaConnectionError e) {
             if (!this.disconnecting.get()) {
@@ -513,19 +496,19 @@ public class RestClient {
 
     private void sendKeepAliveMessage() {
         try {
-            if (this.session != null) {
-                String response = performPutRequest("/sessions/" + this.session.getUuid(),
+            if (!this.sessionUuid.isEmpty()) {
+                String response = performPutRequest("/sessions/" + this.sessionUuid,
                         KEEPALIVE_TIMEOUT, "");
                 GsonBuilder builder = new GsonBuilder();
                 builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
-                this.session = builder.create().fromJson(response, CaffaSession.class);
+                CaffaSession session = builder.create().fromJson(response, CaffaSession.class);
                 consecutiveKeepAliveFailures = 0;
             }
         } catch (Exception e) {
             if (++consecutiveKeepAliveFailures >= 10) { // Allow ten failures before aborting
                 this.disconnecting.set(true);
                 logger.error("Keepalive failed " + consecutiveKeepAliveFailures + " times");
-                this.session = null;
+                this.sessionUuid = "";
                 firePropertyChange("status", true, false);
             } else {
                 logger.debug("Keepalive failed " + consecutiveKeepAliveFailures + " times. Will try again. ");
@@ -536,12 +519,12 @@ public class RestClient {
     public String getFieldValue(CaffaAbstractField field) {
         try {
             lock();
-            if (this.session == null) {
+            if (this.sessionUuid.isEmpty()) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
             String fullReply = performGetRequest("/objects/" + fieldOwner.uuid() + "/fields/" + field.keyword
-                    + "?skeleton=true&session_uuid=" + this.session.getUuid(), REQUEST_TIMEOUT);
+                    + "?skeleton=true&session_uuid=" + this.sessionUuid, REQUEST_TIMEOUT);
             JsonElement value = JsonParser.parseString(fullReply);
             return value.toString();
         } catch (CaffaConnectionError e) {
@@ -562,12 +545,12 @@ public class RestClient {
     public void setFieldValue(CaffaAbstractField field, String value) throws CaffaConnectionError {
         try {
             lock();
-            if (this.session == null) {
+            if (this.sessionUuid.isEmpty()) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject fieldOwner = field.getOwner();
             performPutRequest("/objects/" + fieldOwner.uuid() + "/fields/" + field.keyword + "?session_uuid="
-                    + this.session.getUuid(), REQUEST_TIMEOUT, value);
+                    + this.sessionUuid, REQUEST_TIMEOUT, value);
         } catch (CaffaConnectionError e) {
             if (!this.disconnecting.get()) {
                 logger.error("Set field value error for {}: {} {}", field.keyword, e.type, e.getMessage());
@@ -581,12 +564,12 @@ public class RestClient {
     public String execute(CaffaObjectMethod method) throws CaffaConnectionError {
         try {
             lock();
-            if (this.session == null) {
+            if (this.sessionUuid.isEmpty()) {
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, "No valid session");
             }
             CaffaObject self = method.getSelf();
             return performPostRequest(
-                    "/objects/" + self.uuid() + "/methods/" + method.keyword() + "?session_uuid=" + this.session.getUuid(),
+                    "/objects/" + self.uuid() + "/methods/" + method.keyword() + "?session_uuid=" + this.sessionUuid,
                     REQUEST_TIMEOUT, method.getJson());
         } catch (CaffaConnectionError e) {
             if (!this.disconnecting.get()) {

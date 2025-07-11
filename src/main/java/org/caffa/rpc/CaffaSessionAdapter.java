@@ -25,11 +25,8 @@ public class CaffaSessionAdapter
             JsonObject jsonObject = json.getAsJsonObject();
             String uuid = jsonObject.get("uuid").getAsString();
             String typeString = jsonObject.get("type").getAsString();
-            boolean valid = jsonObject.get("valid").getAsBoolean();
-            if (valid) {
-                CaffaSession.Type typeFound = CaffaSession.Type.fromString(typeString);
-                return new CaffaSession(uuid, typeFound);
-            }
+            CaffaSession.Type typeFound = CaffaSession.Type.fromString(typeString);
+            return new CaffaSession(uuid, typeFound);
         }
         return null;
     }

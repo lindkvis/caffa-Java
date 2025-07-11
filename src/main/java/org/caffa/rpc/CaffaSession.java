@@ -4,13 +4,15 @@ public class CaffaSession {
     public enum Type {
         INVALID,
         REGULAR,
-        OBSERVING;
+        OBSERVING,
+        DENIED;
 
         public static Type fromInt(int type) {
             return switch (type) {
                 case 0 -> INVALID;
                 case 1 -> REGULAR;
                 case 2 -> OBSERVING;
+                case 3 -> DENIED;
                 default -> throw new RuntimeException("Cannot convert integer " + type + " to session type");
             };
         }
@@ -22,6 +24,8 @@ public class CaffaSession {
                 return REGULAR;
             } else if (type.equals(OBSERVING.name())) {
                 return OBSERVING;
+            } else if (type.equals(DENIED.name())) {
+                return DENIED;
             }
             throw new RuntimeException("Cannot convert type " + type + " to session type");
         }
