@@ -317,7 +317,6 @@ public class RestClient {
     private CaffaSession getSession() throws CaffaConnectionError {
         try {
             lock();
-            System.out.println("Retrieving session " + this.sessionUuid);
             String response = performGetRequest("/sessions/" + this.sessionUuid,
                     SESSION_TIMEOUT);
             GsonBuilder builder = new GsonBuilder();
