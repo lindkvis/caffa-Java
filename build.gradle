@@ -25,6 +25,7 @@ test {
         events "started", "skipped", "passed", "failed"
         showStandardStreams true
     }
+    systemProperty 'port', System.getProperty('port')
 }
 
 java {

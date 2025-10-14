@@ -17,7 +17,9 @@ public class ClientFieldTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        testApp = new RestClient(hostname, 50000, "log4j.properties");
+        int port = Integer.parseInt(System.getProperty("port", "50000"));
+        System.out.println("Trying to connect to " + hostname + ":" + port);
+        testApp = new RestClient(hostname, port, "log4j.properties");
         testApp.connect("test", "password");
     }
 
