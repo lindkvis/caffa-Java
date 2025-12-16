@@ -243,6 +243,7 @@ public class RestClient {
 
     public void connect(String username, String password) throws Exception {
         try {
+            disconnecting.set(false);
             this.httpClient = createHttpClient(username, password);
             this.sessionUuid = this.createSession(initialSessionType).getUuid();
             startKeepAliveTransfer();
@@ -268,20 +269,15 @@ public class RestClient {
     }
 
     public CaffaSession.Type getCurrentSessionType() {
-        CaffaSession.Type type = CaffaSession.Type.INVALID;
-
-        lock();
         try {
-            type = getSession().getType();
+            lock();
+            return getSession().getType();
         } catch (CaffaConnectionError e) {
-            logger.error("Failed to retrieve session " + this.sessionUuid);
-            this.sessionUuid = "";
-            this.disconnecting.set(true);
+            logger.error("Failed to retrieve session: " + this.sessionUuid);
+            return CaffaSession.Type.INVALID;
+        } finally {
+            unlock();
         }
-
-        unlock();
-
-        return type;
     }
 
     private CaffaSession createSession(CaffaSession.Type type) throws CaffaConnectionError {
