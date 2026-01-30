@@ -102,6 +102,7 @@ public class RestClient {
     static final long STATUS_TIMEOUT = 15000;
     static final long SESSION_TIMEOUT = 15000;
     static final long REQUEST_TIMEOUT = 15000;
+    private long maxKeepaliveRetries = 10;
     private ScheduledExecutorService executor = null;
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
@@ -474,6 +475,7 @@ public class RestClient {
 
     private void startKeepAliveTransfer() throws Exception {
         try {
+            this.maxKeepaliveRetries = 10;
             this.executor = Executors.newSingleThreadScheduledExecutor();
             this.executor.scheduleAtFixedRate(
                     this::sendKeepAliveMessage,
@@ -504,7 +506,7 @@ public class RestClient {
                 consecutiveKeepAliveFailures = 0;
             }
         } catch (Exception e) {
-            if (++consecutiveKeepAliveFailures >= 10) { // Allow ten failures before aborting
+            if (++consecutiveKeepAliveFailures >= maxKeepaliveRetries) { // Allow ten failures before aborting
                 this.disconnecting.set(true);
                 logger.error("Keepalive failed " + consecutiveKeepAliveFailures + " times");
                 this.sessionUuid = "";
@@ -641,6 +643,7 @@ public class RestClient {
             throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
         } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
                 || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            this.maxKeepaliveRetries = 1;
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
@@ -665,6 +668,7 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
             } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
                     || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                this.maxKeepaliveRetries = 1;
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
             } else if (response.statusCode() != HttpURLConnection.HTTP_OK &&
                        response.statusCode() != HttpURLConnection.HTTP_ACCEPTED) {
@@ -696,6 +700,7 @@ public class RestClient {
                 throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
             } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
                     || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                this.maxKeepaliveRetries = 1;
                 throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
             } else if (response.statusCode() != HttpURLConnection.HTTP_OK &&
                        response.statusCode() != HttpURLConnection.HTTP_ACCEPTED) {
@@ -731,6 +736,7 @@ public class RestClient {
             throw new CaffaConnectionError(FailureType.TOO_MANY_REQUESTS, response.body());
         } else if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN
                 || response.statusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            this.maxKeepaliveRetries = 1;
             throw new CaffaConnectionError(FailureType.SESSION_REFUSED, response.body());
         } else if (response.statusCode() != HttpURLConnection.HTTP_OK && response.statusCode() != HttpURLConnection.HTTP_ACCEPTED) {
             throw new CaffaConnectionError(FailureType.REQUEST_ERROR, response.body());
