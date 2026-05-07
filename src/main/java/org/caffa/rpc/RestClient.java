@@ -98,13 +98,23 @@ public class RestClient {
 
     /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 2000;
-    static final long KEEPALIVE_TIMEOUT = 1000;
     static final long KEEPALIVE_TIMEOUT = 1500;
+    static final long KEEPALIVE_SUMMARY_INTERVAL = 30000;
     static final long STATUS_TIMEOUT = 15000;
     static final long SESSION_TIMEOUT = 15000;
     static final long REQUEST_TIMEOUT = 15000;
     private long maxKeepaliveRetries = 8;
     private ScheduledExecutorService executor = null;
+
+    // Keepalive diagnostics state
+    private long lastKeepaliveAttemptNs = 0;
+    private long lastKeepaliveSuccessNs = 0;
+    private long lastKeepaliveSummaryNs = 0;
+    private long keepaliveAttemptsInWindow = 0;
+    private long keepaliveSuccessesInWindow = 0;
+    private long keepaliveFailuresInWindow = 0;
+    private long keepaliveMaxLatencyMsInWindow = 0;
+    private long keepaliveMaxJitterMsInWindow = 0;
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
 
@@ -473,12 +483,27 @@ public class RestClient {
     private void startKeepAliveTransfer() throws Exception {
         try {
             this.maxKeepaliveRetries = 10;
+            final long now = System.nanoTime();
+            this.lastKeepaliveAttemptNs = now;
+            this.lastKeepaliveSuccessNs = now;
+            this.lastKeepaliveSummaryNs = now;
+            this.keepaliveAttemptsInWindow = 0;
+            this.keepaliveSuccessesInWindow = 0;
+            this.keepaliveFailuresInWindow = 0;
+            this.keepaliveMaxLatencyMsInWindow = 0;
+            this.keepaliveMaxJitterMsInWindow = 0;
             this.executor = Executors.newSingleThreadScheduledExecutor();
             this.executor.scheduleAtFixedRate(
                     this::sendKeepAliveMessage,
                     KEEPALIVE_INTERVAL,
                     KEEPALIVE_INTERVAL,
                     TimeUnit.MILLISECONDS);
+            logger.info(
+                    "Started keepalive scheduler for session {} (interval={} ms, timeout={} ms, maxRetries={})",
+                    this.sessionUuid,
+                    KEEPALIVE_INTERVAL,
+                    KEEPALIVE_TIMEOUT,
+                    this.maxKeepaliveRetries);
         } catch (Exception e) {
             logger.error("Failed to start keepalive: ", e);
             throw e;
@@ -493,24 +518,113 @@ public class RestClient {
     }
 
     private void sendKeepAliveMessage() {
+        final long attemptStartNs = System.nanoTime();
+        long sinceLastAttemptMs = 0;
+        long jitterMs = 0;
+        if (this.lastKeepaliveAttemptNs != 0) {
+            sinceLastAttemptMs = TimeUnit.NANOSECONDS.toMillis(attemptStartNs - this.lastKeepaliveAttemptNs);
+            jitterMs = Math.max(0, sinceLastAttemptMs - KEEPALIVE_INTERVAL);
+        }
+        this.lastKeepaliveAttemptNs = attemptStartNs;
+
         try {
             if (!this.sessionUuid.isEmpty()) {
+                keepaliveAttemptsInWindow++;
                 String response = performPutRequest("/sessions/" + this.sessionUuid,
                         KEEPALIVE_TIMEOUT, "");
                 GsonBuilder builder = new GsonBuilder();
                 builder.registerTypeAdapter(CaffaSession.class, new CaffaSessionAdapter());
                 CaffaSession session = builder.create().fromJson(response, CaffaSession.class);
+
+                final long attemptLatencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - attemptStartNs);
+                keepaliveSuccessesInWindow++;
+                keepaliveMaxLatencyMsInWindow = Math.max(keepaliveMaxLatencyMsInWindow, attemptLatencyMs);
+                keepaliveMaxJitterMsInWindow = Math.max(keepaliveMaxJitterMsInWindow, jitterMs);
+
+                if (consecutiveKeepAliveFailures > 0) {
+                    logger.info(
+                            "Keepalive recovered for session {} after {} failures (latency={} ms, jitter={} ms)",
+                            this.sessionUuid,
+                            consecutiveKeepAliveFailures,
+                            attemptLatencyMs,
+                            jitterMs);
+                }
                 consecutiveKeepAliveFailures = 0;
+                lastKeepaliveSuccessNs = System.nanoTime();
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug(
+                            "Keepalive ok for session {} (latency={} ms, sinceLastAttempt={} ms, jitter={} ms)",
+                            this.sessionUuid,
+                            attemptLatencyMs,
+                            sinceLastAttemptMs,
+                            jitterMs);
+                }
+            } else {
+                logger.debug("Skipping keepalive: session UUID is empty");
             }
         } catch (Exception e) {
+            keepaliveFailuresInWindow++;
+            final long attemptLatencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - attemptStartNs);
+            keepaliveMaxLatencyMsInWindow = Math.max(keepaliveMaxLatencyMsInWindow, attemptLatencyMs);
+            keepaliveMaxJitterMsInWindow = Math.max(keepaliveMaxJitterMsInWindow, jitterMs);
+
             if (++consecutiveKeepAliveFailures >= maxKeepaliveRetries) { // Allow ten failures before aborting
                 this.disconnecting.set(true);
-                logger.error("Keepalive failed " + consecutiveKeepAliveFailures + " times");
+                final long sinceLastSuccessMs = lastKeepaliveSuccessNs == 0
+                        ? -1
+                        : TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - lastKeepaliveSuccessNs);
+                logger.error(
+                        "Keepalive failed {} times for session {}. Giving up (latency={} ms, sinceLastAttempt={} ms, jitter={} ms, sinceLastSuccess={} ms)",
+                        consecutiveKeepAliveFailures,
+                        this.sessionUuid,
+                        attemptLatencyMs,
+                        sinceLastAttemptMs,
+                        jitterMs,
+                        sinceLastSuccessMs,
+                        e);
                 this.sessionUuid = "";
                 firePropertyChange("status", true, false);
             } else {
-                logger.debug("Keepalive failed " + consecutiveKeepAliveFailures + " times. Will try again. ");
+                final long sinceLastSuccessMs = lastKeepaliveSuccessNs == 0
+                        ? -1
+                        : TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - lastKeepaliveSuccessNs);
+                logger.warn(
+                        "Keepalive failed for session {} ({}/{}). Will retry (latency={} ms, sinceLastAttempt={} ms, jitter={} ms, sinceLastSuccess={} ms): {}",
+                        this.sessionUuid,
+                        consecutiveKeepAliveFailures,
+                        maxKeepaliveRetries,
+                        attemptLatencyMs,
+                        sinceLastAttemptMs,
+                        jitterMs,
+                        sinceLastSuccessMs,
+                        e.toString());
             }
+        }
+
+        final long nowNs = System.nanoTime();
+        if (lastKeepaliveSummaryNs != 0
+                && TimeUnit.NANOSECONDS.toMillis(nowNs - lastKeepaliveSummaryNs) >= KEEPALIVE_SUMMARY_INTERVAL) {
+            final long sinceLastSuccessMs = lastKeepaliveSuccessNs == 0
+                    ? -1
+                    : TimeUnit.NANOSECONDS.toMillis(nowNs - lastKeepaliveSuccessNs);
+            logger.info(
+                    "Keepalive summary session {}: attempts={}, successes={}, failures={}, consecutiveFailures={}, maxLatency={} ms, maxJitter={} ms, sinceLastSuccess={} ms",
+                    this.sessionUuid,
+                    keepaliveAttemptsInWindow,
+                    keepaliveSuccessesInWindow,
+                    keepaliveFailuresInWindow,
+                    consecutiveKeepAliveFailures,
+                    keepaliveMaxLatencyMsInWindow,
+                    keepaliveMaxJitterMsInWindow,
+                    sinceLastSuccessMs);
+
+            lastKeepaliveSummaryNs = nowNs;
+            keepaliveAttemptsInWindow = 0;
+            keepaliveSuccessesInWindow = 0;
+            keepaliveFailuresInWindow = 0;
+            keepaliveMaxLatencyMsInWindow = 0;
+            keepaliveMaxJitterMsInWindow = 0;
         }
     }
 
