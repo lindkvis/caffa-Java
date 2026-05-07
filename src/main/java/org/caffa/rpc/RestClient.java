@@ -99,10 +99,11 @@ public class RestClient {
     /** Defines intervals and timeouts (milliseconds). */
     static final long KEEPALIVE_INTERVAL = 2000;
     static final long KEEPALIVE_TIMEOUT = 1000;
+    static final long KEEPALIVE_TIMEOUT = 1500;
     static final long STATUS_TIMEOUT = 15000;
     static final long SESSION_TIMEOUT = 15000;
     static final long REQUEST_TIMEOUT = 15000;
-    private long maxKeepaliveRetries = 10;
+    private long maxKeepaliveRetries = 8;
     private ScheduledExecutorService executor = null;
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
