@@ -182,6 +182,21 @@ public class RestClient {
 
     public static boolean checkCompatibility(HttpClient client, String host, int port, int expectedMajorVersion,
             int expectedMinorVersion, boolean developmentVersion) throws Exception {
+        HttpRequest versionRequest = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/version"))
+                .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
+        HttpResponse<String> versionResponse = client.send(versionRequest, HttpResponse.BodyHandlers.ofString());
+        if (versionResponse.statusCode() == HttpURLConnection.HTTP_OK) {
+            JsonObject version = JsonParser.parseString(versionResponse.body()).getAsJsonObject();
+            if (version.has("supported_api_versions")) {
+                for (JsonElement apiVersion : version.get("supported_api_versions").getAsJsonArray()) {
+                    if (apiVersion.getAsInt() == expectedMajorVersion) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
         HttpRequest request = HttpRequest.newBuilder(new URI("http://" + host + ":" + port + "/app/info"))
                 .version(HttpClient.Version.HTTP_2).timeout(Duration.ofMillis(STATUS_TIMEOUT)).GET().build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
